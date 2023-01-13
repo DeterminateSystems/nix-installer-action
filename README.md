@@ -1,6 +1,6 @@
 # Nix Installer Action
 
-You can use `nix-installer` as a Github action like so:
+You can use [`nix-installer`](https://github.com/DeterminateSystems/nix-installer) as a Github action like so:
 
 ```yaml
 on:
