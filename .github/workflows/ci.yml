@@ -43,6 +43,14 @@ jobs:
           log-directives: nix_installer=trace
           backtrace: full
           github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Test `nix` with `$GITHUB_PATH`
+        if: success() || failure()
+        run: |
+          nix run nixpkgs#fortune
+          nix profile install nixpkgs#fortune
+          fortune
+          nix store gc
+          nix run nixpkgs#fortune
       - name: Reinstall Nix
         uses: ./
         with:
@@ -51,6 +59,14 @@ jobs:
           backtrace: full
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reinstall: true
+      - name: Test `nix` with `$GITHUB_PATH`
+        if: success() || failure()
+        run: |
+          nix run nixpkgs#fortune
+          nix profile install nixpkgs#fortune
+          fortune
+          nix store gc
+          nix run nixpkgs#fortune
 
   run-x86_64-darwin:
     name: Run x86_64 Darwin
@@ -93,6 +109,14 @@ jobs:
           log-directives: nix_installer=trace
           backtrace: full
           github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Test `nix` with `$GITHUB_PATH`
+        if: success() || failure()
+        run: |
+          nix run nixpkgs#fortune
+          nix profile install nixpkgs#fortune
+          fortune
+          nix store gc
+          nix run nixpkgs#fortune
       - name: Reinstall Nix
         uses: ./
         with:
@@ -101,4 +125,11 @@ jobs:
           backtrace: full
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reinstall: true
-        
+      - name: Test `nix` with `$GITHUB_PATH`
+        if: success() || failure()
+        run: |
+          nix run nixpkgs#fortune
+          nix profile install nixpkgs#fortune
+          fortune
+          nix store gc
+          nix run nixpkgs#fortune
