@@ -9,7 +9,6 @@ jobs:
   run-x86_64-linux:
     name: Run x86_64 Linux
     runs-on: ubuntu-22.04
-    needs: [build-x86_64-linux, lints]
     steps:
       - uses: actions/checkout@v3
       - run: sudo apt install fish zsh
@@ -111,7 +110,6 @@ jobs:
   run-x86_64-darwin:
     name: Run x86_64 Darwin
     runs-on: macos-12
-    needs: [build-x86_64-darwin, lints]
     steps:
       - uses: actions/checkout@v3
       - run: brew install fish coreutils
