@@ -1,0 +1,183 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  run-x86_64-linux:
+    name: Run x86_64 Linux
+    runs-on: ubuntu-22.04
+    needs: [build-x86_64-linux, lints]
+    steps:
+      - uses: actions/checkout@v3
+      - run: sudo apt install fish zsh
+      - uses: actions/download-artifact@v3
+        with:
+          name: nix-installer-x86_64-linux
+      - name: Move & set executable
+        run: |
+          chmod +x ./nix-installer
+          mkdir install-root
+          cp nix-installer.sh install-root/nix-installer.sh
+          mv nix-installer install-root/nix-installer-x86_64-linux
+      - name: Initial install
+        uses: ./
+        with:
+          local-root: install-root/
+          logger: pretty
+          log-directives: nix_installer=trace
+          backtrace: full
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Initial uninstall (without a `nix run` first)
+        run: sudo -E /nix/nix-installer uninstall
+        env:
+          NIX_INSTALLER_NO_CONFIRM: true
+          NIX_INSTALLER_LOGGER: pretty
+          NIX_INSTALLER_LOG_DIRECTIVES: nix_installer=trace
+          RUST_BACKTRACE: full
+      - name: Ensure `nix` is removed
+        run: |
+          if systemctl is-active nix-daemon.socket; then
+            echo "nix-daemon.socket was still running"
+            exit 1
+          fi
+          if systemctl is-active nix-daemon.service; then
+            echo "nix-daemon.service was still running"
+            exit 1
+          fi
+          if [ -e /nix ]; then
+            echo "/nix exists"
+            exit 1
+          fi
+      - name: Repeated install
+        uses: ./
+        with:
+          local-root: install-root/
+          logger: pretty
+          log-directives: nix_installer=trace
+          backtrace: full
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: echo $PATH
+        run: echo $PATH
+      - name: Test `nix` with `$GITHUB_PATH`
+        if: success() || failure()
+        run: |
+          nix run nixpkgs#fortune
+          nix profile install nixpkgs#fortune
+          fortune
+          nix store gc
+          nix run nixpkgs#fortune
+      - name: Test bash
+        run: nix-instantiate -E 'builtins.currentTime' --eval
+        if: success() || failure()
+        shell: bash --login {0}
+      - name: Test sh
+        run: nix-instantiate -E 'builtins.currentTime' --eval
+        if: success() || failure()
+        shell: sh -l {0}
+      - name: Test zsh
+        run: nix-instantiate -E 'builtins.currentTime' --eval
+        if: success() || failure()
+        shell: zsh --login --interactive {0}
+      - name: Test fish
+        run: nix-instantiate -E 'builtins.currentTime' --eval
+        if: success() || failure()
+        shell: fish --login {0}
+      - name: Repeated uninstall
+        run: sudo -E /nix/nix-installer uninstall
+        env:
+          NIX_INSTALLER_NO_CONFIRM: true
+          NIX_INSTALLER_LOGGER: pretty
+          NIX_INSTALLER_LOG_DIRECTIVES: nix_installer=trace
+          RUST_BACKTRACE: full
+      - name: Ensure `nix` is removed
+        run: |
+          if systemctl is-active nix-daemon.socket; then
+            echo "nix-daemon.socket was still running"
+            exit 1
+          fi
+          if systemctl is-active nix-daemon.service; then
+            echo "nix-daemon.service was still running"
+            exit 1
+          fi
+          if [ -e /nix ]; then
+            echo "/nix exists"
+            exit 1
+          fi
+
+
+  run-x86_64-darwin:
+    name: Run x86_64 Darwin
+    runs-on: macos-12
+    needs: [build-x86_64-darwin, lints]
+    steps:
+      - uses: actions/checkout@v3
+      - run: brew install fish coreutils
+      - uses: actions/download-artifact@v3
+        with:
+          name: nix-installer-x86_64-darwin
+      - name: Move & set executable
+        run: |
+          chmod +x ./nix-installer
+          mkdir install-root
+          cp nix-installer.sh install-root/nix-installer.sh
+          mv nix-installer install-root/nix-installer-x86_64-darwin
+      - name: Initial install
+        uses: ./
+        with:
+          local-root: install-root/
+          logger: pretty
+          log-directives: nix_installer=trace
+          backtrace: full
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Initial uninstall (without a `nix run` first)
+        run: sudo -E /nix/nix-installer uninstall
+        env:
+          NIX_INSTALLER_NO_CONFIRM: true
+          NIX_INSTALLER_LOGGER: pretty
+          NIX_INSTALLER_LOG_DIRECTIVES: nix_installer=trace
+          RUST_BACKTRACE: full
+      - name: Repeated install
+        uses: ./
+        with:
+          local-root: install-root/
+          logger: pretty
+          log-directives: nix_installer=trace
+          backtrace: full
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: echo $PATH
+        run: echo $PATH
+      - name: Test `nix` with `$GITHUB_PATH`
+        if: success() || failure()
+        run: |
+          nix run nixpkgs#fortune
+          nix profile install nixpkgs#fortune
+          fortune
+          nix store gc
+          nix run nixpkgs#fortune
+      - name: Test bash
+        run: nix-instantiate -E 'builtins.currentTime' --eval
+        if: success() || failure()
+        shell: bash --login {0}
+      - name: Test sh
+        run: nix-instantiate -E 'builtins.currentTime' --eval
+        if: success() || failure()
+        shell: sh -l {0}
+      - name: Test zsh
+        run: nix-instantiate -E 'builtins.currentTime' --eval
+        if: success() || failure()
+        shell: zsh --login --interactive {0}
+      - name: Test fish
+        run: nix-instantiate -E 'builtins.currentTime' --eval
+        if: success() || failure()
+        shell: fish --login {0}
+      - name: Repeated uninstall
+        run: sudo -E /nix/nix-installer uninstall
+        env:
+          NIX_INSTALLER_NO_CONFIRM: true
+          NIX_INSTALLER_LOGGER: pretty
+          NIX_INSTALLER_LOG_DIRECTIVES: nix_installer=trace
+          RUST_BACKTRACE: full
+        
