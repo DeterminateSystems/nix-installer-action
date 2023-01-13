@@ -2,7 +2,7 @@ name: Nix Installer
 branding:
   icon: 'box'
   color: 'purple'
-description: An experimental Nix installer using `nix-install`
+description: Install Nix
 inputs:
   planner:
     description: A planner to use
@@ -75,6 +75,8 @@ inputs:
   nix-installer-branch:
     description: The branch of `nix-installer` to use
     required: false
+  reinstall:
+    description: Force a reinstall if the
 
 runs:
   using: composite
@@ -82,6 +84,16 @@ runs:
     - name: Install Nix
       shell: bash
       run: |
+        if [ -f "/nix/receipt.json" ]; then
+          if [ -n "${{ inputs.reinstall }}" ]; then
+            /nix/nix-installer uninstall --no-confirm
+          else
+            echo "Nix was already installed, using existing install"
+            exit 0
+          fi
+          
+        fi
+
         if [ -n "${{ inputs.nix-installer-tag }}" ]; then
           export NIX_INSTALLER_TAG=${{ inputs.tag }}
           echo "Set NIX_INSTALLER_TAG=$NIX_INSTALLER_TAG"

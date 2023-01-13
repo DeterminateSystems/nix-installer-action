@@ -36,6 +36,21 @@ jobs:
         run: nix-instantiate -E 'builtins.currentTime' --eval
         if: success() || failure()
         shell: sh -l {0}
+      - name: Install Nix again (noop)
+        uses: ./
+        with:
+          logger: pretty
+          log-directives: nix_installer=trace
+          backtrace: full
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Reinstall Nix
+        uses: ./
+        with:
+          logger: pretty
+          log-directives: nix_installer=trace
+          backtrace: full
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          reinstall: true
 
   run-x86_64-darwin:
     name: Run x86_64 Darwin
@@ -71,4 +86,19 @@ jobs:
         run: nix-instantiate -E 'builtins.currentTime' --eval
         if: success() || failure()
         shell: zsh --login --interactive {0}
+      - name: Install Nix again (noop)
+        uses: ./
+        with:
+          logger: pretty
+          log-directives: nix_installer=trace
+          backtrace: full
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Reinstall Nix
+        uses: ./
+        with:
+          logger: pretty
+          log-directives: nix_installer=trace
+          backtrace: full
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          reinstall: true
         
