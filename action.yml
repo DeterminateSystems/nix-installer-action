@@ -201,7 +201,7 @@ runs:
               export NIX_INSTALLER_URL=https://install.determinate.systems/nix/rev/$NIX_INSTALLER_REVISION
             elif [ -n "$NIX_INSTALLER_REVISION" ]; then
               export NIX_INSTALLER_URL=https://install.determinate.systems/nix/branch/$NIX_INSTALLER_BRANCH
-            else [ -n "$NIX_INSTALLER_REVISION" ]; then
+            else
               export NIX_INSTALLER_URL=https://install.determinate.systems/nix
             fi
           fi
