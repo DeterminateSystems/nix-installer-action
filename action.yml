@@ -76,7 +76,7 @@ inputs:
     description: The branch of `nix-installer` to use
     required: false
   reinstall:
-    description: Force a reinstall if an existing installation is detected
+    description: Force a reinstall if an existing installation is detected  (consider backing up `/nix/store`)
     required: false
 
 runs:
@@ -87,7 +87,7 @@ runs:
       run: |
         if [ -f "/nix/receipt.json" ] && [ -f "/nix/nix-installer" ]; then
           if ([ -n "${{ inputs.nix-installer-revision }}" ] || [ -n "${{ inputs.nix-installer-branch }}" ]) && [ "${{ inputs.reinstall }}" != "true" ]; then
-            echo "When `nix-installer-revision` or `nix-installer-branch` are set the detection of existing installs (and versions) may be unreliable, `reinstall: true` should also be set"
+            echo "Detection of existing installation versions isn't supported when `nix-installer-revision` or `nix-installer-branch` are set, `reinstall: true` should also be set"
           fi
 
           if [ -n "${{ inputs.reinstall }}" ] && [ "${{ inputs.reinstall }}" == "true" ]; then
@@ -95,7 +95,7 @@ runs:
           else
             EXISTING_VERSION=$(/nix/nix-installer --version | awk '{ print $2 }')
             if [ -n "${{ inputs.nix-installer-tag }}" ] && [ "${{ inputs.nix-installer-tag }}" != "$EXISTING_VERSION" ]; then
-              echo "`nix-installer` version mismatch, if attempting to upgrade to a new tag, use `reinstall: true`, you may want to back up your `/nix/store` first"
+              echo "`nix-installer` version mismatch, use `reinstall: true` to reinstall Nix using the new `nix-installer` version (consider backing up `/nix/store`)"
               exit 1
             fi
             echo "Nix was already installed, using existing install"
