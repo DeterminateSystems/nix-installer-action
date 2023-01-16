@@ -76,7 +76,8 @@ inputs:
     description: The branch of `nix-installer` to use
     required: false
   reinstall:
-    description: Force a reinstall if the
+    description: Force a reinstall if an existing installation is detected
+    required: false
 
 runs:
   using: composite
@@ -84,18 +85,27 @@ runs:
     - name: Install Nix
       shell: bash
       run: |
-        if [ -f "/nix/receipt.json" ]; then
-          if [ -n "${{ inputs.reinstall }}" ]; then
+        if [ -f "/nix/receipt.json" ] && [ -f "/nix/nix-installer" ]; then
+          if ([ -n "${{ inputs.nix-installer-revision }}" ] || [ -n "${{ inputs.nix-installer-branch }}" ]) && [ "${{ inputs.reinstall }}" != "true" ]; then
+            echo "When `nix-installer-revision` or `nix-installer-branch` are set the detection of existing installs (and versions) may be unreliable, `reinstall: true` should also be set"
+          fi
+
+          if [ -n "${{ inputs.reinstall }}" ] && [ "${{ inputs.reinstall }}" == "true" ]; then
             /nix/nix-installer uninstall --no-confirm
           else
+            EXISTING_VERSION=$(/nix/nix-installer --version | awk '{ print $2 }')
+            if [ -n "${{ inputs.nix-installer-tag }}" ] && [ "${{ inputs.nix-installer-tag }}" != "$EXISTING_VERSION" ]; then
+              echo "`nix-installer` version mismatch, if attempting to upgrade to a new tag, use `reinstall: true`, you may want to back up your `/nix/store` first"
+              exit 1
+            fi
             echo "Nix was already installed, using existing install"
+            echo "/nix/var/nix/profiles/default/bin" >> $GITHUB_PATH
             exit 0
           fi
-          
         fi
 
         if [ -n "${{ inputs.nix-installer-tag }}" ]; then
-          export NIX_INSTALLER_TAG=${{ inputs.tag }}
+          export NIX_INSTALLER_TAG=${{ inputs.nix-installer-tag }}
           echo "Set NIX_INSTALLER_TAG=$NIX_INSTALLER_TAG"
         fi
         
