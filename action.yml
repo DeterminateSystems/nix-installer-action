@@ -52,17 +52,17 @@ inputs:
     description: The root disk of the target (Mac only)
     required: false
   start-daemon:
-    description: If the daemon should be started
+    description: "If the daemon should be started , requires `planner: linux-multi` or `planner: darwin-multi`"
     required: false
   init:
-    description: The init system to configure (On Linux choose `none` or `systemd`, on Mac choose `none` or `launchd`)
+    description: "The init system to configure, requires `planner: linux-multi` (allowing the choice between `none` or `systemd`) or `planner: darwin-multi` (allowing the choive between `none` or `launchd`)"
     required: false
   nix-installer-url:
     description: A URL pointing to a `nix-installer.sh` script
     required: false
   logger:
     description: The logger to use for install (eg. `pretty`, `json`, `full`, `compact`)
-    required: false
+    required: falseg
   local-root:
     description: A local `nix-installer` binary root, overrides the `nix-installer-url` setting (a `nix-installer.sh` should exist, binaries should be named `nix-installer-$ARCH`, eg. `nix-installer-x86_64-linux`)
     required: false
