@@ -51,6 +51,12 @@ inputs:
   mac-root-disk:
     description: The root disk of the target (Mac only)
     required: false
+  start-daemon:
+    description: If the daemon should be started
+    required: false
+  init:
+    description: The init system to configure (On Linux choose `none` or `systemd`, on Mac choose `none` or `launchd`)
+    required: false
   nix-installer-url:
     description: A URL pointing to a `nix-installer.sh` script
     required: false
@@ -233,6 +239,16 @@ runs:
         if [ -n "${{ inputs.logger }}" ]; then
           export NIX_INSTALLER_LOGGER=${{ inputs.logger }}
           echo "Set NIX_INSTALLER_LOGGER=$NIX_INSTALLER_LOGGER"
+        fi
+
+        if [ -n "${{ inputs.init }}" ]; then
+          export NIX_INSTALLER_INIT=${{ inputs.init }}
+          echo "Set NIX_INSTALLER_INIT=$NIX_INSTALLER_INIT"
+        fi
+
+        if [ -n "${{ inputs.start-daemon }}" ]; then
+          export NIX_INSTALLER_START_DAEMON=${{ inputs.start-daemon }}
+          echo "Set NIX_INSTALLER_START_DAEMON=$NIX_INSTALLER_START_DAEMON"
         fi
 
         if [ -n "${{ inputs.log-directives }}" ]; then
