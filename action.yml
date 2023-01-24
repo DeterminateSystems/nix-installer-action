@@ -73,13 +73,16 @@ inputs:
     description: The setting for `RUST_BACKTRACE` (see https://doc.rust-lang.org/std/backtrace/index.html#environment-variables)
     required: false
   nix-installer-tag:
-    description: The tag of `nix-installer` to use
+    description: The tag of `nix-installer` to use (conflicts with `nix-installer-revision`, `nix-installer-branch`, `nix-installer-pr`)
     required: false
   nix-installer-revision:
-    description: The revision of `nix-installer` to use
+    description: The revision of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-branch`, `nix-installer-pr`)
     required: false
   nix-installer-branch:
-    description: The branch of `nix-installer` to use
+    description: The branch of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-revision`, `nix-installer-pr`)
+    required: false
+  nix-installer-pr:
+    description: The PR of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-revision`, `nix-installer-branch`)
     required: false
   reinstall:
     description: Force a reinstall if an existing installation is detected  (consider backing up `/nix/store`)
@@ -223,12 +226,14 @@ runs:
           if [ -n "${{ inputs.nix-installer-url }}" ]; then
             export NIX_INSTALLER_URL=${{ inputs.nix-installer-url }}
           else
-            if [ -n "$NIX_INSTALLER_TAG" ]; then
-              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/tag/$NIX_INSTALLER_TAG
-            elif [ -n "$NIX_INSTALLER_REVISION" ]; then
-              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/rev/$NIX_INSTALLER_REVISION
-            elif [ -n "$NIX_INSTALLER_REVISION" ]; then
-              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/branch/$NIX_INSTALLER_BRANCH
+            if [ -n "${{ inputs.nix-installer-pr }}" ]; then
+              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/pr/${{ inputs.nix-installer-pr }}
+            elif [ -n "${{ inputs.nix-installer-tag }}" ]; then
+              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/tag/${{ inputs.nix-installer-tag }}
+            elif [ -n "${{ inputs.nix-installer-revision }}" ]; then
+              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/rev/${{ inputs.nix-installer-revision }}
+            elif [ -n "${{ inputs.nix-installer-branch }}" ]; then
+              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/branch/${{ inputs.nix-installer-branch }}
             else
               export NIX_INSTALLER_URL=https://install.determinate.systems/nix
             fi
