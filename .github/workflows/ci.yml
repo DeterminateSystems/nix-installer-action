@@ -59,6 +59,8 @@ jobs:
           backtrace: full
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reinstall: true
+          extra-conf: |
+            use-sqlite-wal = true
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -71,6 +73,7 @@ jobs:
         run: |
           cat -n /etc/nix/nix.conf
           grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
+          grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf
 
   run-x86_64-darwin:
     name: Run x86_64 Darwin
@@ -129,6 +132,8 @@ jobs:
           backtrace: full
           github-token: ${{ secrets.GITHUB_TOKEN }}
           reinstall: true
+          extra-conf: |
+            use-sqlite-wal = true
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -141,3 +146,4 @@ jobs:
         run: |
           cat -n /etc/nix/nix.conf
           grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
+          grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf
