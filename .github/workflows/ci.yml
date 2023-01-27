@@ -67,6 +67,10 @@ jobs:
           fortune
           nix store gc
           nix run nixpkgs#fortune
+      - name: Verify the generated nix.conf
+        run: |
+          cat -n /etc/nix/nix.conf
+          grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
 
   run-x86_64-darwin:
     name: Run x86_64 Darwin
@@ -133,3 +137,7 @@ jobs:
           fortune
           nix store gc
           nix run nixpkgs#fortune
+      - name: Verify the generated nix.conf
+        run: |
+          cat -n /etc/nix/nix.conf
+          grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
