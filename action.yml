@@ -52,7 +52,7 @@ inputs:
     description: The root disk of the target (Mac only)
     required: false
   start-daemon:
-    description: "If the daemon should be started , requires `planner: linux-multi`"
+    description: "If the daemon should be started, requires `planner: linux-multi`"
     required: false
   init:
     description: "The init system to configure, requires `planner: linux-multi` (allowing the choice between `none` or `systemd`)"
@@ -62,7 +62,7 @@ inputs:
     required: false
   logger:
     description: The logger to use for install (eg. `pretty`, `json`, `full`, `compact`)
-    required: falseg
+    required: false
   local-root:
     description: A local `nix-installer` binary root, overrides the `nix-installer-url` setting (a `nix-installer.sh` should exist, binaries should be named `nix-installer-$ARCH`, eg. `nix-installer-x86_64-linux`)
     required: false
@@ -111,21 +111,6 @@ runs:
             echo "/nix/var/nix/profiles/default/bin" >> $GITHUB_PATH
             exit 0
           fi
-        fi
-
-        if [ -n "${{ inputs.nix-installer-tag }}" ]; then
-          export NIX_INSTALLER_TAG=${{ inputs.nix-installer-tag }}
-          echo "Set NIX_INSTALLER_TAG=$NIX_INSTALLER_TAG"
-        fi
-        
-        if [ -n "${{ inputs.nix-installer-revision }}" ]; then
-          export NIX_INSTALLER_TAG=${{ inputs.nix-installer-revision }}
-          echo "Set NIX_INSTALLER_TAG=$NIX_INSTALLER_TAG"
-        fi
-
-        if [ -n "${{ inputs.nix-installer-branch }}" ]; then
-          export NIX_INSTALLER_BRANCH=${{ inputs.nix-installer-branch }}
-          echo "Set NIX_INSTALLER_BRANCH=$NIX_INSTALLER_BRANCH"
         fi
 
         if [ -n "${{ inputs.channels }}" ]; then
@@ -200,6 +185,31 @@ runs:
         if [ -n "${{ inputs.mac-root-disk }}" ]; then
           export NIX_INSTALLER_ROOT_DISK=${{ inputs.mac-root-disk }}
           echo "Set NIX_INSTALLER_ROOT_DISK=$NIX_INSTALLER_ROOT_DISK"
+        fi
+
+        if [ -n "${{ inputs.nix-installer-pr }}" ] && [ -n "${{ inputs.nix-installer-tag }}" ]; then
+          echo "The nix-installer-pr and nix-installer-tag options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-pr }}" ] && [ -n "${{ inputs.nix-installer-revision }}" ]; then
+          echo "The nix-installer-pr and nix-installer-revision options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-pr }}" ] && [ -n "${{ inputs.nix-installer-branch }}" ]; then
+          echo "The nix-installer-pr and nix-installer-branch options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-tag }}" ] && [ -n "${{ inputs.nix-installer-revision }}" ]; then
+          echo "The nix-installer-tag and nix-installer-revision options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-branch }}" ] && [ -n "${{ inputs.nix-installer-revision }}" ]; then
+          echo "The nix-installer-branch and nix-installer-revision options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-tag }}" ] && [ -n "${{ inputs.nix-installer-branch }}" ]; then
+          echo "The nix-installer-tag and nix-installer-branch options conflict, please choose one"
+          exit 1
         fi
 
         if [ -n "${{ inputs.local-root }}" ]; then
