@@ -17,7 +17,6 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
@@ -42,7 +41,6 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -57,7 +55,6 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           reinstall: true
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
@@ -79,7 +76,6 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
@@ -108,7 +104,6 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -123,7 +118,6 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           reinstall: true
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
