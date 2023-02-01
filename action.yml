@@ -211,6 +211,18 @@ runs:
           echo "The nix-installer-tag and nix-installer-branch options conflict, please choose one"
           exit 1
         fi
+        if [ -n "${{ inputs.nix-installer-url }}" ] && [ -n "${{ inputs.nix-installer-pr }}" ]; then
+          echo "The nix-installer-url and nix-installer-pr options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-url }}" ] && [ -n "${{ inputs.nix-installer-tag }}" ]; then
+          echo "The nix-installer-url and nix-installer-tag options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-url }}" ] && [ -n "${{ inputs.nix-installer-branch }}" ]; then
+          echo "The nix-installer-url and nix-installer-branch options conflict, please choose one"
+          exit 1
+        fi
 
         if [ -n "${{ inputs.local-root }}" ]; then
           if [ "$RUNNER_OS" == "macOS" ]; then
