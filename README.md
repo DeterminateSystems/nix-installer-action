@@ -16,10 +16,6 @@ jobs:
     - uses: actions/checkout@v3
     - name: Install Nix
       uses: DeterminateSystems/nix-installer-action@main
-      with:
-        # Allow the installed Nix to make authenticated Github requests.
-        # If you skip this, you will likely get rate limited.
-        github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Run `nix build`
       run: nix build .
 ```
