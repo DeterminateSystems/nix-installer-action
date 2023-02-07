@@ -55,6 +55,12 @@ inputs:
   mac-root-disk:
     description: The root disk of the target (Mac only)
     required: false
+  start-daemon:
+    description: "If the daemon should be started, requires `planner: linux-multi`"
+    required: false
+  init:
+    description: "The init system to configure, requires `planner: linux-multi` (allowing the choice between `none` or `systemd`)"
+    required: false
   nix-installer-url:
     description: A URL pointing to a `nix-installer.sh` script
     required: false
@@ -71,13 +77,16 @@ inputs:
     description: The setting for `RUST_BACKTRACE` (see https://doc.rust-lang.org/std/backtrace/index.html#environment-variables)
     required: false
   nix-installer-tag:
-    description: The tag of `nix-installer` to use
+    description: The tag of `nix-installer` to use (conflicts with `nix-installer-revision`, `nix-installer-branch`, `nix-installer-pr`)
     required: false
   nix-installer-revision:
-    description: The revision of `nix-installer` to use
+    description: The revision of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-branch`, `nix-installer-pr`)
     required: false
   nix-installer-branch:
-    description: The branch of `nix-installer` to use
+    description: The branch of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-revision`, `nix-installer-pr`)
+    required: false
+  nix-installer-pr:
+    description: The PR of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-revision`, `nix-installer-branch`)
     required: false
   reinstall:
     description: Force a reinstall if an existing installation is detected  (consider backing up `/nix/store`)
@@ -106,21 +115,6 @@ runs:
             echo "/nix/var/nix/profiles/default/bin" >> $GITHUB_PATH
             exit 0
           fi
-        fi
-
-        if [ -n "${{ inputs.nix-installer-tag }}" ]; then
-          export NIX_INSTALLER_TAG=${{ inputs.nix-installer-tag }}
-          echo "Set NIX_INSTALLER_TAG=$NIX_INSTALLER_TAG"
-        fi
-        
-        if [ -n "${{ inputs.nix-installer-revision }}" ]; then
-          export NIX_INSTALLER_TAG=${{ inputs.nix-installer-revision }}
-          echo "Set NIX_INSTALLER_TAG=$NIX_INSTALLER_TAG"
-        fi
-
-        if [ -n "${{ inputs.nix-installer-branch }}" ]; then
-          export NIX_INSTALLER_BRANCH=${{ inputs.nix-installer-branch }}
-          echo "Set NIX_INSTALLER_BRANCH=$NIX_INSTALLER_BRANCH"
         fi
 
         if [ -n "${{ inputs.channels }}" ]; then
@@ -200,6 +194,43 @@ runs:
           echo "Set NIX_INSTALLER_ROOT_DISK=$NIX_INSTALLER_ROOT_DISK"
         fi
 
+        if [ -n "${{ inputs.nix-installer-pr }}" ] && [ -n "${{ inputs.nix-installer-tag }}" ]; then
+          echo "The nix-installer-pr and nix-installer-tag options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-pr }}" ] && [ -n "${{ inputs.nix-installer-revision }}" ]; then
+          echo "The nix-installer-pr and nix-installer-revision options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-pr }}" ] && [ -n "${{ inputs.nix-installer-branch }}" ]; then
+          echo "The nix-installer-pr and nix-installer-branch options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-tag }}" ] && [ -n "${{ inputs.nix-installer-revision }}" ]; then
+          echo "The nix-installer-tag and nix-installer-revision options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-branch }}" ] && [ -n "${{ inputs.nix-installer-revision }}" ]; then
+          echo "The nix-installer-branch and nix-installer-revision options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-tag }}" ] && [ -n "${{ inputs.nix-installer-branch }}" ]; then
+          echo "The nix-installer-tag and nix-installer-branch options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-url }}" ] && [ -n "${{ inputs.nix-installer-pr }}" ]; then
+          echo "The nix-installer-url and nix-installer-pr options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-url }}" ] && [ -n "${{ inputs.nix-installer-tag }}" ]; then
+          echo "The nix-installer-url and nix-installer-tag options conflict, please choose one"
+          exit 1
+        fi
+        if [ -n "${{ inputs.nix-installer-url }}" ] && [ -n "${{ inputs.nix-installer-branch }}" ]; then
+          echo "The nix-installer-url and nix-installer-branch options conflict, please choose one"
+          exit 1
+        fi
+
         if [ -n "${{ inputs.local-root }}" ]; then
           if [ "$RUNNER_OS" == "macOS" ]; then
             export PYTHON="python3"
@@ -224,12 +255,14 @@ runs:
           if [ -n "${{ inputs.nix-installer-url }}" ]; then
             export NIX_INSTALLER_URL=${{ inputs.nix-installer-url }}
           else
-            if [ -n "$NIX_INSTALLER_TAG" ]; then
-              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/tag/$NIX_INSTALLER_TAG
-            elif [ -n "$NIX_INSTALLER_REVISION" ]; then
-              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/rev/$NIX_INSTALLER_REVISION
-            elif [ -n "$NIX_INSTALLER_REVISION" ]; then
-              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/branch/$NIX_INSTALLER_BRANCH
+            if [ -n "${{ inputs.nix-installer-pr }}" ]; then
+              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/pr/${{ inputs.nix-installer-pr }}
+            elif [ -n "${{ inputs.nix-installer-tag }}" ]; then
+              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/tag/${{ inputs.nix-installer-tag }}
+            elif [ -n "${{ inputs.nix-installer-revision }}" ]; then
+              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/rev/${{ inputs.nix-installer-revision }}
+            elif [ -n "${{ inputs.nix-installer-branch }}" ]; then
+              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/branch/${{ inputs.nix-installer-branch }}
             else
               export NIX_INSTALLER_URL=https://install.determinate.systems/nix
             fi
@@ -240,6 +273,16 @@ runs:
         if [ -n "${{ inputs.logger }}" ]; then
           export NIX_INSTALLER_LOGGER=${{ inputs.logger }}
           echo "Set NIX_INSTALLER_LOGGER=$NIX_INSTALLER_LOGGER"
+        fi
+
+        if [ -n "${{ inputs.init }}" ]; then
+          export NIX_INSTALLER_INIT=${{ inputs.init }}
+          echo "Set NIX_INSTALLER_INIT=$NIX_INSTALLER_INIT"
+        fi
+
+        if [ -n "${{ inputs.start-daemon }}" ]; then
+          export NIX_INSTALLER_START_DAEMON=${{ inputs.start-daemon }}
+          echo "Set NIX_INSTALLER_START_DAEMON=$NIX_INSTALLER_START_DAEMON"
         fi
 
         if [ -n "${{ inputs.log-directives }}" ]; then
