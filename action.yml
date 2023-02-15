@@ -44,16 +44,16 @@ inputs:
     description: Extra configuration lines for `/etc/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)
     required: false
   mac-encrypt:
-    description: Force encryption on the volume (Mac only)
+    description: "Force encryption on the volume (`planner: macos` only)"
     required: false
   mac-case-sensitive:
-    description: Use a case sensitive volume (Mac only)
+    description: "Use a case sensitive volume (`planner: macos` only)"
     required: false
   mac-volume-label:
-    description: The label for the created APFS volume (Mac only)
+    description: "The label for the created APFS volume (`planner: macos` only)"
     required: false
   mac-root-disk:
-    description: The root disk of the target (Mac only)
+    description: "The root disk of the target (`planner: macos` only)"
     required: false
   start-daemon:
     description: "If the daemon should be started, requires `planner: linux-multi`"
