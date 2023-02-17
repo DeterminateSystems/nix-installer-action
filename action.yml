@@ -1,86 +1,65 @@
 name: Nix Installer
 branding:
-  icon: 'box'
-  color: 'purple'
+  icon: "box"
+  color: "purple"
 description: Install Nix
 inputs:
-  planner:
-    description: A planner to use
+  backtrace:
+    description: The setting for `RUST_BACKTRACE` (see https://doc.rust-lang.org/std/backtrace/index.html#environment-variables)
+    required: false
+  channels:
+    description: Channel(s) to add (eg `nixpkgs=https://nixos.org/channels/nixpkgs-unstable`)
     required: false
   extra-args:
     description: Extra args to pass to the planner (prefer using structured `with:` arguments unless using a custom planner!)
     required: false
-  github-token:
-    description: A GitHub Token for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)
-    default: ${{ github.token }}
-  trust-runner-user:
-    description: Whether to make the runner user trusted by the Nix daemon
-    default: "true"
-  channels:
-    description: Channel(s) to add (eg `nixpkgs=https://nixos.org/channels/nixpkgs-unstable`)
-    required: false
-  modify-profile:
-    description: Modify the user profile to automatically load nix
-    required: false
-  nix-build-user-count:
-    description: Number of build users to create
-    required: false
-  nix-build-group-name:
-    description: The Nix build group name
-    required: false
-  nix-build-group-id:
-    description: The Nix build group GID
-    required: false
-  nix-build-user-prefix:
-    description: The Nix build user prefix (user numbers will be postfixed)
-    required: false
-  nix-build-user-base:
-    description: The Nix build user base UID (ascending)
-    required: false
-  nix-package-url:
-    description: The Nix package URL
-    required: false
   extra-conf:
     description: Extra configuration lines for `/etc/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)
     required: false
-  mac-encrypt:
-    description: "Force encryption on the volume (`planner: macos` only)"
-    required: false
-  mac-case-sensitive:
-    description: "Use a case sensitive volume (`planner: macos` only)"
-    required: false
-  mac-volume-label:
-    description: "The label for the created APFS volume (`planner: macos` only)"
-    required: false
-  mac-root-disk:
-    description: "The root disk of the target (`planner: macos` only)"
-    required: false
-  start-daemon:
-    description: "If the daemon should be started, requires `planner: linux-multi`"
-    required: false
+  github-token:
+    description: A GitHub token for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)
+    default: ${{ github.token }}
   init:
     description: "The init system to configure, requires `planner: linux-multi` (allowing the choice between `none` or `systemd`)"
     required: false
-  nix-installer-url:
-    description: A URL pointing to a `nix-installer.sh` script
-    required: false
-  logger:
-    description: The logger to use for install (eg. `pretty`, `json`, `full`, `compact`)
-    required: false
   local-root:
-    description: A local `nix-installer` binary root, overrides the `nix-installer-url` setting (a `nix-installer.sh` should exist, binaries should be named `nix-installer-$ARCH`, eg. `nix-installer-x86_64-linux`)
+    description: A local `nix-installer` binary root, overrides the `nix-installer-url` setting (a `nix-installer.sh` script should exist, binaries should be named `nix-installer-$ARCH`, eg. `nix-installer-x86_64-linux`)
     required: false
   log-directives:
     description: A list of Tracing directives, comma separated, `-`s replaced with `_` (eg. `nix_installer=trace`, see https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives)
     required: false
-  backtrace:
-    description: The setting for `RUST_BACKTRACE` (see https://doc.rust-lang.org/std/backtrace/index.html#environment-variables)
+  logger:
+    description: The logger to use for install (eg. `pretty`, `json`, `full`, `compact`)
     required: false
-  nix-installer-tag:
-    description: The tag of `nix-installer` to use (conflicts with `nix-installer-revision`, `nix-installer-branch`, `nix-installer-pr`)
+  mac-case-sensitive:
+    description: "Use a case sensitive volume (`planner: macos` only)"
     required: false
-  nix-installer-revision:
-    description: The revision of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-branch`, `nix-installer-pr`)
+  mac-encrypt:
+    description: "Force encryption on the volume (`planner: macos` only)"
+    required: false
+  mac-root-disk:
+    description: "The root disk of the target (`planner: macos` only)"
+    required: false
+  mac-volume-label:
+    description: "The label for the created APFS volume (`planner: macos` only)"
+    required: false
+  modify-profile:
+    description: Modify the user profile to automatically load nix
+    required: false
+  nix-build-group-id:
+    description: The Nix build group GID
+    required: false
+  nix-build-group-name:
+    description: The Nix build group name
+    required: false
+  nix-build-user-base:
+    description: The Nix build user base UID (ascending)
+    required: false
+  nix-build-user-count:
+    description: Number of build users to create
+    required: false
+  nix-build-user-prefix:
+    description: The Nix build user prefix (user numbers will be postfixed)
     required: false
   nix-installer-branch:
     description: The branch of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-revision`, `nix-installer-pr`)
@@ -88,9 +67,30 @@ inputs:
   nix-installer-pr:
     description: The PR of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-revision`, `nix-installer-branch`)
     required: false
-  reinstall:
-    description: Force a reinstall if an existing installation is detected  (consider backing up `/nix/store`)
+  nix-installer-revision:
+    description: The revision of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-branch`, `nix-installer-pr`)
     required: false
+  nix-installer-tag:
+    description: The tag of `nix-installer` to use (conflicts with `nix-installer-revision`, `nix-installer-branch`, `nix-installer-pr`)
+    required: false
+  nix-installer-url:
+    description: A URL pointing to a `nix-installer.sh` script
+    required: false
+  nix-package-url:
+    description: The Nix package URL
+    required: false
+  planner:
+    description: A planner to use
+    required: false
+  reinstall:
+    description: Force a reinstall if an existing installation is detected (consider backing up `/nix/store`)
+    required: false
+  start-daemon:
+    description: "If the daemon should be started, requires `planner: linux-multi`"
+    required: false
+  trust-runner-user:
+    description: Whether to make the runner user trusted by the Nix daemon
+    default: "true"
 
 runs:
   using: composite
@@ -127,7 +127,7 @@ runs:
           echo "Set NIX_INSTALLER_MODIFY_PROFILE=$NIX_INSTALLER_MODIFY_PROFILE"
         fi
 
-        if [ -n "${{ inputs.daemon-user-count }}" ]; then
+        if [ -n "${{ inputs.nix-build-user-count }}" ]; then
           export NIX_INSTALLER_NIX_BUILD_USER_COUNT=${{ inputs.nix-build-user-count }}
           echo "Set NIX_INSTALLER_NIX_BUILD_USER_COUNT=$NIX_INSTALLER_NIX_BUILD_USER_COUNT"
         fi
@@ -303,6 +303,3 @@ runs:
         if [ -n "$HTTP_PID" ]; then
           kill $HTTP_PID
         fi
-
-
-
