@@ -1,7 +1,7 @@
 name: Nix Installer
 branding:
-  icon: 'box'
-  color: 'purple'
+  icon: "box"
+  color: "purple"
 description: Install Nix
 inputs:
   planner:
@@ -127,7 +127,7 @@ runs:
           echo "Set NIX_INSTALLER_MODIFY_PROFILE=$NIX_INSTALLER_MODIFY_PROFILE"
         fi
 
-        if [ -n "${{ inputs.daemon-user-count }}" ]; then
+        if [ -n "${{ inputs.nix-build-user-count }}" ]; then
           export NIX_INSTALLER_NIX_BUILD_USER_COUNT=${{ inputs.nix-build-user-count }}
           echo "Set NIX_INSTALLER_NIX_BUILD_USER_COUNT=$NIX_INSTALLER_NIX_BUILD_USER_COUNT"
         fi
@@ -303,6 +303,3 @@ runs:
         if [ -n "$HTTP_PID" ]; then
           kill $HTTP_PID
         fi
-
-
-
