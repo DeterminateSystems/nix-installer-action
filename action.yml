@@ -1,8 +1,8 @@
-name: Nix Installer
+name: The Determinate Nix Installer
 branding:
   icon: "box"
   color: "purple"
-description: Install Nix
+description: "Install Nix with the Determinate Nix Installer. See: https://github.com/DeterminateSystems/nix-installer"
 inputs:
   backtrace:
     description: The setting for `RUST_BACKTRACE` (see https://doc.rust-lang.org/std/backtrace/index.html#environment-variables)
