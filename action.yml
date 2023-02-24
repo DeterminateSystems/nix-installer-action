@@ -1,8 +1,8 @@
-name: Nix Installer
+name: Determinate Nix Installer
 branding:
   icon: "box"
   color: "purple"
-description: Install Nix
+description: Install Nix with the Determinate Nix Installer, with Flakes enabled by default.
 inputs:
   planner:
     description: A planner to use
