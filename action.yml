@@ -14,7 +14,7 @@ inputs:
     description: Extra args to pass to the planner (prefer using structured `with:` arguments unless using a custom planner!)
     required: false
   extra-conf:
-    description: Extra configuration lines for `/etc/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)
+    description: Extra configuration lines for `/etc/nix/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)
     required: false
   github-token:
     description: A GitHub token for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)
