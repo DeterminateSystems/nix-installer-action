@@ -41,7 +41,7 @@ inputs:
     description: The Nix package URL
     required: false
   extra-conf:
-    description: Extra configuration lines for `/etc/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)
+    description: Extra configuration lines for `/etc/nix/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)
     required: false
   mac-encrypt:
     description: "Force encryption on the volume (`planner: macos` only)"
