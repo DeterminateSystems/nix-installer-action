@@ -88,6 +88,9 @@ inputs:
   start-daemon:
     description: "If the daemon should be started, requires `planner: linux-multi`"
     required: false
+  diagnostic-endpoint:
+    description: "Diagnostic endpoint url where the installer sends data to. To disable set this to an empty string."
+    default: "https://install.determinate.systems/nix/diagnostic"
   trust-runner-user:
     description: Whether to make the runner user trusted by the Nix daemon
     default: "true"
@@ -293,6 +296,11 @@ runs:
         if [ -n "${{ inputs.backtrace }}" ]; then
           export RUST_BACKTRACE=${{ inputs.backtrace }}
           echo "Set RUST_BACKTRACE=$RUST_BACKTRACE"
+        fi
+
+        if [ -n "${{ inputs.diagnostic-endpoint }}" ]; then
+          export NIX_INSTALLER_DIAGNOSTIC_ENDPOINT="${{ inputs.diagnostic-endpoint }}"
+          echo "Set NIX_INSTALLER_DIAGNOSTIC_ENDPOINT=$NIX_INSTALLER_DIAGNOSTIC_ENDPOINT"
         fi
 
         export NIX_INSTALLER_NO_CONFIRM=true
