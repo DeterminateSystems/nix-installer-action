@@ -7,9 +7,6 @@ inputs:
   backtrace:
     description: The setting for `RUST_BACKTRACE` (see https://doc.rust-lang.org/std/backtrace/index.html#environment-variables)
     required: false
-  channels:
-    description: Channel(s) to add (eg `nixpkgs=https://nixos.org/channels/nixpkgs-unstable`)
-    required: false
   extra-args:
     description: Extra args to pass to the planner (prefer using structured `with:` arguments unless using a custom planner!)
     required: false
@@ -118,11 +115,6 @@ runs:
             echo "/nix/var/nix/profiles/default/bin" >> $GITHUB_PATH
             exit 0
           fi
-        fi
-
-        if [ -n "${{ inputs.channels }}" ]; then
-          export NIX_INSTALLER_CHANNELS=${{ inputs.channels }}
-          echo "Set NIX_INSTALLER_CHANNELS=$NIX_INSTALLER_CHANNELS"
         fi
 
         if [ -n "${{ inputs.modify-profile }}" ]; then
