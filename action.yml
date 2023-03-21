@@ -28,6 +28,12 @@ inputs:
   logger:
     description: The logger to use for install (eg. `pretty`, `json`, `full`, `compact`)
     required: false
+  ssl-cert-file:
+    description: "An SSL cert to use (if any), used for fetching Nix and sets `NIX_SSL_CERT_FILE` for Nix"
+    required: false
+  pproxy:
+    description: "The proxy to use (if any), valid proxy bases are `https://$URL`, `http://$URL` and `socks5://$URL`"
+    required: false
   mac-case-sensitive:
     description: "Use a case sensitive volume (`planner: macos` only)"
     required: false
