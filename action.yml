@@ -4,6 +4,9 @@ branding:
   color: "purple"
 description: "Install Nix with the Determinate Nix Installer. See: https://github.com/DeterminateSystems/nix-installer"
 inputs:
+  check-flake:
+    description: Automatically check the flake.lock for problems.
+    default: true
   backtrace:
     description: The setting for `RUST_BACKTRACE` (see https://doc.rust-lang.org/std/backtrace/index.html#environment-variables)
     required: false
@@ -13,6 +16,9 @@ inputs:
   extra-conf:
     description: Extra configuration lines for `/etc/nix/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)
     required: false
+  flake-checker-send-statistics:
+    description: Anonymously report submit the number of detected issues for measure the effectiveness of the flake checker. To disable set, to false.
+    default: true
   github-token:
     description: A GitHub token for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)
     default: ${{ github.token }}
@@ -101,6 +107,22 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: "Flake.lock health check"
+      if: ${{ inputs.check-flake == 'true' }}
+      shell: bash
+      run: |
+        (
+          set -eu
+          curl --max-time 2 --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/flake-checker/stable/$RUNNER_ARCH-$RUNNER_OS > "$RUNNER_TEMP/flake-checker"
+          chmod +x "$RUNNER_TEMP/flake-checker"
+
+          if [ "${{ inputs.flake-checker-send-statistics }}" == "false" ]; then
+            "$RUNNER_TEMP/flake-checker" --no-telemetry
+          else
+            "$RUNNER_TEMP/flake-checker"
+          fi
+        ) || true
+
     - name: Install Nix
       shell: bash
       run: |
