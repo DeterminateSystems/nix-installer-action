@@ -4,7 +4,7 @@
 
 The goal of this action is to support teams adopting Nix by provide the best Nix experience possible on GitHub Actions.
 This action supports Linux and macOS runners, including persistent self-hosted runners.
-Typical install times take less than 14 seconds.
+Typical install times take less than 14 seconds on Linux, and 30-50s on macOS.
 
 By default, this action will provide a summary of out of date or unstable Flake inputs, through our [flake checker](https://github.com/DeterminateSystems/flake-checker/).
 
