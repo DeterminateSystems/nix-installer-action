@@ -17,7 +17,7 @@ inputs:
     description: Extra configuration lines for `/etc/nix/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)
     required: false
   flake-checker-send-telemetry:
-    description: Anonymously report [submit the number of detected issues](https://github.com/DeterminateSystems/flake-checker/#telemetry) for measure the effectiveness of the flake checker. To disable set, to false. Forced to off by changing the `diagnostic-endpoint` option.
+    description: Anonymously report [the number of detected issues](https://github.com/DeterminateSystems/flake-checker/#telemetry) for measure the effectiveness of the flake checker. To disable set, to false. Forced to off by changing the `diagnostic-endpoint` option.
     default: true
   github-token:
     description: A GitHub token for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)
