@@ -16,8 +16,8 @@ inputs:
   extra-conf:
     description: Extra configuration lines for `/etc/nix/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)
     required: false
-  flake-checker-send-statistics:
-    description: Anonymously report submit the number of detected issues for measure the effectiveness of the flake checker. To disable set, to false.
+  flake-checker-send-telemetry:
+    description: Anonymously report submit the number of detected issues for measure the effectiveness of the flake checker. To disable set, to false. FForced to off by changing the `diagnostic-endpoint` option.
     default: true
   github-token:
     description: A GitHub token for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)
@@ -98,7 +98,7 @@ inputs:
     description: "If the daemon should be started, requires `planner: linux-multi`"
     required: false
   diagnostic-endpoint:
-    description: "Diagnostic endpoint url where the installer sends data to. To disable set this to an empty string."
+    description: "Diagnostic endpoint url where the installer sends data to. To disable set this to an empty string. Changing this value also disables flake-checker's telemetry."
     default: "https://install.determinate.systems/nix/diagnostic"
   trust-runner-user:
     description: Whether to make the runner user trusted by the Nix daemon
@@ -116,7 +116,7 @@ runs:
           curl --max-time 2 --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/flake-checker/stable/$RUNNER_ARCH-$RUNNER_OS > "$RUNNER_TEMP/flake-checker"
           chmod +x "$RUNNER_TEMP/flake-checker"
 
-          if [ "${{ inputs.flake-checker-send-statistics }}" == "false" ]; then
+          if [ "${{ inputs.flake-checker-send-telemetry }}" == "false" ] || [ "${{ inputs.diagnostic-endpoint }}" != "https://install.determinate.systems/nix/diagnostic" ]; then
             "$RUNNER_TEMP/flake-checker" --no-telemetry
           else
             "$RUNNER_TEMP/flake-checker"
