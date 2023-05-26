@@ -7,6 +7,7 @@ This action supports Linux and macOS runners, including persistent self-hosted r
 Typical install times take less than 14 seconds on Linux, and 30-50s on macOS.
 
 By default, this action will provide a summary of out of date or unstable Flake inputs, through our [flake checker](https://github.com/DeterminateSystems/flake-checker/).
+Run the Nix installer after the `actions/checkout` action to examine your top level flake.
 
 You can use [`nix-installer`](https://github.com/DeterminateSystems/nix-installer) as a Github action like so:
 
