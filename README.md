@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v2
+        uses: DeterminateSystems/nix-installer-action@v3
       - name: Run `nix build`
         run: nix build .
 ```
