@@ -255,18 +255,18 @@ runs:
           echo "Set NIX_INSTALLER_FORCE_ALLOW_HTTP=$NIX_INSTALLER_FORCE_ALLOW_HTTP"
         else
           if [ -n "${{ inputs.nix-installer-url }}" ]; then
-            export NIX_INSTALLER_URL=${{ inputs.nix-installer-url }}
+            export NIX_INSTALLER_URL="${{ inputs.nix-installer-url }}"
           else
             if [ -n "${{ inputs.nix-installer-pr }}" ]; then
-              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/pr/${{ inputs.nix-installer-pr }}?ci=github
+              export NIX_INSTALLER_URL="https://install.determinate.systems/nix/pr/${{ inputs.nix-installer-pr }}?ci=github"
             elif [ -n "${{ inputs.nix-installer-tag }}" ]; then
-              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/tag/${{ inputs.nix-installer-tag }}?ci=github
+              export NIX_INSTALLER_URL="https://install.determinate.systems/nix/tag/${{ inputs.nix-installer-tag }}?ci=github"
             elif [ -n "${{ inputs.nix-installer-revision }}" ]; then
-              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/rev/${{ inputs.nix-installer-revision }}?ci=github
+              export NIX_INSTALLER_URL="https://install.determinate.systems/nix/rev/${{ inputs.nix-installer-revision }}?ci=github"
             elif [ -n "${{ inputs.nix-installer-branch }}" ]; then
-              export NIX_INSTALLER_URL=https://install.determinate.systems/nix/branch/${{ inputs.nix-installer-branch }}?ci=github
+              export NIX_INSTALLER_URL="https://install.determinate.systems/nix/branch/${{ inputs.nix-installer-branch }}?ci=github"
             else
-              export NIX_INSTALLER_URL=https://install.determinate.systems/nix?ci=github
+              export NIX_INSTALLER_URL="https://install.determinate.systems/nix?ci=github"
             fi
           fi
           echo "Set NIX_INSTALLER_URL=$NIX_INSTALLER_URL"
