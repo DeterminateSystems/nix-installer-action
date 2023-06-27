@@ -171,7 +171,7 @@ runs:
           echo "trusted-users = root $USER" >> ${NIX_EXTRA_CONF_FILE}
         fi
         if [ -n "$NIX_EXTRA_CONF" ]; then
-          export NIX_INSTALLER_EXTRA_CONF="$(cat ${NIX_EXTRA_CONF_FILE}")"
+          export NIX_INSTALLER_EXTRA_CONF=$(cat ${NIX_EXTRA_CONF_FILE})
           echo "Set NIX_INSTALLER_EXTRA_CONF=$NIX_INSTALLER_EXTRA_CONF"
         fi
 
