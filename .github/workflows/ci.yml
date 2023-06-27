@@ -17,6 +17,8 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+          nix-installer-branch: main
+      - run: cat /etc/nix/nix.conf
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
