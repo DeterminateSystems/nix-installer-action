@@ -17,6 +17,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+          nix-installer-branch: main
           extra-conf: |
             experimental-features = impure-derivations
       - run: cat /etc/nix/nix.conf
