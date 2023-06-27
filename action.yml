@@ -159,20 +159,19 @@ runs:
           echo "Set NIX_INSTALLER_NIX_PACKAGE_URL=$NIX_INSTALLER_NIX_PACKAGE_URL"
         fi
 
-        NIX_EXTRA_CONF=""
-        NEWLINE='
-        '
+        NIX_EXTRA_CONF_FILE=/tmp/tmp.jvU0yFBwoanix-installer-extra-conf
+
         if [ -n "${{ inputs.extra-conf }}" ]; then
-          NIX_EXTRA_CONF="${{ inputs.extra-conf }}"
+          echo "${{ inputs.extra-conf }}" | tee -a ${NIX_EXTRA_CONF_FILE}
         fi
         if [ -n "${{ inputs.github-token }}" ]; then
-          NIX_EXTRA_CONF="${NIX_EXTRA_CONF:+$NIX_EXTRA_CONF$NEWLINE}access-tokens = github.com=${{ inputs.github-token }}"
+          echo "access-tokens = github.com=${{ inputs.github-token }}" | tee -a ${NIX_EXTRA_CONF_FILE}
         fi
         if [ "${{ inputs.trust-runner-user }}" == "true" ]; then
-          NIX_EXTRA_CONF="${NIX_EXTRA_CONF:+$NIX_EXTRA_CONF$NEWLINE}trusted-users = root $USER"
+          echo "trusted-users = root $USER" | tee -a ${NIX_EXTRA_CONF_FILE}
         fi
         if [ -n "$NIX_EXTRA_CONF" ]; then
-          export NIX_INSTALLER_EXTRA_CONF="$NIX_EXTRA_CONF"
+          export NIX_INSTALLER_EXTRA_CONF="$(cat NIX_EXTRA_CONF_FILE")"
           echo "Set NIX_INSTALLER_EXTRA_CONF=$NIX_INSTALLER_EXTRA_CONF"
         fi
 
