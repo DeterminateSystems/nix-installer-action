@@ -124,7 +124,7 @@ runs:
           fi
         fi
 
-        NIX_EXTRA_CONF_FILE=$(mktemp --suffix=nix-installer-extra-conf)
+        NIX_EXTRA_CONF_FILE=$(mktemp)
 
         if [ -n "$ACT" ] && [ ! -n "$NOT_ACT" ]; then
           echo 'Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the settings of the `init` as well as `extra-conf` to be compatible with `act`'
