@@ -17,7 +17,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          nix-installer-branch: fix-action-reinstall-issue
+          nix-installer-pr: 541
       - run: cat /etc/nix/nix.conf
       - name: echo $PATH
         run: echo $PATH
@@ -85,7 +85,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          nix-installer-branch: fix-action-reinstall-issue
+          nix-installer-pr: 541
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
