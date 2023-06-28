@@ -124,6 +124,14 @@ runs:
           fi
         fi
 
+        NIX_EXTRA_CONF_FILE=$(mktemp --suffix=nix-installer-extra-conf)
+
+        if [ -n "$ACT" ] && [ ! -n "$NOT_ACT" ]; then
+          echo 'Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the settings of the `init` as well as `extra-conf` to be compatible with `act`'
+          NIX_INSTALLER_INIT="none"
+          echo "sandbox = false" >> ${NIX_EXTRA_CONF_FILE}
+        fi
+
         if [ -n "${{ inputs.modify-profile }}" ]; then
           export NIX_INSTALLER_MODIFY_PROFILE=${{ inputs.modify-profile }}
           echo "Set NIX_INSTALLER_MODIFY_PROFILE=$NIX_INSTALLER_MODIFY_PROFILE"
@@ -157,14 +165,6 @@ runs:
         if [ -n "${{ inputs.nix-package-url }}" ]; then
           export NIX_INSTALLER_NIX_PACKAGE_URL=${{ inputs.nix-package-url }}
           echo "Set NIX_INSTALLER_NIX_PACKAGE_URL=$NIX_INSTALLER_NIX_PACKAGE_URL"
-        fi
-
-        NIX_EXTRA_CONF_FILE=$(mktemp --suffix=nix-installer-extra-conf)
-
-        if [ -n "$ACT" ] && [ ! -n "$NOT_ACT" ]; then
-          echo 'Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the settings of the `init` as well as `extra-conf` to be compatible with `act`'
-          NIX_INSTALLER_INIT="none"
-          echo "sandbox = false" >> ${NIX_EXTRA_CONF_FILE}
         fi
 
         if [ -n "${{ inputs.extra-conf }}" ]; then
