@@ -128,7 +128,8 @@ runs:
 
         if [ -n "$ACT" ] && [ ! -n "$NOT_ACT" ]; then
           echo 'Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the settings of the `init` as well as `extra-conf` to be compatible with `act`'
-          NIX_INSTALLER_INIT="none"
+          export NIX_INSTALLER_INIT="none"
+          echo "Set NIX_INSTALLER_INIT=$NIX_INSTALLER_INIT"
           echo "sandbox = false" >> ${NIX_EXTRA_CONF_FILE}
         fi
 
@@ -310,7 +311,16 @@ runs:
         export NIX_INSTALLER_NO_CONFIRM=true
         echo "Set NIX_INSTALLER_NO_CONFIRM=$NIX_INSTALLER_NO_CONFIRM"
 
-        curl --retry 20 -L $NIX_INSTALLER_URL | sh -s -- install ${{ inputs.planner }} ${{ inputs.extra-args }}
+        if [ "${RUNNER_OS}" == "Linux" ]; then
+          export PLANNER="linux"
+        elif [ "${RUNNER_OS}" == "macOS" ]; then
+          export PLANNER="darwin"
+        else
+          echo "${RUNNER_OS} not supported"
+          exit 1
+        fi
+
+        curl --retry 20 -L $NIX_INSTALLER_URL | sh -s -- install ${PLANNER} ${{ inputs.extra-args }}
 
         if [ -n "$HTTP_PID" ]; then
           kill $HTTP_PID
