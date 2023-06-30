@@ -106,7 +106,7 @@ runs:
       run: |
         if [ -f "/nix/receipt.json" ] && [ -f "/nix/nix-installer" ]; then
           if ([ -n "${{ inputs.nix-installer-revision }}" ] || [ -n "${{ inputs.nix-installer-branch }}" ]) && [ "${{ inputs.reinstall }}" != "true" ]; then
-            echo 'Detection of existing installation versions isn't supported when `nix-installer-revision` or `nix-installer-branch` are set, `reinstall: true` should also be set'
+            echo "Detection of existing installation versions isn't supported when \`nix-installer-revision\` or \`nix-installer-branch\` are set, \`reinstall: true\` should also be set"
           fi
 
           if [ -n "${{ inputs.reinstall }}" ] && [ "${{ inputs.reinstall }}" == "true" ]; then
