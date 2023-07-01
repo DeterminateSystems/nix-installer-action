@@ -17,6 +17,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+          nix-installer-branch: main
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
@@ -41,6 +42,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+          nix-installer-branch: main
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -58,6 +60,7 @@ jobs:
           reinstall: true
           extra-conf: |
             use-sqlite-wal = true
+          nix-installer-branch: main
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -83,6 +86,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+          nix-installer-branch: main
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
@@ -111,6 +115,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+          nix-installer-branch: main
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -128,6 +133,7 @@ jobs:
           reinstall: true
           extra-conf: |
             use-sqlite-wal = true
+          nix-installer-branch: main
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -138,6 +144,6 @@ jobs:
           nix run nixpkgs#hello
       - name: Verify the generated nix.conf
         run: |
-          cat -n /etc/nix/nix.conf
+          cat /etc/nix/nix.conf
           grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
           grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf

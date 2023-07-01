@@ -106,7 +106,7 @@ runs:
       run: |
         if [ -f "/nix/receipt.json" ] && [ -f "/nix/nix-installer" ]; then
           if ([ -n "${{ inputs.nix-installer-revision }}" ] || [ -n "${{ inputs.nix-installer-branch }}" ]) && [ "${{ inputs.reinstall }}" != "true" ]; then
-            echo "Detection of existing installation versions isn't supported when `nix-installer-revision` or `nix-installer-branch` are set, `reinstall: true` should also be set"
+            echo "Detection of existing installation versions isn't supported when \`nix-installer-revision\` or \`nix-installer-branch\` are set, \`reinstall: true\` should also be set"
           fi
 
           if [ -n "${{ inputs.reinstall }}" ] && [ "${{ inputs.reinstall }}" == "true" ]; then
@@ -122,6 +122,15 @@ runs:
             echo "$HOME/.nix-profile/bin" >> $GITHUB_PATH
             exit 0
           fi
+        fi
+
+        NIX_EXTRA_CONF_FILE=$(mktemp)
+
+        if [ -n "$ACT" ] && [ ! -n "$NOT_ACT" ]; then
+          echo 'Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the settings of the `init` as well as `extra-conf` to be compatible with `act`'
+          export NIX_INSTALLER_INIT="none"
+          echo "Set NIX_INSTALLER_INIT=$NIX_INSTALLER_INIT"
+          echo "sandbox = false" >> ${NIX_EXTRA_CONF_FILE}
         fi
 
         if [ -n "${{ inputs.modify-profile }}" ]; then
@@ -159,20 +168,17 @@ runs:
           echo "Set NIX_INSTALLER_NIX_PACKAGE_URL=$NIX_INSTALLER_NIX_PACKAGE_URL"
         fi
 
-        NIX_EXTRA_CONF=""
-        NEWLINE='
-        '
         if [ -n "${{ inputs.extra-conf }}" ]; then
-          NIX_EXTRA_CONF="${{ inputs.extra-conf }}"
+          echo "${{ inputs.extra-conf }}" >> ${NIX_EXTRA_CONF_FILE}
         fi
         if [ -n "${{ inputs.github-token }}" ]; then
-          NIX_EXTRA_CONF="${NIX_EXTRA_CONF:+$NIX_EXTRA_CONF$NEWLINE}access-tokens = github.com=${{ inputs.github-token }}"
+          echo "access-tokens = github.com=${{ inputs.github-token }}" >> ${NIX_EXTRA_CONF_FILE}
         fi
         if [ "${{ inputs.trust-runner-user }}" == "true" ]; then
-          NIX_EXTRA_CONF="${NIX_EXTRA_CONF:+$NIX_EXTRA_CONF$NEWLINE}trusted-users = root $USER"
+          echo "trusted-users = root $USER" >> ${NIX_EXTRA_CONF_FILE}
         fi
-        if [ -n "$NIX_EXTRA_CONF" ]; then
-          export NIX_INSTALLER_EXTRA_CONF="$NIX_EXTRA_CONF"
+        if [ -n "$NIX_EXTRA_CONF_FILE" ]; then
+          export NIX_INSTALLER_EXTRA_CONF=$(cat ${NIX_EXTRA_CONF_FILE})
           echo "Set NIX_INSTALLER_EXTRA_CONF=$NIX_INSTALLER_EXTRA_CONF"
         fi
 
@@ -305,7 +311,16 @@ runs:
         export NIX_INSTALLER_NO_CONFIRM=true
         echo "Set NIX_INSTALLER_NO_CONFIRM=$NIX_INSTALLER_NO_CONFIRM"
 
-        curl --retry 20 -L $NIX_INSTALLER_URL | sh -s -- install ${{ inputs.planner }} ${{ inputs.extra-args }}
+        if [ "${RUNNER_OS}" == "Linux" ]; then
+          export PLANNER="linux"
+        elif [ "${RUNNER_OS}" == "macOS" ]; then
+          export PLANNER="macos"
+        else
+          echo "${RUNNER_OS} not supported"
+          exit 1
+        fi
+
+        curl --retry 20 -L $NIX_INSTALLER_URL | sh -s -- install ${PLANNER} ${{ inputs.extra-args }}
 
         if [ -n "$HTTP_PID" ]; then
           kill $HTTP_PID
