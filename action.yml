@@ -154,13 +154,13 @@ runs:
         fi
 
         if [ -n "${{ inputs.nix-build-user-prefix }}" ]; then
-          export NIX_INSTALLER_NIX_BUILD_USER_ID_BASE=${{ inputs.nix-build-user-prefix }}
-          echo "Set NIX_INSTALLER_NIX_BUILD_USER_ID_BASE=$NIX_INSTALLER_NIX_BUILD_USER_ID_BASE"
+          export NIX_INSTALLER_NIX_BUILD_USER_PREFIX=${{ inputs.nix-build-user-prefix }}
+          echo "Set NIX_INSTALLER_NIX_BUILD_USER_PREFIX=$NIX_INSTALLER_NIX_BUILD_USER_PREFIX"
         fi
 
         if [ -n "${{ inputs.nix-build-user-base }}" ]; then
-          export NIX_INSTALLER_NIX_BUILD_USER_PREFIX=${{ inputs.nix-build-user-base }}
-          echo "Set NIX_INSTALLER_NIX_BUILD_USER_PREFIX=$NIX_INSTALLER_NIX_BUILD_USER_PREFIX"
+          export NIX_INSTALLER_NIX_BUILD_USER_BASE=${{ inputs.nix-build-user-base }}
+          echo "Set NIX_INSTALLER_NIX_BUILD_USER_BASE=$NIX_INSTALLER_NIX_BUILD_USER_BASE"
         fi
 
         if [ -n "${{ inputs.nix-package-url }}" ]; then
