@@ -193,11 +193,17 @@ class NixInstallerAction {
             });
             spawned.stdout.setEncoding('utf-8');
             spawned.stdout.on('data', data => {
-                actions_core.info(data.trim());
+                const trimmed = data.trimEnd();
+                if (trimmed.length >= 0) {
+                    actions_core.info(trimmed);
+                }
             });
             spawned.stderr.setEncoding('utf-8');
             spawned.stderr.on('data', data => {
-                actions_core.info(data.trim());
+                const trimmed = data.trimEnd();
+                if (trimmed.length >= 0) {
+                    actions_core.info(trimmed);
+                }
             });
             const exit_code = yield new Promise((resolve, _reject) => {
                 spawned.on('close', resolve);
@@ -242,11 +248,17 @@ class NixInstallerAction {
             });
             spawned.stdout.setEncoding('utf-8');
             spawned.stdout.on('data', data => {
-                actions_core.info(data.trim());
+                const trimmed = data.trimEnd();
+                if (trimmed.length >= 0) {
+                    actions_core.info(trimmed);
+                }
             });
             spawned.stderr.setEncoding('utf-8');
             spawned.stderr.on('data', data => {
-                actions_core.info(data.trim());
+                const trimmed = data.trimEnd();
+                if (trimmed.length >= 0) {
+                    actions_core.info(trimmed);
+                }
             });
             const exit_code = yield new Promise((resolve, _reject) => {
                 spawned.on('close', resolve);
