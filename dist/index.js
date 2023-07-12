@@ -139,6 +139,12 @@ class NixInstallerAction {
         if (this.mac_root_disk !== null) {
             execution_env.NIX_INSTALLER_ROOT_DISK = this.mac_root_disk;
         }
+        if (this.logger !== null) {
+            execution_env.NIX_INSTALLER_LOGGER = this.logger;
+        }
+        if (this.log_directives !== null) {
+            execution_env.NIX_INSTALLER_LOG_DIRECTIVES = this.log_directives;
+        }
         // TODO: Error if the user uses these on MacOS
         if (this.init !== null) {
             execution_env.NIX_INSTALLER_INIT = this.init;
