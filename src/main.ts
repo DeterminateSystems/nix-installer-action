@@ -218,12 +218,14 @@ class NixInstallerAction {
       env: merged_env
     })
 
+    spawned.stdout.setEncoding('utf-8')
     spawned.stdout.on('data', data => {
-      actions_core.info(data)
+      actions_core.info(data.trim())
     })
 
+    spawned.stderr.setEncoding('utf-8')
     spawned.stderr.on('data', data => {
-      actions_core.info(data)
+      actions_core.info(data.trim())
     })
 
     const exit_code: number = await new Promise((resolve, _reject) => {
@@ -272,12 +274,14 @@ class NixInstallerAction {
       }
     })
 
+    spawned.stdout.setEncoding('utf-8')
     spawned.stdout.on('data', data => {
-      actions_core.info(data)
+      actions_core.info(data.trim())
     })
 
+    spawned.stderr.setEncoding('utf-8')
     spawned.stderr.on('data', data => {
-      actions_core.info(data)
+      actions_core.info(data.trim())
     })
 
     const exit_code: number = await new Promise((resolve, _reject) => {
