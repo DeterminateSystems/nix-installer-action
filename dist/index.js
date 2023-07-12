@@ -175,7 +175,7 @@ class NixInstallerAction {
     execute_install(binary_path) {
         return __awaiter(this, void 0, void 0, function* () {
             const execution_env = this.executionEnvironment();
-            actions_core.info(`Execution environment: ${JSON.stringify(execution_env)}`);
+            actions_core.info(`Execution environment: ${JSON.stringify(execution_env, null, 4)}`);
             const args = ['install'];
             if (this.planner) {
                 args.push(this.planner);
@@ -192,10 +192,10 @@ class NixInstallerAction {
                 env: merged_env
             });
             spawned.stdout.on('data', data => {
-                actions_core.info(`stdout: ${data}`);
+                actions_core.info(data);
             });
             spawned.stderr.on('data', data => {
-                actions_core.info(`stderr: ${data}`);
+                actions_core.info(data);
             });
             const exit_code = yield new Promise((resolve, _reject) => {
                 spawned.on('close', resolve);
@@ -213,7 +213,7 @@ class NixInstallerAction {
                 if (this.reinstall) {
                     // We need to uninstall, then reinstall
                     actions_core.info('Nix was already installed, `reinstall` is set, uninstalling for a reinstall');
-                    yield this.uninstall();
+                    yield this.execute_uninstall();
                 }
                 else {
                     // We're already installed, and not reinstalling, just set GITHUB_PATH and finish early
@@ -232,17 +232,17 @@ class NixInstallerAction {
         actions_core.addPath('/nix/var/nix/profiles/default/bin');
         actions_core.addPath(`${process.env.HOME}/.nix-profile/bin`);
     }
-    uninstall() {
+    execute_uninstall() {
         return __awaiter(this, void 0, void 0, function* () {
             const spawned = (0, node_child_process_1.spawn)(`/nix/nix-installer`, ['uninstall'], {
                 env: Object.assign({ NIX_INSTALLER_NO_CONFIRM: 'true' }, process.env // To get $PATH, etc
                 )
             });
             spawned.stdout.on('data', data => {
-                actions_core.info(`stdout: ${data}`);
+                actions_core.info(data);
             });
             spawned.stderr.on('data', data => {
-                actions_core.info(`stderr: ${data}`);
+                actions_core.info(data);
             });
             const exit_code = yield new Promise((resolve, _reject) => {
                 spawned.on('close', resolve);

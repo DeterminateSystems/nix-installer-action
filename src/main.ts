@@ -193,7 +193,9 @@ class NixInstallerAction {
 
   private async execute_install(binary_path: string): Promise<number> {
     const execution_env = this.executionEnvironment()
-    actions_core.info(`Execution environment: ${JSON.stringify(execution_env)}`)
+    actions_core.info(
+      `Execution environment: ${JSON.stringify(execution_env, null, 4)}`
+    )
 
     const args = ['install']
     if (this.planner) {
@@ -217,11 +219,11 @@ class NixInstallerAction {
     })
 
     spawned.stdout.on('data', data => {
-      actions_core.info(`stdout: ${data}`)
+      actions_core.info(data)
     })
 
     spawned.stderr.on('data', data => {
-      actions_core.info(`stderr: ${data}`)
+      actions_core.info(data)
     })
 
     const exit_code: number = await new Promise((resolve, _reject) => {
@@ -243,7 +245,7 @@ class NixInstallerAction {
         actions_core.info(
           'Nix was already installed, `reinstall` is set, uninstalling for a reinstall'
         )
-        await this.uninstall()
+        await this.execute_uninstall()
       } else {
         // We're already installed, and not reinstalling, just set GITHUB_PATH and finish early
         this.set_github_path()
@@ -262,7 +264,7 @@ class NixInstallerAction {
     actions_core.addPath(`${process.env.HOME}/.nix-profile/bin`)
   }
 
-  async uninstall(): Promise<number> {
+  async execute_uninstall(): Promise<number> {
     const spawned = spawn(`/nix/nix-installer`, ['uninstall'], {
       env: {
         NIX_INSTALLER_NO_CONFIRM: 'true',
@@ -271,11 +273,11 @@ class NixInstallerAction {
     })
 
     spawned.stdout.on('data', data => {
-      actions_core.info(`stdout: ${data}`)
+      actions_core.info(data)
     })
 
     spawned.stderr.on('data', data => {
-      actions_core.info(`stderr: ${data}`)
+      actions_core.info(data)
     })
 
     const exit_code: number = await new Promise((resolve, _reject) => {
