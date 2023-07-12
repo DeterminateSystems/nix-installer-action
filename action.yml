@@ -49,6 +49,7 @@ inputs:
   modify-profile:
     description: Modify the user profile to automatically load nix
     required: false
+    default: true
   nix-build-group-id:
     description: The Nix build group GID
     required: false
@@ -88,9 +89,11 @@ inputs:
   reinstall:
     description: Force a reinstall if an existing installation is detected (consider backing up `/nix/store`)
     required: false
+    default: false
   start-daemon:
     description: "If the daemon should be started, requires `planner: linux-multi`"
     required: false
+    default: true
   diagnostic-endpoint:
     description: "Diagnostic endpoint url where the installer sends data to. To disable set this to an empty string."
     default: "https://install.determinate.systems/nix/diagnostic"

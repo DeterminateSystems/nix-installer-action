@@ -1,12 +1,17 @@
 import * as actions_core from '@actions/core'
-import {mkdtemp, open} from 'node:fs/promises'
+import {mkdtemp, chmod, access} from 'node:fs/promises'
 import {spawn} from 'node:child_process'
 import {join} from 'node:path'
 import {tmpdir} from 'node:os'
-import {Readable} from 'node:stream'
+import {pipeline} from 'node:stream'
+import fetch from 'node-fetch'
+import {promisify} from 'node:util'
+import fs from 'node:fs'
+import stringArgv from 'string-argv'
 
 class NixInstallerAction {
   platform: string
+  nix_package_url: string | null
   backtrace: string | null
   extra_args: string | null
   extra_conf: string[] | null
@@ -22,21 +27,22 @@ class NixInstallerAction {
   mac_encrypt: string | null
   mac_root_disk: string | null
   mac_volume_label: string | null
-  modify_profile: boolean | null
+  modify_profile: boolean
   nix_build_group_id: number | null
   nix_build_group_name: string | null
   nix_build_user_base: number | null
   nix_build_user_count: number | null
   nix_build_user_prefix: string | null
   planner: string | null
-  reinstall: boolean | null
-  start_daemon: boolean | null
+  reinstall: boolean
+  start_daemon: boolean
   diagnostic_endpoint: string | null
   trust_runner_user: boolean | null
   nix_installer_url: URL
 
   constructor() {
     this.platform = get_nix_platform()
+    this.nix_package_url = action_input_string_or_null('nix-package-url')
     this.backtrace = action_input_string_or_null('backtrace')
     this.extra_args = action_input_string_or_null('extra-args')
     this.extra_conf = action_input_multiline_string_or_null('extra-conf')
@@ -51,7 +57,7 @@ class NixInstallerAction {
     this.mac_encrypt = action_input_string_or_null('mac-encrypt')
     this.mac_root_disk = action_input_string_or_null('mac-root-disk')
     this.mac_volume_label = action_input_string_or_null('mac-volume-label')
-    this.modify_profile = action_input_bool_or_null('modify-profile')
+    this.modify_profile = action_input_bool('modify-profile')
     this.nix_build_group_id = action_input_number_or_null('nix-build-group-id')
     this.nix_build_group_name = action_input_string_or_null(
       'nix-build-group-name'
@@ -66,102 +72,151 @@ class NixInstallerAction {
       'nix-build-user-prefix'
     )
     this.planner = action_input_string_or_null('planner')
-    this.reinstall = action_input_bool_or_null('reinstall')
-    this.start_daemon = action_input_bool_or_null('start-daemon')
+    this.reinstall = action_input_bool('reinstall')
+    this.start_daemon = action_input_bool('start-daemon')
     this.diagnostic_endpoint = action_input_string_or_null(
       'diagnostic-endpoint'
     )
-    this.trust_runner_user = action_input_bool_or_null('trust-runner-user')
+    this.trust_runner_user = action_input_bool('trust-runner-user')
     this.nix_installer_url = resolve_nix_installer_url(this.platform)
   }
 
   private executionEnvironment(): ExecuteEnvironment {
-    const env: ExecuteEnvironment = {}
+    const execution_env: ExecuteEnvironment = {}
+
+    execution_env.NIX_INSTALLER_NO_CONFIRM = 'true'
 
     if (this.backtrace !== null) {
-      env.RUST_BACKTRACE = this.backtrace
+      execution_env.RUST_BACKTRACE = this.backtrace
     }
     if (this.modify_profile !== null) {
       if (this.modify_profile) {
-        env.NIX_INSTALLER_MODIFY_PROFILE = '1'
+        execution_env.NIX_INSTALLER_MODIFY_PROFILE = 'true'
       } else {
-        env.NIX_INSTALLER_MODIFY_PROFILE = '0'
+        execution_env.NIX_INSTALLER_MODIFY_PROFILE = 'false'
       }
     }
 
     if (this.nix_build_group_id !== null) {
-      env.NIX_INSTALLER_NIX_BUILD_GROUP_ID = `${this.nix_build_group_id}`
+      execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_ID = `${this.nix_build_group_id}`
     }
 
     if (this.nix_build_group_name !== null) {
-      env.NIX_INSTALLER_NIX_BUILD_GROUP_NAME = this.nix_build_group_name
+      execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_NAME =
+        this.nix_build_group_name
     }
 
     if (this.nix_build_user_prefix !== null) {
-      env.NIX_INSTALLER_NIX_BUILD_USER_PREFIX = this.nix_build_user_prefix
+      execution_env.NIX_INSTALLER_NIX_BUILD_USER_PREFIX =
+        this.nix_build_user_prefix
     }
 
     if (this.nix_build_user_count !== null) {
-      env.NIX_INSTALLER_NIX_BUILD_USER_COUNT = `${this.nix_build_user_count}`
+      execution_env.NIX_INSTALLER_NIX_BUILD_USER_COUNT = `${this.nix_build_user_count}`
     }
 
     if (this.nix_build_user_base !== null) {
-      env.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nix_build_user_count}`
+      execution_env.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nix_build_user_count}`
     }
 
-    if (this.nix_installer_url !== null) {
-      env.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nix_installer_url}`
+    if (this.nix_package_url !== null) {
+      execution_env.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nix_package_url}`
     }
 
     if (this.proxy !== null) {
-      env.NIX_INSTALLER_PROXY = this.proxy
+      execution_env.NIX_INSTALLER_PROXY = this.proxy
     }
 
     if (this.ssl_cert_file !== null) {
-      env.NIX_INSTALLER_SSL_CERT_FILE = this.ssl_cert_file
+      execution_env.NIX_INSTALLER_SSL_CERT_FILE = this.ssl_cert_file
     }
 
     if (this.diagnostic_endpoint !== null) {
-      env.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT = this.diagnostic_endpoint
+      execution_env.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT = this.diagnostic_endpoint
     }
 
     // TODO: Error if the user uses these on not-MacOS
     if (this.mac_encrypt !== null) {
-      env.NIX_INSTALLER_ENCRYPT = this.mac_encrypt
+      execution_env.NIX_INSTALLER_ENCRYPT = this.mac_encrypt
     }
 
     if (this.mac_case_sensitive !== null) {
-      env.NIX_INSTALLER_CASE_SENSITIVE = this.mac_case_sensitive
+      execution_env.NIX_INSTALLER_CASE_SENSITIVE = this.mac_case_sensitive
     }
 
     if (this.mac_volume_label !== null) {
-      env.NIX_INSTALLER_VOLUME_LABEL = this.mac_volume_label
+      execution_env.NIX_INSTALLER_VOLUME_LABEL = this.mac_volume_label
     }
 
     if (this.mac_root_disk !== null) {
-      env.NIX_INSTALLER_ROOT_DISK = this.mac_root_disk
+      execution_env.NIX_INSTALLER_ROOT_DISK = this.mac_root_disk
     }
 
     // TODO: Error if the user uses these on MacOS
     if (this.init !== null) {
-      env.NIX_INSTALLER_INIT = this.init
+      execution_env.NIX_INSTALLER_INIT = this.init
     }
 
     if (this.start_daemon !== null) {
       if (this.start_daemon) {
-        env.NIX_INSTALLER_START_DAEMON = '1'
+        execution_env.NIX_INSTALLER_START_DAEMON = 'true'
       } else {
-        env.NIX_INSTALLER_START_DAEMON = '0'
+        execution_env.NIX_INSTALLER_START_DAEMON = 'false'
       }
     }
 
-    return env
+    let extra_conf = ''
+    if (this.github_token !== null) {
+      extra_conf += `access-tokens = github.com=${this.github_token}`
+      extra_conf += '\n'
+    }
+    if (this.trust_runner_user !== null) {
+      // TODO: Consider how to improve this
+      extra_conf += `trusted-users = root ${process.env.USER}`
+      extra_conf += '\n'
+    }
+    if (this.extra_conf !== null && this.extra_conf.length !== 0) {
+      extra_conf += this.extra_conf.join('\n')
+      extra_conf += '\n'
+    }
+    execution_env.NIX_INSTALLER_EXTRA_CONF = extra_conf
+
+    if (process.env.ACT && !process.env.NOT_ACT) {
+      actions_core.debug(
+        'Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the settings of the `init` as well as `extra-conf` to be compatible with `act`'
+      )
+      execution_env.NIX_INSTALLER_INIT = 'none'
+    }
+
+    return execution_env
   }
 
-  private async execute(binary_path: string): Promise<number> {
-    const env = this.executionEnvironment()
+  private async execute_install(binary_path: string): Promise<number> {
+    const execution_env = this.executionEnvironment()
+    actions_core.debug(
+      `Execution environment: ${JSON.stringify(execution_env)}`
+    )
 
-    const spawned = spawn(`${binary_path} ${this.extra_args}`, {env})
+    const args = ['install']
+    if (this.planner) {
+      args.push(this.planner)
+    } else {
+      args.push(get_default_planner())
+    }
+
+    if (this.extra_args) {
+      const extra_args = stringArgv(this.extra_args)
+      args.concat(extra_args)
+    }
+
+    const merged_env = {
+      ...process.env, // To get $PATH, etc
+      ...execution_env
+    }
+
+    const spawned = spawn(`${binary_path}`, args, {
+      env: merged_env
+    })
 
     spawned.stdout.on('data', data => {
       actions_core.debug(`stdout: ${data}`)
@@ -183,17 +238,76 @@ class NixInstallerAction {
   }
 
   async install(): Promise<void> {
+    const existing_install = await this.detect_existing()
+    if (existing_install) {
+      if (this.reinstall) {
+        // We need to uninstall, then reinstall
+        actions_core.debug(
+          'Nix was already installed, `reinstall` is set, uninstalling for a reinstall'
+        )
+        await this.uninstall()
+      } else {
+        // We're already installed, and not reinstalling, just set GITHUB_PATH and finish early
+        this.set_github_path()
+        actions_core.debug('Nix was already installed, using existing install')
+        return
+      }
+    }
+    // Normal just doing of the install
     const binary_path = await this.fetch_binary()
-    await this.execute(binary_path)
+    await this.execute_install(binary_path)
+    // TODO: Add `this.set_github_path()` and remove that from the installer crate
+  }
+
+  set_github_path(): void {
+    actions_core.addPath('/nix/var/nix/profiles/default/bin')
+    actions_core.addPath(`${process.env.HOME}/.nix-profile/bin`)
+  }
+
+  async uninstall(): Promise<number> {
+    const spawned = spawn(`/nix/nix-installer`, ['uninstall'], {
+      env: {
+        NIX_INSTALLER_NO_CONFIRM: 'true',
+        ...process.env // To get $PATH, etc
+      }
+    })
+
+    spawned.stdout.on('data', data => {
+      actions_core.debug(`stdout: ${data}`)
+    })
+
+    spawned.stderr.on('data', data => {
+      actions_core.debug(`stderr: ${data}`)
+    })
+
+    const exit_code: number = await new Promise((resolve, _reject) => {
+      spawned.on('close', resolve)
+    })
+
+    if (exit_code !== 0) {
+      throw new Error(`Non-zero exit code of \`${exit_code}\` detected`)
+    }
+
+    return exit_code
+  }
+
+  async detect_existing(): Promise<boolean> {
+    const receipt_path = '/nix/receipt.json'
+    // TODO: Maybe this should be a bit smarter?
+    try {
+      await access(receipt_path)
+      // There is a /nix/receipt.json
+      return true
+    } catch {
+      // No /nix/receipt.json
+      return false
+    }
   }
 
   private async fetch_binary(): Promise<string> {
     if (!this.local_root) {
-      const request = new Request(this.nix_installer_url, {
-        redirect: 'follow'
-      })
-
-      const response = await fetch(request)
+      actions_core.debug(`Fetching binary from ${this.nix_installer_url}`)
+      const response = await fetch(this.nix_installer_url)
       if (!response.ok) {
         throw new Error(
           `Got a status of ${response.status} from \`${this.nix_installer_url}\`, expected a 200`
@@ -203,17 +317,26 @@ class NixInstallerAction {
       const tempdir = await mkdtemp(join(tmpdir(), 'nix-installer-'))
       const tempfile = join(tempdir, `nix-installer-${this.platform}`)
 
-      const handle = await open(tempfile)
-      const writer = handle.createWriteStream()
+      if (!response.ok) {
+        throw new Error(`unexpected response ${response.statusText}`)
+      }
 
-      const blob = await response.blob()
-      const stream = blob.stream() as unknown as Readable
-      stream.pipe(writer)
-      writer.close()
+      if (response.body !== null) {
+        const streamPipeline = promisify(pipeline)
+        await streamPipeline(response.body, fs.createWriteStream(tempfile))
+        actions_core.debug(`Downloaded \`nix-installer\` to \`${tempfile}\``)
+      } else {
+        throw new Error('No response body recieved')
+      }
+
+      // Make executable
+      await chmod(tempfile, fs.constants.S_IXUSR | fs.constants.S_IXGRP)
 
       return tempfile
     } else {
-      return join(this.local_root, `nix-installer-${this.platform}`)
+      const local_path = join(this.local_root, `nix-installer-${this.platform}`)
+      actions_core.debug(`Using binary ${local_path}`)
+      return local_path
     }
   }
 }
@@ -237,6 +360,8 @@ type ExecuteEnvironment = {
   NIX_INSTALLER_ROOT_DISK?: string
   NIX_INSTALLER_INIT?: string
   NIX_INSTALLER_START_DAEMON?: string
+  NIX_INSTALLER_NO_CONFIRM?: string
+  NIX_INSTALLER_EXTRA_CONF?: string
 }
 
 function get_nix_platform(): string {
@@ -255,6 +380,18 @@ function get_nix_platform(): string {
     throw new Error(
       `Unsupported \`RUNNER_OS\` (currently \`${env_os}\`) and \`RUNNER_ARCH\` (currently \`${env_arch}\`)  combination`
     )
+  }
+}
+
+function get_default_planner(): string {
+  const env_os = process.env.RUNNER_OS
+
+  if (env_os === 'macOS') {
+    return 'macos'
+  } else if (env_os === 'Linux') {
+    return 'linux'
+  } else {
+    throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${env_os}\`)`)
   }
 }
 
@@ -344,16 +481,17 @@ function action_input_number_or_null(name: string): number | null {
   }
 }
 
-function action_input_bool_or_null(name: string): boolean {
+function action_input_bool(name: string): boolean {
   return actions_core.getBooleanInput(name)
 }
 
 async function main(): Promise<void> {
   try {
     const installer = new NixInstallerAction()
+
     await installer.install()
   } catch (error) {
-    if (error instanceof Error) actions_core.setFailed(error.message)
+    if (error instanceof Error) actions_core.setFailed(error)
   }
 }
 
