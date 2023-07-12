@@ -182,7 +182,7 @@ class NixInstallerAction {
     execution_env.NIX_INSTALLER_EXTRA_CONF = extra_conf
 
     if (process.env.ACT && !process.env.NOT_ACT) {
-      actions_core.debug(
+      actions_core.info(
         'Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the settings of the `init` as well as `extra-conf` to be compatible with `act`'
       )
       execution_env.NIX_INSTALLER_INIT = 'none'
@@ -193,9 +193,7 @@ class NixInstallerAction {
 
   private async execute_install(binary_path: string): Promise<number> {
     const execution_env = this.executionEnvironment()
-    actions_core.debug(
-      `Execution environment: ${JSON.stringify(execution_env)}`
-    )
+    actions_core.info(`Execution environment: ${JSON.stringify(execution_env)}`)
 
     const args = ['install']
     if (this.planner) {
@@ -219,11 +217,11 @@ class NixInstallerAction {
     })
 
     spawned.stdout.on('data', data => {
-      actions_core.debug(`stdout: ${data}`)
+      actions_core.info(`stdout: ${data}`)
     })
 
     spawned.stderr.on('data', data => {
-      actions_core.debug(`stderr: ${data}`)
+      actions_core.info(`stderr: ${data}`)
     })
 
     const exit_code: number = await new Promise((resolve, _reject) => {
@@ -242,14 +240,14 @@ class NixInstallerAction {
     if (existing_install) {
       if (this.reinstall) {
         // We need to uninstall, then reinstall
-        actions_core.debug(
+        actions_core.info(
           'Nix was already installed, `reinstall` is set, uninstalling for a reinstall'
         )
         await this.uninstall()
       } else {
         // We're already installed, and not reinstalling, just set GITHUB_PATH and finish early
         this.set_github_path()
-        actions_core.debug('Nix was already installed, using existing install')
+        actions_core.info('Nix was already installed, using existing install')
         return
       }
     }
@@ -273,11 +271,11 @@ class NixInstallerAction {
     })
 
     spawned.stdout.on('data', data => {
-      actions_core.debug(`stdout: ${data}`)
+      actions_core.info(`stdout: ${data}`)
     })
 
     spawned.stderr.on('data', data => {
-      actions_core.debug(`stderr: ${data}`)
+      actions_core.info(`stderr: ${data}`)
     })
 
     const exit_code: number = await new Promise((resolve, _reject) => {
@@ -306,7 +304,7 @@ class NixInstallerAction {
 
   private async fetch_binary(): Promise<string> {
     if (!this.local_root) {
-      actions_core.debug(`Fetching binary from ${this.nix_installer_url}`)
+      actions_core.info(`Fetching binary from ${this.nix_installer_url}`)
       const response = await fetch(this.nix_installer_url)
       if (!response.ok) {
         throw new Error(
@@ -324,7 +322,7 @@ class NixInstallerAction {
       if (response.body !== null) {
         const streamPipeline = promisify(pipeline)
         await streamPipeline(response.body, fs.createWriteStream(tempfile))
-        actions_core.debug(`Downloaded \`nix-installer\` to \`${tempfile}\``)
+        actions_core.info(`Downloaded \`nix-installer\` to \`${tempfile}\``)
       } else {
         throw new Error('No response body recieved')
       }
@@ -335,7 +333,7 @@ class NixInstallerAction {
       return tempfile
     } else {
       const local_path = join(this.local_root, `nix-installer-${this.platform}`)
-      actions_core.debug(`Using binary ${local_path}`)
+      actions_core.info(`Using binary ${local_path}`)
       return local_path
     }
   }
