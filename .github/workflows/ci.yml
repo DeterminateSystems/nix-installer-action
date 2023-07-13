@@ -93,6 +93,7 @@ jobs:
           log-directives: nix_installer=trace
           backtrace: full
           nix-installer-branch: main
+          planner: steam-deck
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
