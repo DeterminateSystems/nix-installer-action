@@ -201,7 +201,6 @@ class NixInstallerAction {
       extra_conf += "\n";
     }
     if (this.trust_runner_user !== null) {
-      // TODO: Consider how to improve this
       extra_conf += `trusted-users = root ${process.env.USER}`;
       extra_conf += "\n";
     }
@@ -213,7 +212,7 @@ class NixInstallerAction {
 
     if (process.env.ACT && !process.env.NOT_ACT) {
       actions_core.info(
-        "Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the settings of the `init` as well as `extra-conf` to be compatible with `act`",
+        "Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`",
       );
       execution_env.NIX_INSTALLER_INIT = "none";
     }
