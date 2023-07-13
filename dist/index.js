@@ -55,46 +55,46 @@ const string_argv_1 = __importDefault(__nccwpck_require__(9663));
 class NixInstallerAction {
     constructor() {
         this.platform = get_nix_platform();
-        this.nix_package_url = action_input_string_or_null('nix-package-url');
-        this.backtrace = action_input_string_or_null('backtrace');
-        this.extra_args = action_input_string_or_null('extra-args');
-        this.extra_conf = action_input_multiline_string_or_null('extra-conf');
-        this.github_token = action_input_string_or_null('github-token');
-        this.init = action_input_string_or_null('init');
-        this.local_root = action_input_string_or_null('local-root');
-        this.log_directives = action_input_string_or_null('log-directives');
-        this.logger = action_input_string_or_null('logger');
-        this.ssl_cert_file = action_input_string_or_null('ssl-cert-file');
-        this.proxy = action_input_string_or_null('proxy');
-        this.mac_case_sensitive = action_input_string_or_null('mac-case-sensitive');
-        this.mac_encrypt = action_input_string_or_null('mac-encrypt');
-        this.mac_root_disk = action_input_string_or_null('mac-root-disk');
-        this.mac_volume_label = action_input_string_or_null('mac-volume-label');
-        this.modify_profile = action_input_bool('modify-profile');
-        this.nix_build_group_id = action_input_number_or_null('nix-build-group-id');
-        this.nix_build_group_name = action_input_string_or_null('nix-build-group-name');
-        this.nix_build_user_base = action_input_number_or_null('nix_build-user-base');
-        this.nix_build_user_count = action_input_number_or_null('nix-build-user-count');
-        this.nix_build_user_prefix = action_input_string_or_null('nix-build-user-prefix');
-        this.planner = action_input_string_or_null('planner');
-        this.reinstall = action_input_bool('reinstall');
-        this.start_daemon = action_input_bool('start-daemon');
-        this.diagnostic_endpoint = action_input_string_or_null('diagnostic-endpoint');
-        this.trust_runner_user = action_input_bool('trust-runner-user');
+        this.nix_package_url = action_input_string_or_null("nix-package-url");
+        this.backtrace = action_input_string_or_null("backtrace");
+        this.extra_args = action_input_string_or_null("extra-args");
+        this.extra_conf = action_input_multiline_string_or_null("extra-conf");
+        this.github_token = action_input_string_or_null("github-token");
+        this.init = action_input_string_or_null("init");
+        this.local_root = action_input_string_or_null("local-root");
+        this.log_directives = action_input_string_or_null("log-directives");
+        this.logger = action_input_string_or_null("logger");
+        this.ssl_cert_file = action_input_string_or_null("ssl-cert-file");
+        this.proxy = action_input_string_or_null("proxy");
+        this.mac_case_sensitive = action_input_string_or_null("mac-case-sensitive");
+        this.mac_encrypt = action_input_string_or_null("mac-encrypt");
+        this.mac_root_disk = action_input_string_or_null("mac-root-disk");
+        this.mac_volume_label = action_input_string_or_null("mac-volume-label");
+        this.modify_profile = action_input_bool("modify-profile");
+        this.nix_build_group_id = action_input_number_or_null("nix-build-group-id");
+        this.nix_build_group_name = action_input_string_or_null("nix-build-group-name");
+        this.nix_build_user_base = action_input_number_or_null("nix_build-user-base");
+        this.nix_build_user_count = action_input_number_or_null("nix-build-user-count");
+        this.nix_build_user_prefix = action_input_string_or_null("nix-build-user-prefix");
+        this.planner = action_input_string_or_null("planner");
+        this.reinstall = action_input_bool("reinstall");
+        this.start_daemon = action_input_bool("start-daemon");
+        this.diagnostic_endpoint = action_input_string_or_null("diagnostic-endpoint");
+        this.trust_runner_user = action_input_bool("trust-runner-user");
         this.nix_installer_url = resolve_nix_installer_url(this.platform);
     }
     executionEnvironment() {
         const execution_env = {};
-        execution_env.NIX_INSTALLER_NO_CONFIRM = 'true';
+        execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
         if (this.backtrace !== null) {
             execution_env.RUST_BACKTRACE = this.backtrace;
         }
         if (this.modify_profile !== null) {
             if (this.modify_profile) {
-                execution_env.NIX_INSTALLER_MODIFY_PROFILE = 'true';
+                execution_env.NIX_INSTALLER_MODIFY_PROFILE = "true";
             }
             else {
-                execution_env.NIX_INSTALLER_MODIFY_PROFILE = 'false';
+                execution_env.NIX_INSTALLER_MODIFY_PROFILE = "false";
             }
         }
         if (this.nix_build_group_id !== null) {
@@ -124,7 +124,8 @@ class NixInstallerAction {
             execution_env.NIX_INSTALLER_SSL_CERT_FILE = this.ssl_cert_file;
         }
         if (this.diagnostic_endpoint !== null) {
-            execution_env.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT = this.diagnostic_endpoint;
+            execution_env.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
+                this.diagnostic_endpoint;
         }
         // TODO: Error if the user uses these on not-MacOS
         if (this.mac_encrypt !== null) {
@@ -151,30 +152,30 @@ class NixInstallerAction {
         }
         if (this.start_daemon !== null) {
             if (this.start_daemon) {
-                execution_env.NIX_INSTALLER_START_DAEMON = 'true';
+                execution_env.NIX_INSTALLER_START_DAEMON = "true";
             }
             else {
-                execution_env.NIX_INSTALLER_START_DAEMON = 'false';
+                execution_env.NIX_INSTALLER_START_DAEMON = "false";
             }
         }
-        let extra_conf = '';
+        let extra_conf = "";
         if (this.github_token !== null) {
             extra_conf += `access-tokens = github.com=${this.github_token}`;
-            extra_conf += '\n';
+            extra_conf += "\n";
         }
         if (this.trust_runner_user !== null) {
             // TODO: Consider how to improve this
             extra_conf += `trusted-users = root ${process.env.USER}`;
-            extra_conf += '\n';
+            extra_conf += "\n";
         }
         if (this.extra_conf !== null && this.extra_conf.length !== 0) {
-            extra_conf += this.extra_conf.join('\n');
-            extra_conf += '\n';
+            extra_conf += this.extra_conf.join("\n");
+            extra_conf += "\n";
         }
         execution_env.NIX_INSTALLER_EXTRA_CONF = extra_conf;
         if (process.env.ACT && !process.env.NOT_ACT) {
-            actions_core.info('Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the settings of the `init` as well as `extra-conf` to be compatible with `act`');
-            execution_env.NIX_INSTALLER_INIT = 'none';
+            actions_core.info("Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the settings of the `init` as well as `extra-conf` to be compatible with `act`");
+            execution_env.NIX_INSTALLER_INIT = "none";
         }
         return execution_env;
     }
@@ -182,7 +183,7 @@ class NixInstallerAction {
         return __awaiter(this, void 0, void 0, function* () {
             const execution_env = this.executionEnvironment();
             actions_core.info(`Execution environment: ${JSON.stringify(execution_env, null, 4)}`);
-            const args = ['install'];
+            const args = ["install"];
             if (this.planner) {
                 args.push(this.planner);
             }
@@ -195,24 +196,24 @@ class NixInstallerAction {
             }
             const merged_env = Object.assign(Object.assign({}, process.env), execution_env);
             const spawned = (0, node_child_process_1.spawn)(`${binary_path}`, args, {
-                env: merged_env
+                env: merged_env,
             });
-            spawned.stdout.setEncoding('utf-8');
-            spawned.stdout.on('data', data => {
+            spawned.stdout.setEncoding("utf-8");
+            spawned.stdout.on("data", (data) => {
                 const trimmed = data.trimEnd();
                 if (trimmed.length >= 0) {
                     actions_core.info(trimmed);
                 }
             });
-            spawned.stderr.setEncoding('utf-8');
-            spawned.stderr.on('data', data => {
+            spawned.stderr.setEncoding("utf-8");
+            spawned.stderr.on("data", (data) => {
                 const trimmed = data.trimEnd();
                 if (trimmed.length >= 0) {
                     actions_core.info(trimmed);
                 }
             });
             const exit_code = yield new Promise((resolve, _reject) => {
-                spawned.on('close', resolve);
+                spawned.on("close", resolve);
             });
             if (exit_code !== 0) {
                 throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
@@ -226,13 +227,13 @@ class NixInstallerAction {
             if (existing_install) {
                 if (this.reinstall) {
                     // We need to uninstall, then reinstall
-                    actions_core.info('Nix was already installed, `reinstall` is set, uninstalling for a reinstall');
+                    actions_core.info("Nix was already installed, `reinstall` is set, uninstalling for a reinstall");
                     yield this.execute_uninstall();
                 }
                 else {
                     // We're already installed, and not reinstalling, just set GITHUB_PATH and finish early
                     this.set_github_path();
-                    actions_core.info('Nix was already installed, using existing install');
+                    actions_core.info("Nix was already installed, using existing install");
                     return;
                 }
             }
@@ -243,31 +244,30 @@ class NixInstallerAction {
         });
     }
     set_github_path() {
-        actions_core.addPath('/nix/var/nix/profiles/default/bin');
+        actions_core.addPath("/nix/var/nix/profiles/default/bin");
         actions_core.addPath(`${process.env.HOME}/.nix-profile/bin`);
     }
     execute_uninstall() {
         return __awaiter(this, void 0, void 0, function* () {
-            const spawned = (0, node_child_process_1.spawn)(`/nix/nix-installer`, ['uninstall'], {
-                env: Object.assign({ NIX_INSTALLER_NO_CONFIRM: 'true' }, process.env // To get $PATH, etc
-                )
+            const spawned = (0, node_child_process_1.spawn)(`/nix/nix-installer`, ["uninstall"], {
+                env: Object.assign({ NIX_INSTALLER_NO_CONFIRM: "true" }, process.env),
             });
-            spawned.stdout.setEncoding('utf-8');
-            spawned.stdout.on('data', data => {
+            spawned.stdout.setEncoding("utf-8");
+            spawned.stdout.on("data", (data) => {
                 const trimmed = data.trimEnd();
                 if (trimmed.length >= 0) {
                     actions_core.info(trimmed);
                 }
             });
-            spawned.stderr.setEncoding('utf-8');
-            spawned.stderr.on('data', data => {
+            spawned.stderr.setEncoding("utf-8");
+            spawned.stderr.on("data", (data) => {
                 const trimmed = data.trimEnd();
                 if (trimmed.length >= 0) {
                     actions_core.info(trimmed);
                 }
             });
             const exit_code = yield new Promise((resolve, _reject) => {
-                spawned.on('close', resolve);
+                spawned.on("close", resolve);
             });
             if (exit_code !== 0) {
                 throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
@@ -277,7 +277,7 @@ class NixInstallerAction {
     }
     detect_existing() {
         return __awaiter(this, void 0, void 0, function* () {
-            const receipt_path = '/nix/receipt.json';
+            const receipt_path = "/nix/receipt.json";
             // TODO: Maybe this should be a bit smarter?
             try {
                 yield (0, promises_1.access)(receipt_path);
@@ -298,7 +298,7 @@ class NixInstallerAction {
                 if (!response.ok) {
                     throw new Error(`Got a status of ${response.status} from \`${this.nix_installer_url}\`, expected a 200`);
                 }
-                const tempdir = yield (0, promises_1.mkdtemp)((0, node_path_1.join)((0, node_os_1.tmpdir)(), 'nix-installer-'));
+                const tempdir = yield (0, promises_1.mkdtemp)((0, node_path_1.join)((0, node_os_1.tmpdir)(), "nix-installer-"));
                 const tempfile = (0, node_path_1.join)(tempdir, `nix-installer-${this.platform}`);
                 if (!response.ok) {
                     throw new Error(`unexpected response ${response.statusText}`);
@@ -309,7 +309,7 @@ class NixInstallerAction {
                     actions_core.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
                 }
                 else {
-                    throw new Error('No response body recieved');
+                    throw new Error("No response body recieved");
                 }
                 // Make executable
                 yield (0, promises_1.chmod)(tempfile, node_fs_1.default.constants.S_IXUSR | node_fs_1.default.constants.S_IXGRP);
@@ -326,17 +326,17 @@ class NixInstallerAction {
 function get_nix_platform() {
     const env_os = process.env.RUNNER_OS;
     const env_arch = process.env.RUNNER_ARCH;
-    if (env_os === 'macOS' && env_arch === 'X64') {
-        return 'x86_64-darwin';
+    if (env_os === "macOS" && env_arch === "X64") {
+        return "x86_64-darwin";
     }
-    else if (env_os === 'macOS' && env_arch === 'ARM64') {
-        return 'aarch64-darwin';
+    else if (env_os === "macOS" && env_arch === "ARM64") {
+        return "aarch64-darwin";
     }
-    else if (env_os === 'Linux' && env_arch === 'X64') {
-        return 'x86_64-linux';
+    else if (env_os === "Linux" && env_arch === "X64") {
+        return "x86_64-linux";
     }
-    else if (env_os === 'Linux' && env_arch === 'ARM64') {
-        return 'aarch64-linux';
+    else if (env_os === "Linux" && env_arch === "ARM64") {
+        return "aarch64-linux";
     }
     else {
         throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${env_os}\`) and \`RUNNER_ARCH\` (currently \`${env_arch}\`)  combination`);
@@ -344,11 +344,11 @@ function get_nix_platform() {
 }
 function get_default_planner() {
     const env_os = process.env.RUNNER_OS;
-    if (env_os === 'macOS') {
-        return 'macos';
+    if (env_os === "macOS") {
+        return "macos";
     }
-    else if (env_os === 'Linux') {
-        return 'linux';
+    else if (env_os === "Linux") {
+        return "linux";
     }
     else {
         throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${env_os}\`)`);
@@ -356,11 +356,11 @@ function get_default_planner() {
 }
 function resolve_nix_installer_url(platform) {
     // Only one of these are allowed.
-    const nix_installer_branch = action_input_string_or_null('nix-installer-branch');
-    const nix_installer_pr = action_input_number_or_null('nix-installer-pr');
-    const nix_installer_revision = action_input_string_or_null('nix-installer-revision');
-    const nix_installer_tag = action_input_string_or_null('nix-installer-tag');
-    const nix_installer_url = action_input_string_or_null('nix-installer-url');
+    const nix_installer_branch = action_input_string_or_null("nix-installer-branch");
+    const nix_installer_pr = action_input_number_or_null("nix-installer-pr");
+    const nix_installer_revision = action_input_string_or_null("nix-installer-revision");
+    const nix_installer_tag = action_input_string_or_null("nix-installer-tag");
+    const nix_installer_url = action_input_string_or_null("nix-installer-url");
     let num_set = 0;
     if (nix_installer_branch !== null) {
         num_set += 1;
@@ -401,7 +401,7 @@ function resolve_nix_installer_url(platform) {
 }
 function action_input_string_or_null(name) {
     const value = actions_core.getInput(name);
-    if (value === '') {
+    if (value === "") {
         return null;
     }
     else {
@@ -419,7 +419,7 @@ function action_input_multiline_string_or_null(name) {
 }
 function action_input_number_or_null(name) {
     const value = actions_core.getInput(name);
-    if (value === '') {
+    if (value === "") {
         return null;
     }
     else {
