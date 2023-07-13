@@ -20,7 +20,7 @@ inputs:
     description: "The init system to configure, requires `planner: linux-multi` (allowing the choice between `none` or `systemd`)"
     required: false
   local-root:
-    description: A local `nix-installer` binary root, overrides any settings which change the `nix-installer` used (binaries should be named `nix-installer-$ARCH`, eg. `nix-installer-x86_64-linux`)
+    description: A local `nix-installer` binary root, overrides any settings which change the `nix-installer` used (binaries should be named `nix-installer-$ARCH-$OS`, eg. `nix-installer-x86_64-linux`)
     required: false
   log-directives:
     description: A list of Tracing directives, comma separated, `-`s replaced with `_` (eg. `nix_installer=trace`, see https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives)
@@ -91,7 +91,7 @@ inputs:
     required: false
     default: false
   start-daemon:
-    description: "If the daemon should be started, requires `planner: linux-multi`"
+    description: "If the daemon should be started, requires `planner: linux`"
     required: false
     default: true
   diagnostic-endpoint:
