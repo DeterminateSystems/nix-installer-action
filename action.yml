@@ -311,13 +311,20 @@ runs:
         export NIX_INSTALLER_NO_CONFIRM=true
         echo "Set NIX_INSTALLER_NO_CONFIRM=$NIX_INSTALLER_NO_CONFIRM"
 
-        if [ "${RUNNER_OS}" == "Linux" ]; then
-          export PLANNER="linux"
-        elif [ "${RUNNER_OS}" == "macOS" ]; then
-          export PLANNER="macos"
+        if [ -n "${{ inputs.planner }}" ]; then
+          export PLANNER="${{ inputs.planner }}"
+          echo "Set PLANNER=$PLANNER"
         else
-          echo "${RUNNER_OS} not supported"
-          exit 1
+          if [ "${RUNNER_OS}" == "Linux" ]; then
+            export PLANNER="linux"
+            echo "Set PLANNER=$PLANNER (Default)"
+          elif [ "${RUNNER_OS}" == "macOS" ]; then
+            export PLANNER="macos"
+            echo "Set PLANNER=$PLANNER (Default)"
+          else
+            echo "${RUNNER_OS} not supported"
+            exit 1
+          fi
         fi
 
         curl --retry 20 -L $NIX_INSTALLER_URL | sh -s -- install ${PLANNER} ${{ inputs.extra-args }}
