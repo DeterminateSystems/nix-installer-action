@@ -254,7 +254,7 @@ class NixInstallerAction {
             // Normal just doing of the install
             const binary_path = yield this.fetch_binary();
             yield this.execute_install(binary_path);
-            // TODO: Add `this.set_github_path()` and remove that from the installer crate
+            this.set_github_path();
         });
     }
     set_github_path() {
