@@ -313,11 +313,14 @@ runs:
 
         if [ -n "${{ inputs.planner }}" ]; then
           export PLANNER="${{ inputs.planner }}"
+          echo "Set PLANNER=$PLANNER"
         else
           if [ "${RUNNER_OS}" == "Linux" ]; then
             export PLANNER="linux"
+            echo "Set PLANNER=$PLANNER (Default)"
           elif [ "${RUNNER_OS}" == "macOS" ]; then
             export PLANNER="macos"
+            echo "Set PLANNER=$PLANNER (Default)"
           else
             echo "${RUNNER_OS} not supported"
             exit 1
