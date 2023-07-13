@@ -129,15 +129,27 @@ class NixInstallerAction {
         }
         // TODO: Error if the user uses these on not-MacOS
         if (this.mac_encrypt !== null) {
+            if (process.env.RUNNER_OS !== "macOS") {
+                throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
+            }
             execution_env.NIX_INSTALLER_ENCRYPT = this.mac_encrypt;
         }
         if (this.mac_case_sensitive !== null) {
+            if (process.env.RUNNER_OS !== "macOS") {
+                throw new Error("`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`");
+            }
             execution_env.NIX_INSTALLER_CASE_SENSITIVE = this.mac_case_sensitive;
         }
         if (this.mac_volume_label !== null) {
+            if (process.env.RUNNER_OS !== "macOS") {
+                throw new Error("`mac-volume-label` while `$RUNNER_OS` was not `macOS`");
+            }
             execution_env.NIX_INSTALLER_VOLUME_LABEL = this.mac_volume_label;
         }
         if (this.mac_root_disk !== null) {
+            if (process.env.RUNNER_OS !== "macOS") {
+                throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
+            }
             execution_env.NIX_INSTALLER_ROOT_DISK = this.mac_root_disk;
         }
         if (this.logger !== null) {
@@ -148,6 +160,9 @@ class NixInstallerAction {
         }
         // TODO: Error if the user uses these on MacOS
         if (this.init !== null) {
+            if (process.env.RUNNER_OS === "macOS") {
+                throw new Error("`init` is not a valid option when `$RUNNER_OS` is `macOS`");
+            }
             execution_env.NIX_INSTALLER_INIT = this.init;
         }
         if (this.start_daemon !== null) {
@@ -278,7 +293,6 @@ class NixInstallerAction {
     detect_existing() {
         return __awaiter(this, void 0, void 0, function* () {
             const receipt_path = "/nix/receipt.json";
-            // TODO: Maybe this should be a bit smarter?
             try {
                 yield (0, promises_1.access)(receipt_path);
                 // There is a /nix/receipt.json
