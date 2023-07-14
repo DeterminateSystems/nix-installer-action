@@ -17,7 +17,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          nix-installer-pr: 568
+          nix-installer-branch: main
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
@@ -42,7 +42,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          nix-installer-pr: 568
+          nix-installer-branch: main
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -60,7 +60,7 @@ jobs:
           reinstall: true
           extra-conf: |
             use-sqlite-wal = true
-          nix-installer-pr: 568
+          nix-installer-branch: main
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -86,7 +86,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          nix-installer-pr: 568
+          nix-installer-branch: main
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
@@ -115,7 +115,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          nix-installer-pr: 568
+          nix-installer-branch: main
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -133,7 +133,7 @@ jobs:
           reinstall: true
           extra-conf: |
             use-sqlite-wal = true
-          nix-installer-pr: 568
+          nix-installer-branch: main
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
