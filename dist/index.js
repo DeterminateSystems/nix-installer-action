@@ -260,21 +260,12 @@ class NixInstallerAction {
     set_github_path() {
         return __awaiter(this, void 0, void 0, function* () {
             // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
-            const github_path = process.env.GITHUB_PATH;
-            if (typeof github_path === "string") {
-                try {
-                    (0, promises_1.access)(github_path);
-                }
-                catch (error) {
-                    actions_core.info("Skipping setting $GITHUB_PATH in action, as `nix-installer` crate did it already");
-                }
-            }
             try {
                 actions_core.addPath("/nix/var/nix/profiles/default/bin");
                 actions_core.addPath(`${process.env.HOME}/.nix-profile/bin`);
             }
             catch (error) {
-                actions_core.error(`Attempt to set \`$GITHUB_PATH\` failed, \`nix\` may not be available on future steps: ${error}`);
+                actions_core.warning("Skipping setting $GITHUB_PATH in action, as `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is only done in the action. Prior to 0.11.0, this was done in the `nix-installer` binary.");
             }
         });
     }
