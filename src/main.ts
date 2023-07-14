@@ -285,7 +285,7 @@ class NixInstallerAction {
         await this.execute_uninstall();
       } else {
         // We're already installed, and not reinstalling, just set GITHUB_PATH and finish early
-        this.set_github_path();
+        await this.set_github_path();
         actions_core.info("Nix was already installed, using existing install");
         return;
       }
@@ -293,10 +293,21 @@ class NixInstallerAction {
     // Normal just doing of the install
     const binary_path = await this.fetch_binary();
     await this.execute_install(binary_path);
-    this.set_github_path();
+    await this.set_github_path();
   }
 
-  set_github_path(): void {
+  async set_github_path(): Promise<void> {
+    // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
+    const github_path = process.env.GITHUB_PATH;
+    if (typeof github_path === "string") {
+      try {
+        access(github_path);
+      } catch {
+        actions_core.info(
+          "Skipping setting $GITHUB_PATH in action, as `nix-installer` crate did it already",
+        );
+      }
+    }
     actions_core.addPath("/nix/var/nix/profiles/default/bin");
     actions_core.addPath(`${process.env.HOME}/.nix-profile/bin`);
   }
