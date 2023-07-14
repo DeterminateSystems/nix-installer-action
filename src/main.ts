@@ -302,14 +302,20 @@ class NixInstallerAction {
     if (typeof github_path === "string") {
       try {
         access(github_path);
-      } catch {
+      } catch (error) {
         actions_core.info(
           "Skipping setting $GITHUB_PATH in action, as `nix-installer` crate did it already",
         );
       }
     }
-    actions_core.addPath("/nix/var/nix/profiles/default/bin");
-    actions_core.addPath(`${process.env.HOME}/.nix-profile/bin`);
+    try {
+      actions_core.addPath("/nix/var/nix/profiles/default/bin");
+      actions_core.addPath(`${process.env.HOME}/.nix-profile/bin`);
+    } catch (error) {
+      actions_core.error(
+        `Attempt to set \`$GITHUB_PATH\` failed, \`nix\` may not be available on future steps: ${error}`,
+      );
+    }
   }
 
   async execute_uninstall(): Promise<number> {
