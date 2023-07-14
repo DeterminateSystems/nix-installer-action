@@ -265,7 +265,7 @@ class NixInstallerAction {
                 actions_core.addPath(`${process.env.HOME}/.nix-profile/bin`);
             }
             catch (error) {
-                actions_core.warning("Skipping setting $GITHUB_PATH in action, as `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is only done in the action. Prior to 0.11.0, this was done in the `nix-installer` binary.");
+                actions_core.warning("Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is only done in the action. Prior to 0.11.0, this was done in the `nix-installer` binary.");
             }
         });
     }
