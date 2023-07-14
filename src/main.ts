@@ -299,8 +299,13 @@ class NixInstallerAction {
   async set_github_path(): Promise<void> {
     // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
     try {
-      actions_core.addPath("/nix/var/nix/profiles/default/bin");
-      actions_core.addPath(`${process.env.HOME}/.nix-profile/bin`);
+      const nix_var_nix_profile_path = "/nix/var/nix/profiles/default/bin";
+      const home_nix_profile_path = `${process.env.HOME}/.nix-profile/bin`;
+      actions_core.addPath(nix_var_nix_profile_path);
+      actions_core.addPath(home_nix_profile_path);
+      actions_core.info(
+        `Added \`${nix_var_nix_profile_path}\` and \`${home_nix_profile_path}\` to \`$GITHUB_PATH\``,
+      );
     } catch (error) {
       actions_core.warning(
         "Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is only done in the action. Prior to 0.11.0, this was done in the `nix-installer` binary.",
@@ -463,51 +468,44 @@ function resolve_nix_installer_url(platform: string): URL {
   const nix_installer_tag = action_input_string_or_null("nix-installer-tag");
   const nix_installer_url = action_input_string_or_null("nix-installer-url");
 
+  let resolved_nix_installer_url = null;
   let num_set = 0;
+
   if (nix_installer_branch !== null) {
     num_set += 1;
-  }
-  if (nix_installer_pr !== null) {
+    resolved_nix_installer_url = new URL(
+      `https://install.determinate.systems/nix/branch/${nix_installer_branch}/nix-installer-${platform}?ci=github`,
+    );
+  } else if (nix_installer_pr !== null) {
     num_set += 1;
-  }
-  if (nix_installer_revision !== null) {
+    resolved_nix_installer_url = new URL(
+      `https://install.determinate.systems/nix/pr/${nix_installer_pr}/nix-installer-${platform}?ci=github`,
+    );
+  } else if (nix_installer_revision !== null) {
     num_set += 1;
-  }
-  if (nix_installer_tag !== null) {
+    resolved_nix_installer_url = new URL(
+      `https://install.determinate.systems/nix/rev/${nix_installer_revision}/nix-installer-${platform}?ci=github`,
+    );
+  } else if (nix_installer_tag !== null) {
     num_set += 1;
-  }
-  if (nix_installer_url !== null) {
+    resolved_nix_installer_url = new URL(
+      `https://install.determinate.systems/nix/tag/${nix_installer_tag}/nix-installer-${platform}?ci=github`,
+    );
+  } else if (nix_installer_url !== null) {
     num_set += 1;
+    resolved_nix_installer_url = new URL(nix_installer_url);
+  } else {
+    resolved_nix_installer_url = new URL(
+      `https://install.determinate.systems/nix/nix-installer-${platform}?ci=github`,
+    );
   }
+
   if (num_set > 1) {
     throw new Error(
       `The following options are mututally exclusive, but ${num_set} were set: \`nix_installer_branch\`, \`nix_installer_pr\`, \`nix_installer_revision\`, \`nix_installer_tag\`, and \`nix_installer_url\``,
     );
   }
-
-  if (nix_installer_branch !== null) {
-    return new URL(
-      `https://install.determinate.systems/nix/branch/${nix_installer_branch}/nix-installer-${platform}?ci=github`,
-    );
-  } else if (nix_installer_pr !== null) {
-    return new URL(
-      `https://install.determinate.systems/nix/pr/${nix_installer_pr}/nix-installer-${platform}?ci=github`,
-    );
-  } else if (nix_installer_revision !== null) {
-    return new URL(
-      `https://install.determinate.systems/nix/rev/${nix_installer_revision}/nix-installer-${platform}?ci=github`,
-    );
-  } else if (nix_installer_tag !== null) {
-    return new URL(
-      `https://install.determinate.systems/nix/tag/${nix_installer_tag}/nix-installer-${platform}?ci=github`,
-    );
-  } else if (nix_installer_url !== null) {
-    return new URL(nix_installer_url);
-  } else {
-    return new URL(
-      `https://install.determinate.systems/nix/nix-installer-${platform}?ci=github`,
-    );
-  }
+  return resolved_nix_installer_url;
 }
 
 function action_input_string_or_null(name: string): string | null {
