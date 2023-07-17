@@ -268,7 +268,7 @@ class NixInstallerAction {
                 actions_core.info(`Added \`${nix_var_nix_profile_path}\` and \`${home_nix_profile_path}\` to \`$GITHUB_PATH\``);
             }
             catch (error) {
-                actions_core.warning("Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is only done in the action. Prior to 0.11.0, this was done in the `nix-installer` binary.");
+                actions_core.info("Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is done in the action. Prior to 0.11.0, this was only done in the `nix-installer` binary.");
             }
         });
     }
