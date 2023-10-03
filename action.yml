@@ -16,6 +16,7 @@ inputs:
   flakehub:
     description: Automatically log in to your FlakeHub.com account, for accessing private flakes.
     required: false
+    default: false
   github-token:
     description: A GitHub token for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)
     default: ${{ github.token }}
