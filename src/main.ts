@@ -17,6 +17,7 @@ class NixInstallerAction {
   backtrace: string | null;
   extra_args: string | null;
   extra_conf: string[] | null;
+  flakehub: boolean | null;
   github_token: string | null;
   // TODO: linux_init
   init: string | null;
@@ -54,6 +55,7 @@ class NixInstallerAction {
     this.backtrace = action_input_string_or_null("backtrace");
     this.extra_args = action_input_string_or_null("extra-args");
     this.extra_conf = action_input_multiline_string_or_null("extra-conf");
+    this.flakehub = action_input_bool("flakehub");
     this.github_token = action_input_string_or_null("github-token");
     this.init = action_input_string_or_null("init");
     this.local_root = action_input_string_or_null("local-root");
@@ -305,6 +307,9 @@ class NixInstallerAction {
     }
     // Normal just doing of the install
     const binary_path = await this.fetch_binary();
+    if (this.flakehub) {
+      await this.setup_flakehub();
+    }
     await this.execute_install(binary_path);
     await this.set_github_path();
   }
@@ -324,6 +329,79 @@ class NixInstallerAction {
         "Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is done in the action. Prior to 0.11.0, this was only done in the `nix-installer` binary.",
       );
     }
+  }
+
+  async setup_flakehub(): Promise<number> {
+    const jwt = await actions_core.getIDToken("api.flakehub.com");
+
+    const spawned = spawn(
+      `sudo`,
+      ["sh", "-c", "mkdir -p /etc/nix && tee -a /etc/nix/netrc"],
+      {
+        env: {
+          ...process.env, // To get $PATH, etc
+        },
+      },
+    );
+
+    spawned.stdin.write(`\n`);
+    spawned.stdin.write(
+      `machine flakehub.com login flakehub password ${jwt}\n`,
+    );
+    spawned.stdin.end(
+      `machine api.flakehub.com login flakehub password ${jwt}\n`,
+    );
+
+    spawned.stdout.setEncoding("utf-8");
+    spawned.stdout.on("data", (data) => {
+      const trimmed = data.trimEnd();
+      if (trimmed.length >= 0) {
+        actions_core.info(trimmed);
+      }
+    });
+
+    spawned.stderr.setEncoding("utf-8");
+    spawned.stderr.on("data", (data) => {
+      const trimmed = data.trimEnd();
+      if (trimmed.length >= 0) {
+        actions_core.info(trimmed);
+      }
+    });
+
+    const exit_code: number = await new Promise((resolve, reject) => {
+      const return_handler = (
+        code: number | undefined | null,
+        signal: number | undefined | null,
+      ): void => {
+        if (code !== undefined && code != null) {
+          actions_core.debug(`child process exited with code ${code}`);
+          resolve(code);
+        }
+        if (signal !== undefined && signal != null) {
+          actions_core.debug(`child process signaled with ${signal}`);
+          reject(signal);
+        }
+
+        actions_core.debug(
+          `child process return handler ran without a code or signal`,
+        );
+        reject(new Error("no code or signal"));
+      };
+
+      spawned.on("exit", return_handler);
+      spawned.on("error", (e) => {
+        actions_core.debug(`child process error ${e}`);
+        reject(e);
+      });
+    });
+
+    if (exit_code !== 0) {
+      throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
+    }
+
+    actions_core.info(`Added flakehub.com to Nix's /etc/nix/netrc.`);
+
+    return exit_code;
   }
 
   async execute_uninstall(): Promise<number> {

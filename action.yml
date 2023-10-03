@@ -13,6 +13,9 @@ inputs:
   extra-conf:
     description: Extra configuration lines for `/etc/nix/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)
     required: false
+  flakehub:
+    description: Automatically log in to your FlakeHub.com account, for accessing private flakes.
+    required: false
   github-token:
     description: A GitHub token for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)
     default: ${{ github.token }}
