@@ -87,6 +87,7 @@ class NixInstallerAction {
     );
     this.trust_runner_user = action_input_bool("trust-runner-user");
     this.correlation = process.env["STATE_correlation"];
+    actions_core.info(`${this.correlation}`);
     this.nix_installer_url = resolve_nix_installer_url(
       this.platform,
       this.correlation,
@@ -634,14 +635,16 @@ function action_input_bool(name: string): boolean {
 
 async function main(): Promise<void> {
   try {
+    if (!process.env["STATE_correlation"]) {
+      const correlation = `GH-${randomUUID()}`;
+      actions_core.saveState("correlation", correlation);
+      process.env["STATE_correlation"] = correlation;
+    }
     const installer = new NixInstallerAction();
 
     const isPost = !!process.env["STATE_isPost"];
     if (!isPost) {
       actions_core.saveState("isPost", "true");
-      const correlation = `GH-${randomUUID()}`;
-      actions_core.saveState("correlation", correlation);
-      installer.correlation = correlation;
       await installer.install();
     } else {
       installer.report_overall();
