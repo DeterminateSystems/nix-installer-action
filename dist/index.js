@@ -89,7 +89,7 @@ class NixInstallerAction {
     executionEnvironment() {
         const execution_env = {};
         execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
-        execution_env.NIX_INSTALLER_ATTRIBUTION = this.correlation;
+        execution_env.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = this.correlation;
         if (this.backtrace !== null) {
             execution_env.RUST_BACKTRACE = this.backtrace;
         }

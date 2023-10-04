@@ -97,7 +97,7 @@ class NixInstallerAction {
     const execution_env: ExecuteEnvironment = {};
 
     execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
-    execution_env.NIX_INSTALLER_ATTRIBUTION = this.correlation;
+    execution_env.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = this.correlation;
 
     if (this.backtrace !== null) {
       execution_env.RUST_BACKTRACE = this.backtrace;
@@ -502,7 +502,7 @@ type ExecuteEnvironment = {
   NIX_INSTALLER_PROXY?: string;
   NIX_INSTALLER_SSL_CERT_FILE?: string;
   NIX_INSTALLER_DIAGNOSTIC_ENDPOINT?: string;
-  NIX_INSTALLER_ATTRIBUTION?: string;
+  NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION?: string;
   NIX_INSTALLER_ENCRYPT?: string;
   NIX_INSTALLER_CASE_SENSITIVE?: string;
   NIX_INSTALLER_VOLUME_LABEL?: string;
