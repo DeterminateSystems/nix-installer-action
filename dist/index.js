@@ -381,7 +381,12 @@ class NixInstallerAction {
             try {
                 actions_core.info(`tok: ${this.github_token}`);
                 const octokit = github.getOctokit(this.github_token);
-                actions_core.info(`got octokit`);
+                actions_core.info(`got octokit: ${octokit}`);
+                actions_core.info(`fetch for: ${JSON.stringify({
+                    owner: github.context.repo.owner,
+                    repo: github.context.repo.repo,
+                    run_id: github.context.runId,
+                }, null, 4)}`);
                 const jobs = yield octokit.paginate(octokit.rest.actions.listJobsForWorkflowRun, {
                     owner: github.context.repo.owner,
                     repo: github.context.repo.repo,
