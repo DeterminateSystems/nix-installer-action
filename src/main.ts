@@ -46,7 +46,7 @@ class NixInstallerAction {
   // This is for monitoring the real impact of Nix updates, to avoid breaking large
   // swaths of users at once with botched Nix releases. For example:
   // https://github.com/NixOS/nix/issues/9052.
-  attribution: string;
+  attribution: string | undefined;
 
   constructor() {
     this.platform = get_nix_platform();
@@ -86,7 +86,7 @@ class NixInstallerAction {
       "diagnostic-endpoint",
     );
     this.trust_runner_user = action_input_bool("trust-runner-user");
-    this.attribution = `GH-${randomUUID()}`;
+    this.attribution = process.env["STATE_attribution"];
     this.nix_installer_url = resolve_nix_installer_url(
       this.platform,
       this.attribution,
@@ -546,7 +546,7 @@ function get_default_planner(): string {
   }
 }
 
-function resolve_nix_installer_url(platform: string, attribution: string): URL {
+function resolve_nix_installer_url(platform: string, attribution?: string): URL {
   // Only one of these are allowed.
   const nix_installer_branch = action_input_string_or_null(
     "nix-installer-branch",
@@ -636,6 +636,7 @@ async function main(): Promise<void> {
     const isPost = !!process.env["STATE_isPost"];
     if (!isPost) {
       actions_core.saveState("isPost", "true");
+      actions_core.saveState("attribution", `GH-${randomUUID()}`);
       await installer.install();
     } else {
       installer.report_overall();
