@@ -1,6 +1,6 @@
 import * as actions_core from "@actions/core";
 import * as github from "@actions/github";
-import { mkdtemp, chmod, access } from "node:fs/promises";
+import { mkdtemp, chmod, access, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
@@ -95,7 +95,7 @@ class NixInstallerAction {
     );
   }
 
-  private executionEnvironment(): ExecuteEnvironment {
+  private async executionEnvironment(): Promise<ExecuteEnvironment> {
     const execution_env: ExecuteEnvironment = {};
 
     execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
@@ -219,6 +219,10 @@ class NixInstallerAction {
       extra_conf += `trusted-users = root ${process.env.USER}`;
       extra_conf += "\n";
     }
+    if (this.flakehub !== null) {
+      extra_conf += `netrc-file = ${await this.flakehub_login()}`;
+      extra_conf += "\n";
+    }
     if (this.extra_conf !== null && this.extra_conf.length !== 0) {
       extra_conf += this.extra_conf.join("\n");
       extra_conf += "\n";
@@ -236,7 +240,7 @@ class NixInstallerAction {
   }
 
   private async execute_install(binary_path: string): Promise<number> {
-    const execution_env = this.executionEnvironment();
+    const execution_env = await this.executionEnvironment();
     actions_core.info(
       `Execution environment: ${JSON.stringify(execution_env, null, 4)}`,
     );
@@ -307,9 +311,6 @@ class NixInstallerAction {
     }
     // Normal just doing of the install
     const binary_path = await this.fetch_binary();
-    if (this.flakehub) {
-      await this.setup_flakehub();
-    }
     await this.execute_install(binary_path);
     await this.set_github_path();
   }
@@ -331,77 +332,27 @@ class NixInstallerAction {
     }
   }
 
-  async setup_flakehub(): Promise<number> {
+  async flakehub_login(): Promise<string> {
+    const netrc_path = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
+
     const jwt = await actions_core.getIDToken("api.flakehub.com");
 
-    const spawned = spawn(
-      `sudo`,
-      ["sh", "-c", "mkdir -p /etc/nix && tee -a /etc/nix/netrc"],
-      {
-        env: {
-          ...process.env, // To get $PATH, etc
-        },
-      },
+    await writeFile(
+      netrc_path,
+      [
+        `machine api.flakehub.com login flakehub password ${jwt}`,
+        `machine flakehub.com login flakehub password ${jwt}`,
+      ].join("\n"),
     );
 
-    spawned.stdin.write(`\n`);
-    spawned.stdin.write(
-      `machine flakehub.com login flakehub password ${jwt}\n`,
-    );
-    spawned.stdin.end(
-      `machine api.flakehub.com login flakehub password ${jwt}\n`,
-    );
-
-    spawned.stdout.setEncoding("utf-8");
-    spawned.stdout.on("data", (data) => {
-      const trimmed = data.trimEnd();
-      if (trimmed.length >= 0) {
-        actions_core.info(trimmed);
-      }
-    });
-
-    spawned.stderr.setEncoding("utf-8");
-    spawned.stderr.on("data", (data) => {
-      const trimmed = data.trimEnd();
-      if (trimmed.length >= 0) {
-        actions_core.info(trimmed);
-      }
-    });
-
-    const exit_code: number = await new Promise((resolve, reject) => {
-      const return_handler = (
-        code: number | undefined | null,
-        signal: number | undefined | null,
-      ): void => {
-        if (code !== undefined && code != null) {
-          actions_core.debug(`child process exited with code ${code}`);
-          resolve(code);
-        }
-        if (signal !== undefined && signal != null) {
-          actions_core.debug(`child process signaled with ${signal}`);
-          reject(signal);
-        }
-
-        actions_core.debug(
-          `child process return handler ran without a code or signal`,
-        );
-        reject(new Error("no code or signal"));
-      };
-
-      spawned.on("exit", return_handler);
-      spawned.on("error", (e) => {
-        actions_core.debug(`child process error ${e}`);
-        reject(e);
-      });
-    });
-
-    if (exit_code !== 0) {
-      throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
+    actions_core.info("Logging in to FlakeHub.");
+    if (this.extra_conf?.includes("netrc-file")) {
+      actions_core.warning(
+        "Logging in to FlakeHub conflicts with the Nix option `netrc-file`.",
+      );
     }
 
-    actions_core.info(`Added flakehub.com to Nix's /etc/nix/netrc.`);
-
-    return exit_code;
+    return netrc_path;
   }
 
   async execute_uninstall(): Promise<number> {

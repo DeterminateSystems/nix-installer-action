@@ -88,119 +88,125 @@ class NixInstallerAction {
         this.nix_installer_url = resolve_nix_installer_url(this.platform, this.correlation);
     }
     executionEnvironment() {
-        const execution_env = {};
-        execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
-        execution_env.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = this.correlation;
-        if (this.backtrace !== null) {
-            execution_env.RUST_BACKTRACE = this.backtrace;
-        }
-        if (this.modify_profile !== null) {
-            if (this.modify_profile) {
-                execution_env.NIX_INSTALLER_MODIFY_PROFILE = "true";
+        return __awaiter(this, void 0, void 0, function* () {
+            const execution_env = {};
+            execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
+            execution_env.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = this.correlation;
+            if (this.backtrace !== null) {
+                execution_env.RUST_BACKTRACE = this.backtrace;
             }
-            else {
-                execution_env.NIX_INSTALLER_MODIFY_PROFILE = "false";
+            if (this.modify_profile !== null) {
+                if (this.modify_profile) {
+                    execution_env.NIX_INSTALLER_MODIFY_PROFILE = "true";
+                }
+                else {
+                    execution_env.NIX_INSTALLER_MODIFY_PROFILE = "false";
+                }
             }
-        }
-        if (this.nix_build_group_id !== null) {
-            execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_ID = `${this.nix_build_group_id}`;
-        }
-        if (this.nix_build_group_name !== null) {
-            execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_NAME =
-                this.nix_build_group_name;
-        }
-        if (this.nix_build_user_prefix !== null) {
-            execution_env.NIX_INSTALLER_NIX_BUILD_USER_PREFIX =
-                this.nix_build_user_prefix;
-        }
-        if (this.nix_build_user_count !== null) {
-            execution_env.NIX_INSTALLER_NIX_BUILD_USER_COUNT = `${this.nix_build_user_count}`;
-        }
-        if (this.nix_build_user_base !== null) {
-            execution_env.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nix_build_user_count}`;
-        }
-        if (this.nix_package_url !== null) {
-            execution_env.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nix_package_url}`;
-        }
-        if (this.proxy !== null) {
-            execution_env.NIX_INSTALLER_PROXY = this.proxy;
-        }
-        if (this.ssl_cert_file !== null) {
-            execution_env.NIX_INSTALLER_SSL_CERT_FILE = this.ssl_cert_file;
-        }
-        if (this.diagnostic_endpoint !== null) {
-            execution_env.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
-                this.diagnostic_endpoint;
-        }
-        // TODO: Error if the user uses these on not-MacOS
-        if (this.mac_encrypt !== null) {
-            if (process.env.RUNNER_OS !== "macOS") {
-                throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
+            if (this.nix_build_group_id !== null) {
+                execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_ID = `${this.nix_build_group_id}`;
             }
-            execution_env.NIX_INSTALLER_ENCRYPT = this.mac_encrypt;
-        }
-        if (this.mac_case_sensitive !== null) {
-            if (process.env.RUNNER_OS !== "macOS") {
-                throw new Error("`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`");
+            if (this.nix_build_group_name !== null) {
+                execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_NAME =
+                    this.nix_build_group_name;
             }
-            execution_env.NIX_INSTALLER_CASE_SENSITIVE = this.mac_case_sensitive;
-        }
-        if (this.mac_volume_label !== null) {
-            if (process.env.RUNNER_OS !== "macOS") {
-                throw new Error("`mac-volume-label` while `$RUNNER_OS` was not `macOS`");
+            if (this.nix_build_user_prefix !== null) {
+                execution_env.NIX_INSTALLER_NIX_BUILD_USER_PREFIX =
+                    this.nix_build_user_prefix;
             }
-            execution_env.NIX_INSTALLER_VOLUME_LABEL = this.mac_volume_label;
-        }
-        if (this.mac_root_disk !== null) {
-            if (process.env.RUNNER_OS !== "macOS") {
-                throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
+            if (this.nix_build_user_count !== null) {
+                execution_env.NIX_INSTALLER_NIX_BUILD_USER_COUNT = `${this.nix_build_user_count}`;
             }
-            execution_env.NIX_INSTALLER_ROOT_DISK = this.mac_root_disk;
-        }
-        if (this.logger !== null) {
-            execution_env.NIX_INSTALLER_LOGGER = this.logger;
-        }
-        if (this.log_directives !== null) {
-            execution_env.NIX_INSTALLER_LOG_DIRECTIVES = this.log_directives;
-        }
-        // TODO: Error if the user uses these on MacOS
-        if (this.init !== null) {
-            if (process.env.RUNNER_OS === "macOS") {
-                throw new Error("`init` is not a valid option when `$RUNNER_OS` is `macOS`");
+            if (this.nix_build_user_base !== null) {
+                execution_env.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nix_build_user_count}`;
             }
-            execution_env.NIX_INSTALLER_INIT = this.init;
-        }
-        if (this.start_daemon !== null) {
-            if (this.start_daemon) {
-                execution_env.NIX_INSTALLER_START_DAEMON = "true";
+            if (this.nix_package_url !== null) {
+                execution_env.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nix_package_url}`;
             }
-            else {
-                execution_env.NIX_INSTALLER_START_DAEMON = "false";
+            if (this.proxy !== null) {
+                execution_env.NIX_INSTALLER_PROXY = this.proxy;
             }
-        }
-        let extra_conf = "";
-        if (this.github_token !== null) {
-            extra_conf += `access-tokens = github.com=${this.github_token}`;
-            extra_conf += "\n";
-        }
-        if (this.trust_runner_user !== null) {
-            extra_conf += `trusted-users = root ${process.env.USER}`;
-            extra_conf += "\n";
-        }
-        if (this.extra_conf !== null && this.extra_conf.length !== 0) {
-            extra_conf += this.extra_conf.join("\n");
-            extra_conf += "\n";
-        }
-        execution_env.NIX_INSTALLER_EXTRA_CONF = extra_conf;
-        if (process.env.ACT && !process.env.NOT_ACT) {
-            actions_core.info("Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`");
-            execution_env.NIX_INSTALLER_INIT = "none";
-        }
-        return execution_env;
+            if (this.ssl_cert_file !== null) {
+                execution_env.NIX_INSTALLER_SSL_CERT_FILE = this.ssl_cert_file;
+            }
+            if (this.diagnostic_endpoint !== null) {
+                execution_env.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
+                    this.diagnostic_endpoint;
+            }
+            // TODO: Error if the user uses these on not-MacOS
+            if (this.mac_encrypt !== null) {
+                if (process.env.RUNNER_OS !== "macOS") {
+                    throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
+                }
+                execution_env.NIX_INSTALLER_ENCRYPT = this.mac_encrypt;
+            }
+            if (this.mac_case_sensitive !== null) {
+                if (process.env.RUNNER_OS !== "macOS") {
+                    throw new Error("`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`");
+                }
+                execution_env.NIX_INSTALLER_CASE_SENSITIVE = this.mac_case_sensitive;
+            }
+            if (this.mac_volume_label !== null) {
+                if (process.env.RUNNER_OS !== "macOS") {
+                    throw new Error("`mac-volume-label` while `$RUNNER_OS` was not `macOS`");
+                }
+                execution_env.NIX_INSTALLER_VOLUME_LABEL = this.mac_volume_label;
+            }
+            if (this.mac_root_disk !== null) {
+                if (process.env.RUNNER_OS !== "macOS") {
+                    throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
+                }
+                execution_env.NIX_INSTALLER_ROOT_DISK = this.mac_root_disk;
+            }
+            if (this.logger !== null) {
+                execution_env.NIX_INSTALLER_LOGGER = this.logger;
+            }
+            if (this.log_directives !== null) {
+                execution_env.NIX_INSTALLER_LOG_DIRECTIVES = this.log_directives;
+            }
+            // TODO: Error if the user uses these on MacOS
+            if (this.init !== null) {
+                if (process.env.RUNNER_OS === "macOS") {
+                    throw new Error("`init` is not a valid option when `$RUNNER_OS` is `macOS`");
+                }
+                execution_env.NIX_INSTALLER_INIT = this.init;
+            }
+            if (this.start_daemon !== null) {
+                if (this.start_daemon) {
+                    execution_env.NIX_INSTALLER_START_DAEMON = "true";
+                }
+                else {
+                    execution_env.NIX_INSTALLER_START_DAEMON = "false";
+                }
+            }
+            let extra_conf = "";
+            if (this.github_token !== null) {
+                extra_conf += `access-tokens = github.com=${this.github_token}`;
+                extra_conf += "\n";
+            }
+            if (this.trust_runner_user !== null) {
+                extra_conf += `trusted-users = root ${process.env.USER}`;
+                extra_conf += "\n";
+            }
+            if (this.flakehub !== null) {
+                extra_conf += `netrc-file = ${yield this.flakehub_login()}`;
+                extra_conf += "\n";
+            }
+            if (this.extra_conf !== null && this.extra_conf.length !== 0) {
+                extra_conf += this.extra_conf.join("\n");
+                extra_conf += "\n";
+            }
+            execution_env.NIX_INSTALLER_EXTRA_CONF = extra_conf;
+            if (process.env.ACT && !process.env.NOT_ACT) {
+                actions_core.info("Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`");
+                execution_env.NIX_INSTALLER_INIT = "none";
+            }
+            return execution_env;
+        });
     }
     execute_install(binary_path) {
         return __awaiter(this, void 0, void 0, function* () {
-            const execution_env = this.executionEnvironment();
+            const execution_env = yield this.executionEnvironment();
             actions_core.info(`Execution environment: ${JSON.stringify(execution_env, null, 4)}`);
             const args = ["install"];
             if (this.planner) {
@@ -258,9 +264,6 @@ class NixInstallerAction {
             }
             // Normal just doing of the install
             const binary_path = yield this.fetch_binary();
-            if (this.flakehub) {
-                yield this.setup_flakehub();
-            }
             yield this.execute_install(binary_path);
             yield this.set_github_path();
         });
@@ -280,53 +283,20 @@ class NixInstallerAction {
             }
         });
     }
-    setup_flakehub() {
+    flakehub_login() {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
+            const netrc_path = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
             const jwt = yield actions_core.getIDToken("api.flakehub.com");
-            const spawned = (0, node_child_process_1.spawn)(`sudo`, ["sh", "-c", "mkdir -p /etc/nix && tee -a /etc/nix/netrc"], {
-                env: Object.assign({}, process.env),
-            });
-            spawned.stdin.write(`\n`);
-            spawned.stdin.write(`machine flakehub.com login flakehub password ${jwt}\n`);
-            spawned.stdin.end(`machine api.flakehub.com login flakehub password ${jwt}\n`);
-            spawned.stdout.setEncoding("utf-8");
-            spawned.stdout.on("data", (data) => {
-                const trimmed = data.trimEnd();
-                if (trimmed.length >= 0) {
-                    actions_core.info(trimmed);
-                }
-            });
-            spawned.stderr.setEncoding("utf-8");
-            spawned.stderr.on("data", (data) => {
-                const trimmed = data.trimEnd();
-                if (trimmed.length >= 0) {
-                    actions_core.info(trimmed);
-                }
-            });
-            const exit_code = yield new Promise((resolve, reject) => {
-                const return_handler = (code, signal) => {
-                    if (code !== undefined && code != null) {
-                        actions_core.debug(`child process exited with code ${code}`);
-                        resolve(code);
-                    }
-                    if (signal !== undefined && signal != null) {
-                        actions_core.debug(`child process signaled with ${signal}`);
-                        reject(signal);
-                    }
-                    actions_core.debug(`child process return handler ran without a code or signal`);
-                    reject(new Error("no code or signal"));
-                };
-                spawned.on("exit", return_handler);
-                spawned.on("error", (e) => {
-                    actions_core.debug(`child process error ${e}`);
-                    reject(e);
-                });
-            });
-            if (exit_code !== 0) {
-                throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
+            yield (0, promises_1.writeFile)(netrc_path, [
+                `machine api.flakehub.com login flakehub password ${jwt}`,
+                `machine flakehub.com login flakehub password ${jwt}`,
+            ].join("\n"));
+            actions_core.info("Logging in to FlakeHub.");
+            if ((_a = this.extra_conf) === null || _a === void 0 ? void 0 : _a.includes("netrc-file")) {
+                actions_core.warning("Logging in to FlakeHub conflicts with the Nix option `netrc-file`.");
             }
-            actions_core.info(`Added flakehub.com to Nix's /etc/nix/netrc.`);
-            return exit_code;
+            return netrc_path;
         });
     }
     execute_uninstall() {
