@@ -518,7 +518,9 @@ function main() {
             const isPost = !!process.env["STATE_isPost"];
             if (!isPost) {
                 actions_core.saveState("isPost", "true");
-                actions_core.saveState("correlation", `GH-${(0, node_crypto_1.randomUUID)()}`);
+                const correlation = `GH-${(0, node_crypto_1.randomUUID)()}`;
+                actions_core.saveState("correlation", correlation);
+                installer.correlation = correlation;
                 yield installer.install();
             }
             else {

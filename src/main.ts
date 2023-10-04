@@ -639,7 +639,9 @@ async function main(): Promise<void> {
     const isPost = !!process.env["STATE_isPost"];
     if (!isPost) {
       actions_core.saveState("isPost", "true");
-      actions_core.saveState("correlation", `GH-${randomUUID()}`);
+      const correlation = `GH-${randomUUID()}`;
+      actions_core.saveState("correlation", correlation);
+      installer.correlation = correlation;
       await installer.install();
     } else {
       installer.report_overall();
