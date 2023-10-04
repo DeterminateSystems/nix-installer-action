@@ -87,7 +87,6 @@ class NixInstallerAction {
     );
     this.trust_runner_user = action_input_bool("trust-runner-user");
     this.correlation = process.env["STATE_correlation"];
-    actions_core.info(`${this.correlation}`);
     this.nix_installer_url = resolve_nix_installer_url(
       this.platform,
       this.correlation,
@@ -450,7 +449,9 @@ class NixInstallerAction {
     }
 
     try {
+      actions_core.info(`tok: ${this.github_token}`);
       const octokit = github.getOctokit(this.github_token);
+      actions_core.info(`got octokit`);
       const jobs = await octokit.paginate(
         octokit.rest.actions.listJobsForWorkflowRun,
         {
@@ -459,7 +460,7 @@ class NixInstallerAction {
           run_id: github.context.runId,
         },
       );
-
+      actions_core.info(`awaited jobs: ${jobs}`);
       const job = jobs
         .filter((candidate) => candidate.name === github.context.job)
         .at(0);

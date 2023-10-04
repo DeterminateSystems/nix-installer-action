@@ -84,7 +84,6 @@ class NixInstallerAction {
         this.diagnostic_endpoint = action_input_string_or_null("diagnostic-endpoint");
         this.trust_runner_user = action_input_bool("trust-runner-user");
         this.correlation = process.env["STATE_correlation"];
-        actions_core.info(`${this.correlation}`);
         this.nix_installer_url = resolve_nix_installer_url(this.platform, this.correlation);
     }
     executionEnvironment() {
@@ -380,12 +379,15 @@ class NixInstallerAction {
                 return undefined;
             }
             try {
+                actions_core.info(`tok: ${this.github_token}`);
                 const octokit = github.getOctokit(this.github_token);
+                actions_core.info(`got octokit`);
                 const jobs = yield octokit.paginate(octokit.rest.actions.listJobsForWorkflowRun, {
                     owner: github.context.repo.owner,
                     repo: github.context.repo.repo,
                     run_id: github.context.runId,
                 });
+                actions_core.info(`awaited jobs: ${jobs}`);
                 const job = jobs
                     .filter((candidate) => candidate.name === github.context.job)
                     .at(0);
@@ -515,10 +517,10 @@ function action_input_bool(name) {
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            if (!process.env['STATE_correlation']) {
+            if (!process.env["STATE_correlation"]) {
                 const correlation = `GH-${(0, node_crypto_1.randomUUID)()}`;
                 actions_core.saveState("correlation", correlation);
-                process.env['STATE_correlation'] = correlation;
+                process.env["STATE_correlation"] = correlation;
             }
             const installer = new NixInstallerAction();
             const isPost = !!process.env["STATE_isPost"];
