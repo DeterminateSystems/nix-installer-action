@@ -546,7 +546,10 @@ function get_default_planner(): string {
   }
 }
 
-function resolve_nix_installer_url(platform: string, correlation?: string): URL {
+function resolve_nix_installer_url(
+  platform: string,
+  correlation?: string,
+): URL {
   // Only one of these are allowed.
   const nix_installer_branch = action_input_string_or_null(
     "nix-installer-branch",
