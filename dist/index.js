@@ -379,25 +379,18 @@ class NixInstallerAction {
                 return undefined;
             }
             try {
-                actions_core.info(`tok: ${this.github_token}`);
                 const octokit = github.getOctokit(this.github_token);
-                actions_core.info(`got octokit: ${octokit}`);
-                actions_core.info(`fetch for: ${JSON.stringify({
-                    owner: github.context.repo.owner,
-                    repo: github.context.repo.repo,
-                    run_id: github.context.runId,
-                }, null, 4)}`);
                 const jobs = yield octokit.paginate(octokit.rest.actions.listJobsForWorkflowRun, {
                     owner: github.context.repo.owner,
                     repo: github.context.repo.repo,
                     run_id: github.context.runId,
                 });
-                actions_core.info(`awaited jobs: ${jobs}`);
+                actions_core.debug(`awaited jobs: ${jobs}`);
                 const job = jobs
                     .filter((candidate) => candidate.name === github.context.job)
                     .at(0);
                 if (job === undefined) {
-                    return "unknown-no-job";
+                    return "no-jobs";
                 }
                 const outcomes = (job.steps || []).map((j) => j.conclusion || "unknown");
                 // Possible values: success, failure, cancelled, or skipped
@@ -415,7 +408,7 @@ class NixInstallerAction {
             }
             catch (error) {
                 actions_core.debug(`Error determining final disposition: ${error}`);
-                return "unknown";
+                return "unavailable";
             }
         });
     }

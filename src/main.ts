@@ -437,12 +437,7 @@ class NixInstallerAction {
   }
 
   private async get_workflow_conclusion(): Promise<
-    | undefined
-    | "success"
-    | "failure"
-    | "cancelled"
-    | "unavailable"
-    | "no-jobs"
+    undefined | "success" | "failure" | "cancelled" | "unavailable" | "no-jobs"
   > {
     if (this.github_token == null) {
       return undefined;
