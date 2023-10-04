@@ -346,7 +346,10 @@ class NixInstallerAction {
     );
 
     actions_core.info("Logging in to FlakeHub.");
-    if (this.extra_conf?.includes("netrc-file")) {
+
+    // the join followed by a match on ^... looks silly, but extra_config
+    // could contain multi-line values
+    if (this.extra_conf?.join("\n").match(/^netrc-file/m)) {
       actions_core.warning(
         "Logging in to FlakeHub conflicts with the Nix option `netrc-file`.",
       );
