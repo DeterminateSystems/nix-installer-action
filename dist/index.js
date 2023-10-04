@@ -188,7 +188,7 @@ class NixInstallerAction {
                 extra_conf += `trusted-users = root ${process.env.USER}`;
                 extra_conf += "\n";
             }
-            if (this.flakehub !== null) {
+            if (this.flakehub) {
                 extra_conf += `netrc-file = ${yield this.flakehub_login()}`;
                 extra_conf += "\n";
             }

@@ -17,7 +17,7 @@ class NixInstallerAction {
   backtrace: string | null;
   extra_args: string | null;
   extra_conf: string[] | null;
-  flakehub: boolean | null;
+  flakehub: boolean;
   github_token: string | null;
   // TODO: linux_init
   init: string | null;
@@ -219,7 +219,7 @@ class NixInstallerAction {
       extra_conf += `trusted-users = root ${process.env.USER}`;
       extra_conf += "\n";
     }
-    if (this.flakehub !== null) {
+    if (this.flakehub) {
       extra_conf += `netrc-file = ${await this.flakehub_login()}`;
       extra_conf += "\n";
     }
