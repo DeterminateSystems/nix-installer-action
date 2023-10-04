@@ -441,29 +441,15 @@ class NixInstallerAction {
     | "success"
     | "failure"
     | "cancelled"
-    | "unknown"
-    | "unknown-no-job"
+    | "unavailable"
+    | "no-jobs"
   > {
     if (this.github_token == null) {
       return undefined;
     }
 
     try {
-      actions_core.info(`tok: ${this.github_token}`);
       const octokit = github.getOctokit(this.github_token);
-      actions_core.info(`got octokit: ${octokit}`);
-      actions_core.info(
-        `fetch for: ${JSON.stringify(
-          {
-            owner: github.context.repo.owner,
-            repo: github.context.repo.repo,
-            run_id: github.context.runId,
-          },
-          null,
-          4,
-        )}`,
-      );
-
       const jobs = await octokit.paginate(
         octokit.rest.actions.listJobsForWorkflowRun,
         {
@@ -472,12 +458,13 @@ class NixInstallerAction {
           run_id: github.context.runId,
         },
       );
-      actions_core.info(`awaited jobs: ${jobs}`);
+
+      actions_core.debug(`awaited jobs: ${jobs}`);
       const job = jobs
         .filter((candidate) => candidate.name === github.context.job)
         .at(0);
       if (job === undefined) {
-        return "unknown-no-job";
+        return "no-jobs";
       }
 
       const outcomes = (job.steps || []).map((j) => j.conclusion || "unknown");
@@ -498,7 +485,7 @@ class NixInstallerAction {
       return "success";
     } catch (error) {
       actions_core.debug(`Error determining final disposition: ${error}`);
-      return "unknown";
+      return "unavailable";
     }
   }
 }
