@@ -1,6 +1,6 @@
 import * as actions_core from "@actions/core";
 import * as github from "@actions/github";
-import { mkdtemp, chmod, access } from "node:fs/promises";
+import { mkdtemp, chmod, access, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
@@ -17,6 +17,7 @@ class NixInstallerAction {
   backtrace: string | null;
   extra_args: string | null;
   extra_conf: string[] | null;
+  flakehub: boolean;
   github_token: string | null;
   // TODO: linux_init
   init: string | null;
@@ -54,6 +55,7 @@ class NixInstallerAction {
     this.backtrace = action_input_string_or_null("backtrace");
     this.extra_args = action_input_string_or_null("extra-args");
     this.extra_conf = action_input_multiline_string_or_null("extra-conf");
+    this.flakehub = action_input_bool("flakehub");
     this.github_token = action_input_string_or_null("github-token");
     this.init = action_input_string_or_null("init");
     this.local_root = action_input_string_or_null("local-root");
@@ -93,7 +95,7 @@ class NixInstallerAction {
     );
   }
 
-  private executionEnvironment(): ExecuteEnvironment {
+  private async executionEnvironment(): Promise<ExecuteEnvironment> {
     const execution_env: ExecuteEnvironment = {};
 
     execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
@@ -217,6 +219,10 @@ class NixInstallerAction {
       extra_conf += `trusted-users = root ${process.env.USER}`;
       extra_conf += "\n";
     }
+    if (this.flakehub) {
+      extra_conf += `netrc-file = ${await this.flakehub_login()}`;
+      extra_conf += "\n";
+    }
     if (this.extra_conf !== null && this.extra_conf.length !== 0) {
       extra_conf += this.extra_conf.join("\n");
       extra_conf += "\n";
@@ -234,7 +240,7 @@ class NixInstallerAction {
   }
 
   private async execute_install(binary_path: string): Promise<number> {
-    const execution_env = this.executionEnvironment();
+    const execution_env = await this.executionEnvironment();
     actions_core.info(
       `Execution environment: ${JSON.stringify(execution_env, null, 4)}`,
     );
@@ -324,6 +330,32 @@ class NixInstallerAction {
         "Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is done in the action. Prior to 0.11.0, this was only done in the `nix-installer` binary.",
       );
     }
+  }
+
+  async flakehub_login(): Promise<string> {
+    const netrc_path = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
+
+    const jwt = await actions_core.getIDToken("api.flakehub.com");
+
+    await writeFile(
+      netrc_path,
+      [
+        `machine api.flakehub.com login flakehub password ${jwt}`,
+        `machine flakehub.com login flakehub password ${jwt}`,
+      ].join("\n"),
+    );
+
+    actions_core.info("Logging in to FlakeHub.");
+
+    // the join followed by a match on ^... looks silly, but extra_config
+    // could contain multi-line values
+    if (this.extra_conf?.join("\n").match(/^netrc-file/m)) {
+      actions_core.warning(
+        "Logging in to FlakeHub conflicts with the Nix option `netrc-file`.",
+      );
+    }
+
+    return netrc_path;
   }
 
   async execute_uninstall(): Promise<number> {

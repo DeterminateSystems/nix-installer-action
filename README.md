@@ -15,12 +15,37 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v4
+        uses: DeterminateSystems/nix-installer-action@main
       - name: Run `nix build`
         run: nix build .
 ```
 
 See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for a full example.
+
+To use private flakes from FlakeHub, use a configuration like this:
+
+```yaml
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lints:
+    name: Build
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: "write"
+      contents: "read"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+        with:
+          flakehub: true
+      - name: Run `nix build`
+        run: nix build .
+```
 
 ## Configuration
 
@@ -29,6 +54,7 @@ See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for a full example.
 | `backtrace`              | The setting for [`RUST_BACKTRACE`][backtrace]                                                                                                                                                         | string                                     |                                                      |
 | `extra-args`             | Extra arguments to pass to the planner (prefer using structured `with:` arguments unless using a custom [planner]!)                                                                                   | string                                     |                                                      |
 | `extra-conf`             | Extra configuration lines for `/etc/nix/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)                                                       | string                                     |                                                      |
+| `flakehub`               | Log in to FlakeHub to pull private flakes using the GitHub Actions [JSON Web Token](https://jwt.io) (JWT), which is bound to the `api.flakehub.com` audience.                                         | Boolean                                    | `false`                                              |
 | `github-token`           | A [GitHub token] for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)                                                                               | string                                     | `${{ github.token }}`                                |
 | `init`                   | The init system to configure (requires `planner: linux-multi`)                                                                                                                                        | enum (`none` or `systemd`)                 |                                                      |
 | `local-root`             | A local `nix-installer` binary root. Overrides the `nix-installer-url` setting (a `nix-installer.sh` should exist, binaries should be named `nix-installer-$ARCH`, eg. `nix-installer-x86_64-linux`). | Boolean                                    | `false`                                              |
