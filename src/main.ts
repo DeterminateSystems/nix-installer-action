@@ -46,7 +46,7 @@ class NixInstallerAction {
   // This is for monitoring the real impact of Nix updates, to avoid breaking large
   // swaths of users at once with botched Nix releases. For example:
   // https://github.com/NixOS/nix/issues/9052.
-  attribution: string | undefined;
+  correlation: string | undefined;
 
   constructor() {
     this.platform = get_nix_platform();
@@ -86,10 +86,10 @@ class NixInstallerAction {
       "diagnostic-endpoint",
     );
     this.trust_runner_user = action_input_bool("trust-runner-user");
-    this.attribution = process.env["STATE_attribution"];
+    this.correlation = process.env["STATE_correlation"];
     this.nix_installer_url = resolve_nix_installer_url(
       this.platform,
-      this.attribution,
+      this.correlation,
     );
   }
 
@@ -97,7 +97,7 @@ class NixInstallerAction {
     const execution_env: ExecuteEnvironment = {};
 
     execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
-    execution_env.NIX_INSTALLER_ATTRIBUTION = this.attribution;
+    execution_env.NIX_INSTALLER_ATTRIBUTION = this.correlation;
 
     if (this.backtrace !== null) {
       execution_env.RUST_BACKTRACE = this.backtrace;
@@ -425,7 +425,7 @@ class NixInstallerAction {
         },
         body: JSON.stringify({
           "post-github-workflow-run-report": true,
-          cor: this.attribution,
+          correlation: this.correlation,
           conclusion: await this.get_workflow_conclusion(),
         }),
       });
@@ -546,7 +546,7 @@ function get_default_planner(): string {
   }
 }
 
-function resolve_nix_installer_url(platform: string, attribution?: string): URL {
+function resolve_nix_installer_url(platform: string, correlation?: string): URL {
   // Only one of these are allowed.
   const nix_installer_branch = action_input_string_or_null(
     "nix-installer-branch",
@@ -557,7 +557,7 @@ function resolve_nix_installer_url(platform: string, attribution?: string): URL 
   );
   const nix_installer_tag = action_input_string_or_null("nix-installer-tag");
   const nix_installer_url = action_input_string_or_null("nix-installer-url");
-  const url_suffix = `ci=github&cor=${attribution}`;
+  const url_suffix = `ci=github&correlation=${correlation}`;
   let resolved_nix_installer_url = null;
   let num_set = 0;
 
@@ -636,7 +636,7 @@ async function main(): Promise<void> {
     const isPost = !!process.env["STATE_isPost"];
     if (!isPost) {
       actions_core.saveState("isPost", "true");
-      actions_core.saveState("attribution", `GH-${randomUUID()}`);
+      actions_core.saveState("correlation", `GH-${randomUUID()}`);
       await installer.install();
     } else {
       installer.report_overall();
