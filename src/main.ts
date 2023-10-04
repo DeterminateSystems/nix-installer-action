@@ -1,6 +1,8 @@
 import * as actions_core from "@actions/core";
+import * as github from "@actions/github";
 import { mkdtemp, chmod, access } from "node:fs/promises";
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { pipeline } from "node:stream";
@@ -40,6 +42,12 @@ class NixInstallerAction {
   trust_runner_user: boolean | null;
   nix_installer_url: URL;
 
+  // Connects the installation diagnostic report to the post-run diagnostic report.
+  // This is for monitoring the real impact of Nix updates, to avoid breaking large
+  // swaths of users at once with botched Nix releases. For example:
+  // https://github.com/NixOS/nix/issues/9052.
+  correlation: string | undefined;
+
   constructor() {
     this.platform = get_nix_platform();
     this.nix_package_url = action_input_string_or_null("nix-package-url");
@@ -78,13 +86,18 @@ class NixInstallerAction {
       "diagnostic-endpoint",
     );
     this.trust_runner_user = action_input_bool("trust-runner-user");
-    this.nix_installer_url = resolve_nix_installer_url(this.platform);
+    this.correlation = process.env["STATE_correlation"];
+    this.nix_installer_url = resolve_nix_installer_url(
+      this.platform,
+      this.correlation,
+    );
   }
 
   private executionEnvironment(): ExecuteEnvironment {
     const execution_env: ExecuteEnvironment = {};
 
     execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
+    execution_env.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = this.correlation;
 
     if (this.backtrace !== null) {
       execution_env.RUST_BACKTRACE = this.backtrace;
@@ -398,6 +411,78 @@ class NixInstallerAction {
       return local_path;
     }
   }
+
+  async report_overall(): Promise<void> {
+    if (this.diagnostic_endpoint == null) {
+      return;
+    }
+
+    try {
+      await fetch(this.diagnostic_endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          "post-github-workflow-run-report": true,
+          correlation: this.correlation,
+          conclusion: await this.get_workflow_conclusion(),
+        }),
+      });
+    } catch (error) {
+      actions_core.debug(
+        `Error submitting post-run diagnostics report: ${error}`,
+      );
+    }
+  }
+
+  private async get_workflow_conclusion(): Promise<
+    undefined | "success" | "failure" | "cancelled" | "unavailable" | "no-jobs"
+  > {
+    if (this.github_token == null) {
+      return undefined;
+    }
+
+    try {
+      const octokit = github.getOctokit(this.github_token);
+      const jobs = await octokit.paginate(
+        octokit.rest.actions.listJobsForWorkflowRun,
+        {
+          owner: github.context.repo.owner,
+          repo: github.context.repo.repo,
+          run_id: github.context.runId,
+        },
+      );
+
+      actions_core.debug(`awaited jobs: ${jobs}`);
+      const job = jobs
+        .filter((candidate) => candidate.name === github.context.job)
+        .at(0);
+      if (job === undefined) {
+        return "no-jobs";
+      }
+
+      const outcomes = (job.steps || []).map((j) => j.conclusion || "unknown");
+
+      // Possible values: success, failure, cancelled, or skipped
+      // from: https://docs.github.com/en/actions/learn-github-actions/contexts
+
+      if (outcomes.includes("failure")) {
+        // Any failures fails the job
+        return "failure";
+      }
+      if (outcomes.includes("cancelled")) {
+        // Any cancellations cancels the job
+        return "cancelled";
+      }
+
+      // Assume success if no jobs failed or were canceled
+      return "success";
+    } catch (error) {
+      actions_core.debug(`Error determining final disposition: ${error}`);
+      return "unavailable";
+    }
+  }
 }
 
 type ExecuteEnvironment = {
@@ -413,6 +498,7 @@ type ExecuteEnvironment = {
   NIX_INSTALLER_PROXY?: string;
   NIX_INSTALLER_SSL_CERT_FILE?: string;
   NIX_INSTALLER_DIAGNOSTIC_ENDPOINT?: string;
+  NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION?: string;
   NIX_INSTALLER_ENCRYPT?: string;
   NIX_INSTALLER_CASE_SENSITIVE?: string;
   NIX_INSTALLER_VOLUME_LABEL?: string;
@@ -456,7 +542,10 @@ function get_default_planner(): string {
   }
 }
 
-function resolve_nix_installer_url(platform: string): URL {
+function resolve_nix_installer_url(
+  platform: string,
+  correlation?: string,
+): URL {
   // Only one of these are allowed.
   const nix_installer_branch = action_input_string_or_null(
     "nix-installer-branch",
@@ -467,36 +556,36 @@ function resolve_nix_installer_url(platform: string): URL {
   );
   const nix_installer_tag = action_input_string_or_null("nix-installer-tag");
   const nix_installer_url = action_input_string_or_null("nix-installer-url");
-
+  const url_suffix = `ci=github&correlation=${correlation}`;
   let resolved_nix_installer_url = null;
   let num_set = 0;
 
   if (nix_installer_branch !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/branch/${nix_installer_branch}/nix-installer-${platform}?ci=github`,
+      `https://install.determinate.systems/nix/branch/${nix_installer_branch}/nix-installer-${platform}?${url_suffix}`,
     );
   } else if (nix_installer_pr !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/pr/${nix_installer_pr}/nix-installer-${platform}?ci=github`,
+      `https://install.determinate.systems/nix/pr/${nix_installer_pr}/nix-installer-${platform}?${url_suffix}`,
     );
   } else if (nix_installer_revision !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/rev/${nix_installer_revision}/nix-installer-${platform}?ci=github`,
+      `https://install.determinate.systems/nix/rev/${nix_installer_revision}/nix-installer-${platform}?${url_suffix}`,
     );
   } else if (nix_installer_tag !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/tag/${nix_installer_tag}/nix-installer-${platform}?ci=github`,
+      `https://install.determinate.systems/nix/tag/${nix_installer_tag}/nix-installer-${platform}?${url_suffix}`,
     );
   } else if (nix_installer_url !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(nix_installer_url);
   } else {
     resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/nix-installer-${platform}?ci=github`,
+      `https://install.determinate.systems/nix/nix-installer-${platform}?${url_suffix}`,
     );
   }
 
@@ -541,9 +630,20 @@ function action_input_bool(name: string): boolean {
 
 async function main(): Promise<void> {
   try {
+    if (!process.env["STATE_correlation"]) {
+      const correlation = `GH-${randomUUID()}`;
+      actions_core.saveState("correlation", correlation);
+      process.env["STATE_correlation"] = correlation;
+    }
     const installer = new NixInstallerAction();
 
-    await installer.install();
+    const isPost = !!process.env["STATE_isPost"];
+    if (!isPost) {
+      actions_core.saveState("isPost", "true");
+      await installer.install();
+    } else {
+      installer.report_overall();
+    }
   } catch (error) {
     if (error instanceof Error) actions_core.setFailed(error);
   }
