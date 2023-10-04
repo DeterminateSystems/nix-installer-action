@@ -1,6 +1,8 @@
 import * as actions_core from "@actions/core";
+import * as github from "@actions/github";
 import { mkdtemp, chmod, access } from "node:fs/promises";
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { pipeline } from "node:stream";
@@ -39,6 +41,12 @@ class NixInstallerAction {
   diagnostic_endpoint: string | null;
   trust_runner_user: boolean | null;
   nix_installer_url: URL;
+
+  // Connects the installation diagnostic report to the post-run diagnostic report.
+  // This is for monitoring the real impact of Nix updates, to avoid breaking large
+  // swaths of users at once with botched Nix releases. For example:
+  // https://github.com/NixOS/nix/issues/9052.
+  attribution: string;
 
   constructor() {
     this.platform = get_nix_platform();
@@ -79,12 +87,14 @@ class NixInstallerAction {
     );
     this.trust_runner_user = action_input_bool("trust-runner-user");
     this.nix_installer_url = resolve_nix_installer_url(this.platform);
+    this.attribution = randomUUID();
   }
 
   private executionEnvironment(): ExecuteEnvironment {
     const execution_env: ExecuteEnvironment = {};
 
     execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
+    execution_env.NIX_INSTALLER_ATTRIBUTION = `GH-${this.attribution}`;
 
     if (this.backtrace !== null) {
       execution_env.RUST_BACKTRACE = this.backtrace;
@@ -398,6 +408,81 @@ class NixInstallerAction {
       return local_path;
     }
   }
+
+  async report_overall(): Promise<void> {
+    if (this.diagnostic_endpoint == null) {
+      return;
+    }
+
+    try {
+      await fetch(this.diagnostic_endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          "post-github-workflow-run-report": true,
+          conclusion: await this.get_workflow_conclusion(),
+        }),
+      });
+    } catch (error) {
+      actions_core.debug(
+        `Error submitting post-run diagnostics report: ${error}`,
+      );
+    }
+  }
+
+  private async get_workflow_conclusion(): Promise<
+    | undefined
+    | "success"
+    | "failure"
+    | "cancelled"
+    | "unknown"
+    | "unknown-no-job"
+  > {
+    if (this.github_token == null) {
+      return undefined;
+    }
+
+    try {
+      const octokit = github.getOctokit(this.github_token);
+      const jobs = await octokit.paginate(
+        octokit.rest.actions.listJobsForWorkflowRun,
+        {
+          owner: github.context.repo.owner,
+          repo: github.context.repo.repo,
+          run_id: github.context.runId,
+        },
+      );
+
+      const job = jobs
+        .filter((candidate) => candidate.name === github.context.job)
+        .at(0);
+      if (job === undefined) {
+        return "unknown-no-job";
+      }
+
+      const outcomes = (job.steps || []).map((j) => j.conclusion || "unknown");
+
+      // Possible values: success, failure, cancelled, or skipped
+      // from: https://docs.github.com/en/actions/learn-github-actions/contexts
+
+      if (outcomes.includes("failure")) {
+        // Any failures fails the job
+        return "failure";
+      }
+      if (outcomes.includes("cancelled")) {
+        // Any cancellations cancels the job
+        return "cancelled";
+      }
+
+      // Assume success if no jobs failed or were canceled
+      return "success";
+    } catch (error) {
+      actions_core.debug(`Error determining final disposition: ${error}`);
+      return "unknown";
+    }
+  }
 }
 
 type ExecuteEnvironment = {
@@ -413,6 +498,7 @@ type ExecuteEnvironment = {
   NIX_INSTALLER_PROXY?: string;
   NIX_INSTALLER_SSL_CERT_FILE?: string;
   NIX_INSTALLER_DIAGNOSTIC_ENDPOINT?: string;
+  NIX_INSTALLER_ATTRIBUTION?: string;
   NIX_INSTALLER_ENCRYPT?: string;
   NIX_INSTALLER_CASE_SENSITIVE?: string;
   NIX_INSTALLER_VOLUME_LABEL?: string;
@@ -543,7 +629,13 @@ async function main(): Promise<void> {
   try {
     const installer = new NixInstallerAction();
 
-    await installer.install();
+    const isPost = !!process.env["STATE_isPost"];
+    if (!isPost) {
+      actions_core.saveState("isPost", "true");
+      await installer.install();
+    } else {
+      installer.report_overall();
+    }
   } catch (error) {
     if (error instanceof Error) actions_core.setFailed(error);
   }
