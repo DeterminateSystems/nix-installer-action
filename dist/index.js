@@ -83,13 +83,13 @@ class NixInstallerAction {
         this.start_daemon = action_input_bool("start-daemon");
         this.diagnostic_endpoint = action_input_string_or_null("diagnostic-endpoint");
         this.trust_runner_user = action_input_bool("trust-runner-user");
-        this.nix_installer_url = resolve_nix_installer_url(this.platform);
-        this.attribution = (0, node_crypto_1.randomUUID)();
+        this.attribution = `GH-${(0, node_crypto_1.randomUUID)()}`;
+        this.nix_installer_url = resolve_nix_installer_url(this.platform, this.attribution);
     }
     executionEnvironment() {
         const execution_env = {};
         execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
-        execution_env.NIX_INSTALLER_ATTRIBUTION = `GH-${this.attribution}`;
+        execution_env.NIX_INSTALLER_ATTRIBUTION = this.attribution;
         if (this.backtrace !== null) {
             execution_env.RUST_BACKTRACE = this.backtrace;
         }
@@ -363,6 +363,7 @@ class NixInstallerAction {
                     },
                     body: JSON.stringify({
                         "post-github-workflow-run-report": true,
+                        cor: this.attribution,
                         conclusion: yield this.get_workflow_conclusion(),
                     }),
                 });
@@ -442,37 +443,38 @@ function get_default_planner() {
         throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${env_os}\`)`);
     }
 }
-function resolve_nix_installer_url(platform) {
+function resolve_nix_installer_url(platform, attribution) {
     // Only one of these are allowed.
     const nix_installer_branch = action_input_string_or_null("nix-installer-branch");
     const nix_installer_pr = action_input_number_or_null("nix-installer-pr");
     const nix_installer_revision = action_input_string_or_null("nix-installer-revision");
     const nix_installer_tag = action_input_string_or_null("nix-installer-tag");
     const nix_installer_url = action_input_string_or_null("nix-installer-url");
+    const url_suffix = `ci=github&cor=${attribution}`;
     let resolved_nix_installer_url = null;
     let num_set = 0;
     if (nix_installer_branch !== null) {
         num_set += 1;
-        resolved_nix_installer_url = new URL(`https://install.determinate.systems/nix/branch/${nix_installer_branch}/nix-installer-${platform}?ci=github`);
+        resolved_nix_installer_url = new URL(`https://install.determinate.systems/nix/branch/${nix_installer_branch}/nix-installer-${platform}?${url_suffix}`);
     }
     else if (nix_installer_pr !== null) {
         num_set += 1;
-        resolved_nix_installer_url = new URL(`https://install.determinate.systems/nix/pr/${nix_installer_pr}/nix-installer-${platform}?ci=github`);
+        resolved_nix_installer_url = new URL(`https://install.determinate.systems/nix/pr/${nix_installer_pr}/nix-installer-${platform}?${url_suffix}`);
     }
     else if (nix_installer_revision !== null) {
         num_set += 1;
-        resolved_nix_installer_url = new URL(`https://install.determinate.systems/nix/rev/${nix_installer_revision}/nix-installer-${platform}?ci=github`);
+        resolved_nix_installer_url = new URL(`https://install.determinate.systems/nix/rev/${nix_installer_revision}/nix-installer-${platform}?${url_suffix}`);
     }
     else if (nix_installer_tag !== null) {
         num_set += 1;
-        resolved_nix_installer_url = new URL(`https://install.determinate.systems/nix/tag/${nix_installer_tag}/nix-installer-${platform}?ci=github`);
+        resolved_nix_installer_url = new URL(`https://install.determinate.systems/nix/tag/${nix_installer_tag}/nix-installer-${platform}?${url_suffix}`);
     }
     else if (nix_installer_url !== null) {
         num_set += 1;
         resolved_nix_installer_url = new URL(nix_installer_url);
     }
     else {
-        resolved_nix_installer_url = new URL(`https://install.determinate.systems/nix/nix-installer-${platform}?ci=github`);
+        resolved_nix_installer_url = new URL(`https://install.determinate.systems/nix/nix-installer-${platform}?${url_suffix}`);
     }
     if (num_set > 1) {
         throw new Error(`The following options are mututally exclusive, but ${num_set} were set: \`nix_installer_branch\`, \`nix_installer_pr\`, \`nix_installer_revision\`, \`nix_installer_tag\`, and \`nix_installer_url\``);

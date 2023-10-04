@@ -86,15 +86,18 @@ class NixInstallerAction {
       "diagnostic-endpoint",
     );
     this.trust_runner_user = action_input_bool("trust-runner-user");
-    this.nix_installer_url = resolve_nix_installer_url(this.platform);
-    this.attribution = randomUUID();
+    this.attribution = `GH-${randomUUID()}`;
+    this.nix_installer_url = resolve_nix_installer_url(
+      this.platform,
+      this.attribution,
+    );
   }
 
   private executionEnvironment(): ExecuteEnvironment {
     const execution_env: ExecuteEnvironment = {};
 
     execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
-    execution_env.NIX_INSTALLER_ATTRIBUTION = `GH-${this.attribution}`;
+    execution_env.NIX_INSTALLER_ATTRIBUTION = this.attribution;
 
     if (this.backtrace !== null) {
       execution_env.RUST_BACKTRACE = this.backtrace;
@@ -422,6 +425,7 @@ class NixInstallerAction {
         },
         body: JSON.stringify({
           "post-github-workflow-run-report": true,
+          cor: this.attribution,
           conclusion: await this.get_workflow_conclusion(),
         }),
       });
@@ -542,7 +546,7 @@ function get_default_planner(): string {
   }
 }
 
-function resolve_nix_installer_url(platform: string): URL {
+function resolve_nix_installer_url(platform: string, attribution: string): URL {
   // Only one of these are allowed.
   const nix_installer_branch = action_input_string_or_null(
     "nix-installer-branch",
@@ -553,36 +557,36 @@ function resolve_nix_installer_url(platform: string): URL {
   );
   const nix_installer_tag = action_input_string_or_null("nix-installer-tag");
   const nix_installer_url = action_input_string_or_null("nix-installer-url");
-
+  const url_suffix = `ci=github&cor=${attribution}`;
   let resolved_nix_installer_url = null;
   let num_set = 0;
 
   if (nix_installer_branch !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/branch/${nix_installer_branch}/nix-installer-${platform}?ci=github`,
+      `https://install.determinate.systems/nix/branch/${nix_installer_branch}/nix-installer-${platform}?${url_suffix}`,
     );
   } else if (nix_installer_pr !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/pr/${nix_installer_pr}/nix-installer-${platform}?ci=github`,
+      `https://install.determinate.systems/nix/pr/${nix_installer_pr}/nix-installer-${platform}?${url_suffix}`,
     );
   } else if (nix_installer_revision !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/rev/${nix_installer_revision}/nix-installer-${platform}?ci=github`,
+      `https://install.determinate.systems/nix/rev/${nix_installer_revision}/nix-installer-${platform}?${url_suffix}`,
     );
   } else if (nix_installer_tag !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/tag/${nix_installer_tag}/nix-installer-${platform}?ci=github`,
+      `https://install.determinate.systems/nix/tag/${nix_installer_tag}/nix-installer-${platform}?${url_suffix}`,
     );
   } else if (nix_installer_url !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(nix_installer_url);
   } else {
     resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/nix-installer-${platform}?ci=github`,
+      `https://install.determinate.systems/nix/nix-installer-${platform}?${url_suffix}`,
     );
   }
 
