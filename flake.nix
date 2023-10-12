@@ -4,7 +4,7 @@
 
   inputs = {
     flake-schemas.url = "https://flakehub.com/f/DeterminateSystems/flake-schemas/*.tar.gz";
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/*.tar.gz";
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.0.tar.gz";
   };
 
   outputs = { self, flake-schemas, nixpkgs }:
@@ -20,7 +20,7 @@
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
           packages = with pkgs; [
-            nodejs-18_x
+            nodejs_latest
             nixpkgs-fmt
           ];
         };
