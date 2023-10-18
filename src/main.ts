@@ -597,25 +597,30 @@ function resolve_nix_installer_url(
     resolved_nix_installer_url = new URL(
       `https://install.determinate.systems/nix/branch/${nix_installer_branch}/nix-installer-${platform}?${url_suffix}`,
     );
-  } else if (nix_installer_pr !== null) {
+  }
+  if (nix_installer_pr !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(
       `https://install.determinate.systems/nix/pr/${nix_installer_pr}/nix-installer-${platform}?${url_suffix}`,
     );
-  } else if (nix_installer_revision !== null) {
+  }
+  if (nix_installer_revision !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(
       `https://install.determinate.systems/nix/rev/${nix_installer_revision}/nix-installer-${platform}?${url_suffix}`,
     );
-  } else if (nix_installer_tag !== null) {
+  }
+  if (nix_installer_tag !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(
       `https://install.determinate.systems/nix/tag/${nix_installer_tag}/nix-installer-${platform}?${url_suffix}`,
     );
-  } else if (nix_installer_url !== null) {
+  }
+  if (nix_installer_url !== null) {
     num_set += 1;
     resolved_nix_installer_url = new URL(nix_installer_url);
-  } else {
+  }
+  if (resolved_nix_installer_url == null) {
     resolved_nix_installer_url = new URL(
       `https://install.determinate.systems/nix/nix-installer-${platform}?${url_suffix}`,
     );
