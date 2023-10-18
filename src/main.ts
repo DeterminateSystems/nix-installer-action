@@ -5,11 +5,14 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { pipeline } from "node:stream";
-import fetch from "node-fetch";
-import { promisify } from "node:util";
+import stream from "node:stream";
+import stream_web from "node:stream/web";
+import { finished } from "node:stream/promises";
 import fs from "node:fs";
 import stringArgv from "string-argv";
+
+import fetchRetry from "fetch-retry";
+const retry_fetch = fetchRetry(global.fetch);
 
 class NixInstallerAction {
   platform: string;
@@ -408,7 +411,17 @@ class NixInstallerAction {
   private async fetch_binary(): Promise<string> {
     if (!this.local_root) {
       actions_core.info(`Fetching binary from ${this.nix_installer_url}`);
-      const response = await fetch(this.nix_installer_url);
+      const response = await retry_fetch(this.nix_installer_url, {
+        retries: 5,
+        retryDelay(
+          attempt: number,
+          _error: Error | null,
+          _response: Response | null,
+        ) {
+          return Math.pow(2, attempt) * 1000; // 1000, 2000, 4000
+        },
+      });
+
       if (!response.ok) {
         throw new Error(
           `Got a status of ${response.status} from \`${this.nix_installer_url}\`, expected a 200`,
@@ -423,8 +436,14 @@ class NixInstallerAction {
       }
 
       if (response.body !== null) {
-        const streamPipeline = promisify(pipeline);
-        await streamPipeline(response.body, fs.createWriteStream(tempfile));
+        // shameless: https://stackoverflow.com/a/51302466
+        const fileStream = fs.createWriteStream(tempfile);
+        const responseBodyCast =
+          response.body as stream_web.ReadableStream<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+        await finished(
+          stream.Readable.fromWeb(responseBodyCast).pipe(fileStream),
+        );
+
         actions_core.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
       } else {
         throw new Error("No response body recieved");
