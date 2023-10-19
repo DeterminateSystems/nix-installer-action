@@ -50,11 +50,10 @@ const node_crypto_1 = __nccwpck_require__(6005);
 const node_path_1 = __nccwpck_require__(9411);
 const node_os_1 = __nccwpck_require__(612);
 const node_stream_1 = __importDefault(__nccwpck_require__(4492));
-const promises_2 = __nccwpck_require__(6402);
 const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 const string_argv_1 = __importDefault(__nccwpck_require__(9663));
 const fetch_retry_1 = __importDefault(__nccwpck_require__(9068));
-const retry_fetch = (0, fetch_retry_1.default)(global.fetch);
+const fetchRetry = (0, fetch_retry_1.default)(global.fetch);
 class NixInstallerAction {
     constructor() {
         this.platform = get_nix_platform();
@@ -348,7 +347,7 @@ class NixInstallerAction {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.local_root) {
                 actions_core.info(`Fetching binary from ${this.nix_installer_url}`);
-                const response = yield retry_fetch(this.nix_installer_url, {
+                const response = yield fetchRetry(this.nix_installer_url, {
                     retries: 5,
                     retryDelay(attempt, _error, _response) {
                         return Math.pow(2, attempt) * 1000; // 1000, 2000, 4000
@@ -363,10 +362,9 @@ class NixInstallerAction {
                     throw new Error(`unexpected response ${response.statusText}`);
                 }
                 if (response.body !== null) {
-                    // shameless: https://stackoverflow.com/a/51302466
                     const fileStream = node_fs_1.default.createWriteStream(tempfile);
-                    const responseBodyCast = response.body; // eslint-disable-line @typescript-eslint/no-explicit-any
-                    yield (0, promises_2.finished)(node_stream_1.default.Readable.fromWeb(responseBodyCast).pipe(fileStream));
+                    const fileStreamWeb = node_stream_1.default.Writable.toWeb(fileStream);
+                    yield response.body.pipeTo(fileStreamWeb);
                     actions_core.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
                 }
                 else {
@@ -13588,14 +13586,6 @@ module.exports = require("node:path");
 
 "use strict";
 module.exports = require("node:stream");
-
-/***/ }),
-
-/***/ 6402:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:stream/promises");
 
 /***/ }),
 

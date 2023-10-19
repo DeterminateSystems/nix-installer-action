@@ -6,13 +6,11 @@ import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import stream from "node:stream";
-import stream_web from "node:stream/web";
-import { finished } from "node:stream/promises";
 import fs from "node:fs";
 import stringArgv from "string-argv";
 
-import fetchRetry from "fetch-retry";
-const retry_fetch = fetchRetry(global.fetch);
+import fetchRetry_ from "fetch-retry";
+const fetchRetry = fetchRetry_(global.fetch);
 
 class NixInstallerAction {
   platform: string;
@@ -411,7 +409,7 @@ class NixInstallerAction {
   private async fetch_binary(): Promise<string> {
     if (!this.local_root) {
       actions_core.info(`Fetching binary from ${this.nix_installer_url}`);
-      const response = await retry_fetch(this.nix_installer_url, {
+      const response = await fetchRetry(this.nix_installer_url, {
         retries: 5,
         retryDelay(
           attempt: number,
@@ -436,13 +434,9 @@ class NixInstallerAction {
       }
 
       if (response.body !== null) {
-        // shameless: https://stackoverflow.com/a/51302466
         const fileStream = fs.createWriteStream(tempfile);
-        const responseBodyCast =
-          response.body as stream_web.ReadableStream<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
-        await finished(
-          stream.Readable.fromWeb(responseBodyCast).pipe(fileStream),
-        );
+        const fileStreamWeb = stream.Writable.toWeb(fileStream);
+        await response.body.pipeTo(fileStreamWeb);
 
         actions_core.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
       } else {
