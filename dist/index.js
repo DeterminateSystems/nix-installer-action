@@ -329,13 +329,14 @@ class NixInstallerAction {
             }
             const tempdir = await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.mkdtemp)((0,node_path__WEBPACK_IMPORTED_MODULE_5__.join)((0,node_os__WEBPACK_IMPORTED_MODULE_6__.tmpdir)(), "nix-installer-"));
             const tempfile = (0,node_path__WEBPACK_IMPORTED_MODULE_5__.join)(tempdir, `nix-installer-${this.platform}`);
-            if (!response.ok) {
-                throw new Error(`unexpected response ${response.statusText}`);
-            }
             if (response.body !== null) {
-                const fileStream = node_fs__WEBPACK_IMPORTED_MODULE_8___default().createWriteStream(tempfile);
+                const handle = await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.open)(tempfile, "w");
+                const fileStream = handle.createWriteStream({ autoClose: false });
                 const fileStreamWeb = node_stream__WEBPACK_IMPORTED_MODULE_7___default().Writable.toWeb(fileStream);
                 await response.body.pipeTo(fileStreamWeb);
+                // fileStreamWeb is auto-closed by pipeTo, confirmed
+                fileStream.close();
+                await handle.sync();
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
             }
             else {

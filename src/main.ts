@@ -1,6 +1,6 @@
 import * as actions_core from "@actions/core";
 import * as github from "@actions/github";
-import { mkdtemp, chmod, access, writeFile } from "node:fs/promises";
+import { mkdtemp, chmod, access, writeFile, open } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
@@ -429,14 +429,14 @@ class NixInstallerAction {
       const tempdir = await mkdtemp(join(tmpdir(), "nix-installer-"));
       const tempfile = join(tempdir, `nix-installer-${this.platform}`);
 
-      if (!response.ok) {
-        throw new Error(`unexpected response ${response.statusText}`);
-      }
-
       if (response.body !== null) {
-        const fileStream = fs.createWriteStream(tempfile);
+        const handle = await open(tempfile, "w");
+        const fileStream = handle.createWriteStream({ autoClose: false });
         const fileStreamWeb = stream.Writable.toWeb(fileStream);
         await response.body.pipeTo(fileStreamWeb);
+        // fileStreamWeb is auto-closed by pipeTo, confirmed
+        fileStream.close();
+        await handle.sync();
 
         actions_core.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
       } else {
