@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - run: npm install
-      - run: npm run all --no-save
+      - run: npm install --no-save
+      - run: npm run all
       - run: git status --porcelain=v1
       - run: test $(git status --porcelain=v1 2>/dev/null | wc -l) -eq 0
   run-x86_64-linux:
