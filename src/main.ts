@@ -6,6 +6,8 @@ import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import stream from "node:stream";
+import stream_web from "node:stream/web";
+import { finished } from "node:stream/promises";
 import fs from "node:fs";
 import stringArgv from "string-argv";
 
@@ -432,11 +434,13 @@ class NixInstallerAction {
       if (response.body !== null) {
         const handle = await open(tempfile, "w");
         const fileStream = handle.createWriteStream({ autoClose: false });
-        const fileStreamWeb = stream.Writable.toWeb(fileStream);
-        await response.body.pipeTo(fileStreamWeb);
-        // fileStreamWeb is auto-closed by pipeTo, confirmed
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const bodyCast = response.body as stream_web.ReadableStream<any>;
+        const bodyReader = stream.Readable.fromWeb(bodyCast);
+        await finished(bodyReader.pipe(fileStream));
         fileStream.close();
         await handle.sync();
+        await handle.close();
 
         actions_core.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
       } else {

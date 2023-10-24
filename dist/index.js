@@ -23,11 +23,13 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony import */ var node_os__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__nccwpck_require__.n(node_os__WEBPACK_IMPORTED_MODULE_6__);
 /* harmony import */ var node_stream__WEBPACK_IMPORTED_MODULE_7__ = __nccwpck_require__(4492);
 /* harmony import */ var node_stream__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__nccwpck_require__.n(node_stream__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_8__ = __nccwpck_require__(7561);
-/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__nccwpck_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var string_argv__WEBPACK_IMPORTED_MODULE_10__ = __nccwpck_require__(1810);
-/* harmony import */ var fetch_retry__WEBPACK_IMPORTED_MODULE_9__ = __nccwpck_require__(9068);
-/* harmony import */ var fetch_retry__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__nccwpck_require__.n(fetch_retry__WEBPACK_IMPORTED_MODULE_9__);
+/* harmony import */ var node_stream_promises__WEBPACK_IMPORTED_MODULE_8__ = __nccwpck_require__(6402);
+/* harmony import */ var node_stream_promises__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__nccwpck_require__.n(node_stream_promises__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_9__ = __nccwpck_require__(7561);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__nccwpck_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_9__);
+/* harmony import */ var string_argv__WEBPACK_IMPORTED_MODULE_11__ = __nccwpck_require__(1810);
+/* harmony import */ var fetch_retry__WEBPACK_IMPORTED_MODULE_10__ = __nccwpck_require__(9068);
+/* harmony import */ var fetch_retry__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__nccwpck_require__.n(fetch_retry__WEBPACK_IMPORTED_MODULE_10__);
 
 
 
@@ -39,7 +41,8 @@ __nccwpck_require__.r(__webpack_exports__);
 
 
 
-const fetchRetry = fetch_retry__WEBPACK_IMPORTED_MODULE_9___default()(global.fetch);
+
+const fetchRetry = fetch_retry__WEBPACK_IMPORTED_MODULE_10___default()(global.fetch);
 class NixInstallerAction {
     constructor() {
         this.platform = get_nix_platform();
@@ -199,7 +202,7 @@ class NixInstallerAction {
             args.push(get_default_planner());
         }
         if (this.extra_args) {
-            const extra_args = (0,string_argv__WEBPACK_IMPORTED_MODULE_10__/* ["default"] */ .Z)(this.extra_args);
+            const extra_args = (0,string_argv__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .Z)(this.extra_args);
             args.concat(extra_args);
         }
         const merged_env = Object.assign(Object.assign({}, process.env), execution_env);
@@ -332,18 +335,20 @@ class NixInstallerAction {
             if (response.body !== null) {
                 const handle = await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.open)(tempfile, "w");
                 const fileStream = handle.createWriteStream({ autoClose: false });
-                const fileStreamWeb = node_stream__WEBPACK_IMPORTED_MODULE_7___default().Writable.toWeb(fileStream);
-                await response.body.pipeTo(fileStreamWeb);
-                // fileStreamWeb is auto-closed by pipeTo, confirmed
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const bodyCast = response.body;
+                const bodyReader = node_stream__WEBPACK_IMPORTED_MODULE_7___default().Readable.fromWeb(bodyCast);
+                await (0,node_stream_promises__WEBPACK_IMPORTED_MODULE_8__.finished)(bodyReader.pipe(fileStream));
                 fileStream.close();
                 await handle.sync();
+                await handle.close();
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
             }
             else {
                 throw new Error("No response body recieved");
             }
             // Make executable
-            await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.chmod)(tempfile, (node_fs__WEBPACK_IMPORTED_MODULE_8___default().constants.S_IXUSR) | (node_fs__WEBPACK_IMPORTED_MODULE_8___default().constants.S_IXGRP));
+            await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.chmod)(tempfile, (node_fs__WEBPACK_IMPORTED_MODULE_9___default().constants.S_IXUSR) | (node_fs__WEBPACK_IMPORTED_MODULE_9___default().constants.S_IXGRP));
             return tempfile;
         }
         else {
@@ -13553,6 +13558,14 @@ module.exports = require("node:path");
 
 "use strict";
 module.exports = require("node:stream");
+
+/***/ }),
+
+/***/ 6402:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:stream/promises");
 
 /***/ }),
 
