@@ -692,11 +692,11 @@ async function main(): Promise<void> {
       actions_core.saveState("isPost", "true");
       await installer.install();
     } else {
-      installer.report_overall();
+      await installer.report_overall();
     }
   } catch (error) {
     if (error instanceof Error) actions_core.setFailed(error);
   }
 }
 
-main();
+await main();
