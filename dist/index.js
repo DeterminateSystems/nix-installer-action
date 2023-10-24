@@ -333,15 +333,16 @@ class NixInstallerAction {
             const tempdir = await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.mkdtemp)((0,node_path__WEBPACK_IMPORTED_MODULE_5__.join)((0,node_os__WEBPACK_IMPORTED_MODULE_6__.tmpdir)(), "nix-installer-"));
             const tempfile = (0,node_path__WEBPACK_IMPORTED_MODULE_5__.join)(tempdir, `nix-installer-${this.platform}`);
             if (response.body !== null) {
-                const handle = await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.open)(tempfile, "w");
-                const fileStream = handle.createWriteStream({ autoClose: false });
+                const handle = await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.open)(tempfile, (node_fs__WEBPACK_IMPORTED_MODULE_9___default().constants.O_CREAT) |
+                    (node_fs__WEBPACK_IMPORTED_MODULE_9___default().constants.O_TRUNC) |
+                    (node_fs__WEBPACK_IMPORTED_MODULE_9___default().constants.O_WRONLY) |
+                    (node_fs__WEBPACK_IMPORTED_MODULE_9___default().constants.O_DSYNC));
+                const fileStream = handle.createWriteStream();
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const bodyCast = response.body;
                 const bodyReader = node_stream__WEBPACK_IMPORTED_MODULE_7___default().Readable.fromWeb(bodyCast);
                 await (0,node_stream_promises__WEBPACK_IMPORTED_MODULE_8__.finished)(bodyReader.pipe(fileStream));
                 fileStream.close();
-                await handle.sync();
-                await handle.close();
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
             }
             else {

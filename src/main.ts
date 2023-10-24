@@ -432,15 +432,19 @@ class NixInstallerAction {
       const tempfile = join(tempdir, `nix-installer-${this.platform}`);
 
       if (response.body !== null) {
-        const handle = await open(tempfile, "w");
-        const fileStream = handle.createWriteStream({ autoClose: false });
+        const handle = await open(
+          tempfile,
+          fs.constants.O_CREAT |
+            fs.constants.O_TRUNC |
+            fs.constants.O_WRONLY |
+            fs.constants.O_DSYNC,
+        );
+        const fileStream = handle.createWriteStream();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const bodyCast = response.body as stream_web.ReadableStream<any>;
         const bodyReader = stream.Readable.fromWeb(bodyCast);
         await finished(bodyReader.pipe(fileStream));
         fileStream.close();
-        await handle.sync();
-        await handle.close();
 
         actions_core.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
       } else {
