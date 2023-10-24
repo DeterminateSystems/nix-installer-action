@@ -1,11 +1,13 @@
 import * as actions_core from "@actions/core";
 import * as github from "@actions/github";
-import { mkdtemp, chmod, access, writeFile } from "node:fs/promises";
+import { mkdtemp, chmod, access, writeFile, open } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import stream from "node:stream";
+import stream_web from "node:stream/web";
+import { finished } from "node:stream/promises";
 import fs from "node:fs";
 import stringArgv from "string-argv";
 
@@ -429,14 +431,20 @@ class NixInstallerAction {
       const tempdir = await mkdtemp(join(tmpdir(), "nix-installer-"));
       const tempfile = join(tempdir, `nix-installer-${this.platform}`);
 
-      if (!response.ok) {
-        throw new Error(`unexpected response ${response.statusText}`);
-      }
-
       if (response.body !== null) {
-        const fileStream = fs.createWriteStream(tempfile);
-        const fileStreamWeb = stream.Writable.toWeb(fileStream);
-        await response.body.pipeTo(fileStreamWeb);
+        const handle = await open(
+          tempfile,
+          fs.constants.O_CREAT |
+            fs.constants.O_TRUNC |
+            fs.constants.O_WRONLY |
+            fs.constants.O_DSYNC,
+        );
+        const fileStream = handle.createWriteStream();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const bodyCast = response.body as stream_web.ReadableStream<any>;
+        const bodyReader = stream.Readable.fromWeb(bodyCast);
+        await finished(bodyReader.pipe(fileStream));
+        fileStream.close();
 
         actions_core.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
       } else {
@@ -692,11 +700,11 @@ async function main(): Promise<void> {
       actions_core.saveState("isPost", "true");
       await installer.install();
     } else {
-      installer.report_overall();
+      await installer.report_overall();
     }
   } catch (error) {
     if (error instanceof Error) actions_core.setFailed(error);
   }
 }
 
-main();
+await main();

@@ -2,58 +2,47 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 3109:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
+__nccwpck_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__nccwpck_require__.r(__webpack_exports__);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2186);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(5438);
+/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(_actions_github__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var node_fs_promises__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(3977);
+/* harmony import */ var node_fs_promises__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__nccwpck_require__.n(node_fs_promises__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var node_child_process__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(7718);
+/* harmony import */ var node_child_process__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__nccwpck_require__.n(node_child_process__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_4__ = __nccwpck_require__(6005);
+/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__nccwpck_require__.n(node_crypto__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_5__ = __nccwpck_require__(9411);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__nccwpck_require__.n(node_path__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var node_os__WEBPACK_IMPORTED_MODULE_6__ = __nccwpck_require__(612);
+/* harmony import */ var node_os__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__nccwpck_require__.n(node_os__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var node_stream__WEBPACK_IMPORTED_MODULE_7__ = __nccwpck_require__(4492);
+/* harmony import */ var node_stream__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__nccwpck_require__.n(node_stream__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var node_stream_promises__WEBPACK_IMPORTED_MODULE_8__ = __nccwpck_require__(6402);
+/* harmony import */ var node_stream_promises__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__nccwpck_require__.n(node_stream_promises__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_9__ = __nccwpck_require__(7561);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__nccwpck_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_9__);
+/* harmony import */ var string_argv__WEBPACK_IMPORTED_MODULE_11__ = __nccwpck_require__(1810);
+/* harmony import */ var fetch_retry__WEBPACK_IMPORTED_MODULE_10__ = __nccwpck_require__(9068);
+/* harmony import */ var fetch_retry__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__nccwpck_require__.n(fetch_retry__WEBPACK_IMPORTED_MODULE_10__);
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const actions_core = __importStar(__nccwpck_require__(2186));
-const github = __importStar(__nccwpck_require__(5438));
-const promises_1 = __nccwpck_require__(3977);
-const node_child_process_1 = __nccwpck_require__(7718);
-const node_crypto_1 = __nccwpck_require__(6005);
-const node_path_1 = __nccwpck_require__(9411);
-const node_os_1 = __nccwpck_require__(612);
-const node_stream_1 = __importDefault(__nccwpck_require__(4492));
-const node_fs_1 = __importDefault(__nccwpck_require__(7561));
-const string_argv_1 = __importDefault(__nccwpck_require__(9663));
-const fetch_retry_1 = __importDefault(__nccwpck_require__(9068));
-const fetchRetry = (0, fetch_retry_1.default)(global.fetch);
+
+
+
+
+
+
+
+
+
+
+
+const fetchRetry = fetch_retry__WEBPACK_IMPORTED_MODULE_10___default()(global.fetch);
 class NixInstallerAction {
     constructor() {
         this.platform = get_nix_platform();
@@ -87,361 +76,345 @@ class NixInstallerAction {
         this.correlation = process.env["STATE_correlation"];
         this.nix_installer_url = resolve_nix_installer_url(this.platform, this.correlation);
     }
-    executionEnvironment() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const execution_env = {};
-            execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
-            execution_env.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = this.correlation;
-            if (this.backtrace !== null) {
-                execution_env.RUST_BACKTRACE = this.backtrace;
-            }
-            if (this.modify_profile !== null) {
-                if (this.modify_profile) {
-                    execution_env.NIX_INSTALLER_MODIFY_PROFILE = "true";
-                }
-                else {
-                    execution_env.NIX_INSTALLER_MODIFY_PROFILE = "false";
-                }
-            }
-            if (this.nix_build_group_id !== null) {
-                execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_ID = `${this.nix_build_group_id}`;
-            }
-            if (this.nix_build_group_name !== null) {
-                execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_NAME =
-                    this.nix_build_group_name;
-            }
-            if (this.nix_build_user_prefix !== null) {
-                execution_env.NIX_INSTALLER_NIX_BUILD_USER_PREFIX =
-                    this.nix_build_user_prefix;
-            }
-            if (this.nix_build_user_count !== null) {
-                execution_env.NIX_INSTALLER_NIX_BUILD_USER_COUNT = `${this.nix_build_user_count}`;
-            }
-            if (this.nix_build_user_base !== null) {
-                execution_env.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nix_build_user_count}`;
-            }
-            if (this.nix_package_url !== null) {
-                execution_env.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nix_package_url}`;
-            }
-            if (this.proxy !== null) {
-                execution_env.NIX_INSTALLER_PROXY = this.proxy;
-            }
-            if (this.ssl_cert_file !== null) {
-                execution_env.NIX_INSTALLER_SSL_CERT_FILE = this.ssl_cert_file;
-            }
-            if (this.diagnostic_endpoint !== null) {
-                execution_env.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
-                    this.diagnostic_endpoint;
-            }
-            // TODO: Error if the user uses these on not-MacOS
-            if (this.mac_encrypt !== null) {
-                if (process.env.RUNNER_OS !== "macOS") {
-                    throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
-                }
-                execution_env.NIX_INSTALLER_ENCRYPT = this.mac_encrypt;
-            }
-            if (this.mac_case_sensitive !== null) {
-                if (process.env.RUNNER_OS !== "macOS") {
-                    throw new Error("`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`");
-                }
-                execution_env.NIX_INSTALLER_CASE_SENSITIVE = this.mac_case_sensitive;
-            }
-            if (this.mac_volume_label !== null) {
-                if (process.env.RUNNER_OS !== "macOS") {
-                    throw new Error("`mac-volume-label` while `$RUNNER_OS` was not `macOS`");
-                }
-                execution_env.NIX_INSTALLER_VOLUME_LABEL = this.mac_volume_label;
-            }
-            if (this.mac_root_disk !== null) {
-                if (process.env.RUNNER_OS !== "macOS") {
-                    throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
-                }
-                execution_env.NIX_INSTALLER_ROOT_DISK = this.mac_root_disk;
-            }
-            if (this.logger !== null) {
-                execution_env.NIX_INSTALLER_LOGGER = this.logger;
-            }
-            if (this.log_directives !== null) {
-                execution_env.NIX_INSTALLER_LOG_DIRECTIVES = this.log_directives;
-            }
-            // TODO: Error if the user uses these on MacOS
-            if (this.init !== null) {
-                if (process.env.RUNNER_OS === "macOS") {
-                    throw new Error("`init` is not a valid option when `$RUNNER_OS` is `macOS`");
-                }
-                execution_env.NIX_INSTALLER_INIT = this.init;
-            }
-            if (this.start_daemon !== null) {
-                if (this.start_daemon) {
-                    execution_env.NIX_INSTALLER_START_DAEMON = "true";
-                }
-                else {
-                    execution_env.NIX_INSTALLER_START_DAEMON = "false";
-                }
-            }
-            let extra_conf = "";
-            if (this.github_token !== null) {
-                extra_conf += `access-tokens = github.com=${this.github_token}`;
-                extra_conf += "\n";
-            }
-            if (this.trust_runner_user !== null) {
-                extra_conf += `trusted-users = root ${process.env.USER}`;
-                extra_conf += "\n";
-            }
-            if (this.flakehub) {
-                extra_conf += `netrc-file = ${yield this.flakehub_login()}`;
-                extra_conf += "\n";
-            }
-            if (this.extra_conf !== null && this.extra_conf.length !== 0) {
-                extra_conf += this.extra_conf.join("\n");
-                extra_conf += "\n";
-            }
-            execution_env.NIX_INSTALLER_EXTRA_CONF = extra_conf;
-            if (process.env.ACT && !process.env.NOT_ACT) {
-                actions_core.info("Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`");
-                execution_env.NIX_INSTALLER_INIT = "none";
-            }
-            return execution_env;
-        });
-    }
-    execute_install(binary_path) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const execution_env = yield this.executionEnvironment();
-            actions_core.info(`Execution environment: ${JSON.stringify(execution_env, null, 4)}`);
-            const args = ["install"];
-            if (this.planner) {
-                args.push(this.planner);
+    async executionEnvironment() {
+        const execution_env = {};
+        execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
+        execution_env.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = this.correlation;
+        if (this.backtrace !== null) {
+            execution_env.RUST_BACKTRACE = this.backtrace;
+        }
+        if (this.modify_profile !== null) {
+            if (this.modify_profile) {
+                execution_env.NIX_INSTALLER_MODIFY_PROFILE = "true";
             }
             else {
-                args.push(get_default_planner());
+                execution_env.NIX_INSTALLER_MODIFY_PROFILE = "false";
             }
-            if (this.extra_args) {
-                const extra_args = (0, string_argv_1.default)(this.extra_args);
-                args.concat(extra_args);
+        }
+        if (this.nix_build_group_id !== null) {
+            execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_ID = `${this.nix_build_group_id}`;
+        }
+        if (this.nix_build_group_name !== null) {
+            execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_NAME =
+                this.nix_build_group_name;
+        }
+        if (this.nix_build_user_prefix !== null) {
+            execution_env.NIX_INSTALLER_NIX_BUILD_USER_PREFIX =
+                this.nix_build_user_prefix;
+        }
+        if (this.nix_build_user_count !== null) {
+            execution_env.NIX_INSTALLER_NIX_BUILD_USER_COUNT = `${this.nix_build_user_count}`;
+        }
+        if (this.nix_build_user_base !== null) {
+            execution_env.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nix_build_user_count}`;
+        }
+        if (this.nix_package_url !== null) {
+            execution_env.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nix_package_url}`;
+        }
+        if (this.proxy !== null) {
+            execution_env.NIX_INSTALLER_PROXY = this.proxy;
+        }
+        if (this.ssl_cert_file !== null) {
+            execution_env.NIX_INSTALLER_SSL_CERT_FILE = this.ssl_cert_file;
+        }
+        if (this.diagnostic_endpoint !== null) {
+            execution_env.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
+                this.diagnostic_endpoint;
+        }
+        // TODO: Error if the user uses these on not-MacOS
+        if (this.mac_encrypt !== null) {
+            if (process.env.RUNNER_OS !== "macOS") {
+                throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
             }
-            const merged_env = Object.assign(Object.assign({}, process.env), execution_env);
-            const spawned = (0, node_child_process_1.spawn)(`${binary_path}`, args, {
-                env: merged_env,
-            });
-            spawned.stdout.setEncoding("utf-8");
-            spawned.stdout.on("data", (data) => {
-                const trimmed = data.trimEnd();
-                if (trimmed.length >= 0) {
-                    actions_core.info(trimmed);
-                }
-            });
-            spawned.stderr.setEncoding("utf-8");
-            spawned.stderr.on("data", (data) => {
-                const trimmed = data.trimEnd();
-                if (trimmed.length >= 0) {
-                    actions_core.info(trimmed);
-                }
-            });
-            const exit_code = yield new Promise((resolve, _reject) => {
-                spawned.on("close", resolve);
-            });
-            if (exit_code !== 0) {
-                throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
+            execution_env.NIX_INSTALLER_ENCRYPT = this.mac_encrypt;
+        }
+        if (this.mac_case_sensitive !== null) {
+            if (process.env.RUNNER_OS !== "macOS") {
+                throw new Error("`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`");
             }
-            return exit_code;
-        });
-    }
-    install() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const existing_install = yield this.detect_existing();
-            if (existing_install) {
-                if (this.reinstall) {
-                    // We need to uninstall, then reinstall
-                    actions_core.info("Nix was already installed, `reinstall` is set, uninstalling for a reinstall");
-                    yield this.execute_uninstall();
-                }
-                else {
-                    // We're already installed, and not reinstalling, just set GITHUB_PATH and finish early
-                    yield this.set_github_path();
-                    actions_core.info("Nix was already installed, using existing install");
-                    return;
-                }
+            execution_env.NIX_INSTALLER_CASE_SENSITIVE = this.mac_case_sensitive;
+        }
+        if (this.mac_volume_label !== null) {
+            if (process.env.RUNNER_OS !== "macOS") {
+                throw new Error("`mac-volume-label` while `$RUNNER_OS` was not `macOS`");
             }
-            // Normal just doing of the install
-            const binary_path = yield this.fetch_binary();
-            yield this.execute_install(binary_path);
-            yield this.set_github_path();
-        });
-    }
-    set_github_path() {
-        return __awaiter(this, void 0, void 0, function* () {
-            // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
-            try {
-                const nix_var_nix_profile_path = "/nix/var/nix/profiles/default/bin";
-                const home_nix_profile_path = `${process.env.HOME}/.nix-profile/bin`;
-                actions_core.addPath(nix_var_nix_profile_path);
-                actions_core.addPath(home_nix_profile_path);
-                actions_core.info(`Added \`${nix_var_nix_profile_path}\` and \`${home_nix_profile_path}\` to \`$GITHUB_PATH\``);
+            execution_env.NIX_INSTALLER_VOLUME_LABEL = this.mac_volume_label;
+        }
+        if (this.mac_root_disk !== null) {
+            if (process.env.RUNNER_OS !== "macOS") {
+                throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
             }
-            catch (error) {
-                actions_core.info("Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is done in the action. Prior to 0.11.0, this was only done in the `nix-installer` binary.");
+            execution_env.NIX_INSTALLER_ROOT_DISK = this.mac_root_disk;
+        }
+        if (this.logger !== null) {
+            execution_env.NIX_INSTALLER_LOGGER = this.logger;
+        }
+        if (this.log_directives !== null) {
+            execution_env.NIX_INSTALLER_LOG_DIRECTIVES = this.log_directives;
+        }
+        // TODO: Error if the user uses these on MacOS
+        if (this.init !== null) {
+            if (process.env.RUNNER_OS === "macOS") {
+                throw new Error("`init` is not a valid option when `$RUNNER_OS` is `macOS`");
             }
-        });
-    }
-    flakehub_login() {
-        var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-            const netrc_path = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
-            const jwt = yield actions_core.getIDToken("api.flakehub.com");
-            yield (0, promises_1.writeFile)(netrc_path, [
-                `machine api.flakehub.com login flakehub password ${jwt}`,
-                `machine flakehub.com login flakehub password ${jwt}`,
-            ].join("\n"));
-            actions_core.info("Logging in to FlakeHub.");
-            // the join followed by a match on ^... looks silly, but extra_config
-            // could contain multi-line values
-            if ((_a = this.extra_conf) === null || _a === void 0 ? void 0 : _a.join("\n").match(/^netrc-file/m)) {
-                actions_core.warning("Logging in to FlakeHub conflicts with the Nix option `netrc-file`.");
-            }
-            return netrc_path;
-        });
-    }
-    execute_uninstall() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const spawned = (0, node_child_process_1.spawn)(`/nix/nix-installer`, ["uninstall"], {
-                env: Object.assign({ NIX_INSTALLER_NO_CONFIRM: "true" }, process.env),
-            });
-            spawned.stdout.setEncoding("utf-8");
-            spawned.stdout.on("data", (data) => {
-                const trimmed = data.trimEnd();
-                if (trimmed.length >= 0) {
-                    actions_core.info(trimmed);
-                }
-            });
-            spawned.stderr.setEncoding("utf-8");
-            spawned.stderr.on("data", (data) => {
-                const trimmed = data.trimEnd();
-                if (trimmed.length >= 0) {
-                    actions_core.info(trimmed);
-                }
-            });
-            const exit_code = yield new Promise((resolve, _reject) => {
-                spawned.on("close", resolve);
-            });
-            if (exit_code !== 0) {
-                throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
-            }
-            return exit_code;
-        });
-    }
-    detect_existing() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const receipt_path = "/nix/receipt.json";
-            try {
-                yield (0, promises_1.access)(receipt_path);
-                // There is a /nix/receipt.json
-                return true;
-            }
-            catch (_a) {
-                // No /nix/receipt.json
-                return false;
-            }
-        });
-    }
-    fetch_binary() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!this.local_root) {
-                actions_core.info(`Fetching binary from ${this.nix_installer_url}`);
-                const response = yield fetchRetry(this.nix_installer_url, {
-                    retries: 5,
-                    retryDelay(attempt, _error, _response) {
-                        return Math.pow(2, attempt) * 1000; // 1000, 2000, 4000
-                    },
-                });
-                if (!response.ok) {
-                    throw new Error(`Got a status of ${response.status} from \`${this.nix_installer_url}\`, expected a 200`);
-                }
-                const tempdir = yield (0, promises_1.mkdtemp)((0, node_path_1.join)((0, node_os_1.tmpdir)(), "nix-installer-"));
-                const tempfile = (0, node_path_1.join)(tempdir, `nix-installer-${this.platform}`);
-                if (!response.ok) {
-                    throw new Error(`unexpected response ${response.statusText}`);
-                }
-                if (response.body !== null) {
-                    const fileStream = node_fs_1.default.createWriteStream(tempfile);
-                    const fileStreamWeb = node_stream_1.default.Writable.toWeb(fileStream);
-                    yield response.body.pipeTo(fileStreamWeb);
-                    actions_core.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
-                }
-                else {
-                    throw new Error("No response body recieved");
-                }
-                // Make executable
-                yield (0, promises_1.chmod)(tempfile, node_fs_1.default.constants.S_IXUSR | node_fs_1.default.constants.S_IXGRP);
-                return tempfile;
+            execution_env.NIX_INSTALLER_INIT = this.init;
+        }
+        if (this.start_daemon !== null) {
+            if (this.start_daemon) {
+                execution_env.NIX_INSTALLER_START_DAEMON = "true";
             }
             else {
-                const local_path = (0, node_path_1.join)(this.local_root, `nix-installer-${this.platform}`);
-                actions_core.info(`Using binary ${local_path}`);
-                return local_path;
+                execution_env.NIX_INSTALLER_START_DAEMON = "false";
+            }
+        }
+        let extra_conf = "";
+        if (this.github_token !== null) {
+            extra_conf += `access-tokens = github.com=${this.github_token}`;
+            extra_conf += "\n";
+        }
+        if (this.trust_runner_user !== null) {
+            extra_conf += `trusted-users = root ${process.env.USER}`;
+            extra_conf += "\n";
+        }
+        if (this.flakehub) {
+            extra_conf += `netrc-file = ${await this.flakehub_login()}`;
+            extra_conf += "\n";
+        }
+        if (this.extra_conf !== null && this.extra_conf.length !== 0) {
+            extra_conf += this.extra_conf.join("\n");
+            extra_conf += "\n";
+        }
+        execution_env.NIX_INSTALLER_EXTRA_CONF = extra_conf;
+        if (process.env.ACT && !process.env.NOT_ACT) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`");
+            execution_env.NIX_INSTALLER_INIT = "none";
+        }
+        return execution_env;
+    }
+    async execute_install(binary_path) {
+        const execution_env = await this.executionEnvironment();
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Execution environment: ${JSON.stringify(execution_env, null, 4)}`);
+        const args = ["install"];
+        if (this.planner) {
+            args.push(this.planner);
+        }
+        else {
+            args.push(get_default_planner());
+        }
+        if (this.extra_args) {
+            const extra_args = (0,string_argv__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .Z)(this.extra_args);
+            args.concat(extra_args);
+        }
+        const merged_env = Object.assign(Object.assign({}, process.env), execution_env);
+        const spawned = (0,node_child_process__WEBPACK_IMPORTED_MODULE_3__.spawn)(`${binary_path}`, args, {
+            env: merged_env,
+        });
+        spawned.stdout.setEncoding("utf-8");
+        spawned.stdout.on("data", (data) => {
+            const trimmed = data.trimEnd();
+            if (trimmed.length >= 0) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
             }
         });
+        spawned.stderr.setEncoding("utf-8");
+        spawned.stderr.on("data", (data) => {
+            const trimmed = data.trimEnd();
+            if (trimmed.length >= 0) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
+            }
+        });
+        const exit_code = await new Promise((resolve, _reject) => {
+            spawned.on("close", resolve);
+        });
+        if (exit_code !== 0) {
+            throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
+        }
+        return exit_code;
     }
-    report_overall() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.diagnostic_endpoint == null) {
+    async install() {
+        const existing_install = await this.detect_existing();
+        if (existing_install) {
+            if (this.reinstall) {
+                // We need to uninstall, then reinstall
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("Nix was already installed, `reinstall` is set, uninstalling for a reinstall");
+                await this.execute_uninstall();
+            }
+            else {
+                // We're already installed, and not reinstalling, just set GITHUB_PATH and finish early
+                await this.set_github_path();
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("Nix was already installed, using existing install");
                 return;
             }
-            try {
-                yield fetch(this.diagnostic_endpoint, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        "post-github-workflow-run-report": true,
-                        correlation: this.correlation,
-                        conclusion: yield this.get_workflow_conclusion(),
-                    }),
-                });
-            }
-            catch (error) {
-                actions_core.debug(`Error submitting post-run diagnostics report: ${error}`);
-            }
-        });
+        }
+        // Normal just doing of the install
+        const binary_path = await this.fetch_binary();
+        await this.execute_install(binary_path);
+        await this.set_github_path();
     }
-    get_workflow_conclusion() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.github_token == null) {
-                return undefined;
-            }
-            try {
-                const octokit = github.getOctokit(this.github_token);
-                const jobs = yield octokit.paginate(octokit.rest.actions.listJobsForWorkflowRun, {
-                    owner: github.context.repo.owner,
-                    repo: github.context.repo.repo,
-                    run_id: github.context.runId,
-                });
-                actions_core.debug(`awaited jobs: ${jobs}`);
-                const job = jobs
-                    .filter((candidate) => candidate.name === github.context.job)
-                    .at(0);
-                if (job === undefined) {
-                    return "no-jobs";
-                }
-                const outcomes = (job.steps || []).map((j) => j.conclusion || "unknown");
-                // Possible values: success, failure, cancelled, or skipped
-                // from: https://docs.github.com/en/actions/learn-github-actions/contexts
-                if (outcomes.includes("failure")) {
-                    // Any failures fails the job
-                    return "failure";
-                }
-                if (outcomes.includes("cancelled")) {
-                    // Any cancellations cancels the job
-                    return "cancelled";
-                }
-                // Assume success if no jobs failed or were canceled
-                return "success";
-            }
-            catch (error) {
-                actions_core.debug(`Error determining final disposition: ${error}`);
-                return "unavailable";
+    async set_github_path() {
+        // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
+        try {
+            const nix_var_nix_profile_path = "/nix/var/nix/profiles/default/bin";
+            const home_nix_profile_path = `${process.env.HOME}/.nix-profile/bin`;
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.addPath(nix_var_nix_profile_path);
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.addPath(home_nix_profile_path);
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Added \`${nix_var_nix_profile_path}\` and \`${home_nix_profile_path}\` to \`$GITHUB_PATH\``);
+        }
+        catch (error) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is done in the action. Prior to 0.11.0, this was only done in the `nix-installer` binary.");
+        }
+    }
+    async flakehub_login() {
+        var _a;
+        const netrc_path = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
+        const jwt = await _actions_core__WEBPACK_IMPORTED_MODULE_0__.getIDToken("api.flakehub.com");
+        await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.writeFile)(netrc_path, [
+            `machine api.flakehub.com login flakehub password ${jwt}`,
+            `machine flakehub.com login flakehub password ${jwt}`,
+        ].join("\n"));
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("Logging in to FlakeHub.");
+        // the join followed by a match on ^... looks silly, but extra_config
+        // could contain multi-line values
+        if ((_a = this.extra_conf) === null || _a === void 0 ? void 0 : _a.join("\n").match(/^netrc-file/m)) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("Logging in to FlakeHub conflicts with the Nix option `netrc-file`.");
+        }
+        return netrc_path;
+    }
+    async execute_uninstall() {
+        const spawned = (0,node_child_process__WEBPACK_IMPORTED_MODULE_3__.spawn)(`/nix/nix-installer`, ["uninstall"], {
+            env: Object.assign({ NIX_INSTALLER_NO_CONFIRM: "true" }, process.env),
+        });
+        spawned.stdout.setEncoding("utf-8");
+        spawned.stdout.on("data", (data) => {
+            const trimmed = data.trimEnd();
+            if (trimmed.length >= 0) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
             }
         });
+        spawned.stderr.setEncoding("utf-8");
+        spawned.stderr.on("data", (data) => {
+            const trimmed = data.trimEnd();
+            if (trimmed.length >= 0) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
+            }
+        });
+        const exit_code = await new Promise((resolve, _reject) => {
+            spawned.on("close", resolve);
+        });
+        if (exit_code !== 0) {
+            throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
+        }
+        return exit_code;
+    }
+    async detect_existing() {
+        const receipt_path = "/nix/receipt.json";
+        try {
+            await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.access)(receipt_path);
+            // There is a /nix/receipt.json
+            return true;
+        }
+        catch (_a) {
+            // No /nix/receipt.json
+            return false;
+        }
+    }
+    async fetch_binary() {
+        if (!this.local_root) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Fetching binary from ${this.nix_installer_url}`);
+            const response = await fetchRetry(this.nix_installer_url, {
+                retries: 5,
+                retryDelay(attempt, _error, _response) {
+                    return Math.pow(2, attempt) * 1000; // 1000, 2000, 4000
+                },
+            });
+            if (!response.ok) {
+                throw new Error(`Got a status of ${response.status} from \`${this.nix_installer_url}\`, expected a 200`);
+            }
+            const tempdir = await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.mkdtemp)((0,node_path__WEBPACK_IMPORTED_MODULE_5__.join)((0,node_os__WEBPACK_IMPORTED_MODULE_6__.tmpdir)(), "nix-installer-"));
+            const tempfile = (0,node_path__WEBPACK_IMPORTED_MODULE_5__.join)(tempdir, `nix-installer-${this.platform}`);
+            if (response.body !== null) {
+                const handle = await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.open)(tempfile, (node_fs__WEBPACK_IMPORTED_MODULE_9___default().constants.O_CREAT) |
+                    (node_fs__WEBPACK_IMPORTED_MODULE_9___default().constants.O_TRUNC) |
+                    (node_fs__WEBPACK_IMPORTED_MODULE_9___default().constants.O_WRONLY) |
+                    (node_fs__WEBPACK_IMPORTED_MODULE_9___default().constants.O_DSYNC));
+                const fileStream = handle.createWriteStream();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const bodyCast = response.body;
+                const bodyReader = node_stream__WEBPACK_IMPORTED_MODULE_7___default().Readable.fromWeb(bodyCast);
+                await (0,node_stream_promises__WEBPACK_IMPORTED_MODULE_8__.finished)(bodyReader.pipe(fileStream));
+                fileStream.close();
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
+            }
+            else {
+                throw new Error("No response body recieved");
+            }
+            // Make executable
+            await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_2__.chmod)(tempfile, (node_fs__WEBPACK_IMPORTED_MODULE_9___default().constants.S_IXUSR) | (node_fs__WEBPACK_IMPORTED_MODULE_9___default().constants.S_IXGRP));
+            return tempfile;
+        }
+        else {
+            const local_path = (0,node_path__WEBPACK_IMPORTED_MODULE_5__.join)(this.local_root, `nix-installer-${this.platform}`);
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Using binary ${local_path}`);
+            return local_path;
+        }
+    }
+    async report_overall() {
+        if (this.diagnostic_endpoint == null) {
+            return;
+        }
+        try {
+            await fetch(this.diagnostic_endpoint, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    "post-github-workflow-run-report": true,
+                    correlation: this.correlation,
+                    conclusion: await this.get_workflow_conclusion(),
+                }),
+            });
+        }
+        catch (error) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(`Error submitting post-run diagnostics report: ${error}`);
+        }
+    }
+    async get_workflow_conclusion() {
+        if (this.github_token == null) {
+            return undefined;
+        }
+        try {
+            const octokit = _actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit(this.github_token);
+            const jobs = await octokit.paginate(octokit.rest.actions.listJobsForWorkflowRun, {
+                owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
+                repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
+                run_id: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.runId,
+            });
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(`awaited jobs: ${jobs}`);
+            const job = jobs
+                .filter((candidate) => candidate.name === _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.job)
+                .at(0);
+            if (job === undefined) {
+                return "no-jobs";
+            }
+            const outcomes = (job.steps || []).map((j) => j.conclusion || "unknown");
+            // Possible values: success, failure, cancelled, or skipped
+            // from: https://docs.github.com/en/actions/learn-github-actions/contexts
+            if (outcomes.includes("failure")) {
+                // Any failures fails the job
+                return "failure";
+            }
+            if (outcomes.includes("cancelled")) {
+                // Any cancellations cancels the job
+                return "cancelled";
+            }
+            // Assume success if no jobs failed or were canceled
+            return "success";
+        }
+        catch (error) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(`Error determining final disposition: ${error}`);
+            return "unavailable";
+        }
     }
 }
 function get_nix_platform() {
@@ -514,7 +487,7 @@ function resolve_nix_installer_url(platform, correlation) {
     return resolved_nix_installer_url;
 }
 function action_input_string_or_null(name) {
-    const value = actions_core.getInput(name);
+    const value = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput(name);
     if (value === "") {
         return null;
     }
@@ -523,7 +496,7 @@ function action_input_string_or_null(name) {
     }
 }
 function action_input_multiline_string_or_null(name) {
-    const value = actions_core.getMultilineInput(name);
+    const value = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getMultilineInput(name);
     if (value.length === 0) {
         return null;
     }
@@ -532,7 +505,7 @@ function action_input_multiline_string_or_null(name) {
     }
 }
 function action_input_number_or_null(name) {
-    const value = actions_core.getInput(name);
+    const value = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput(name);
     if (value === "") {
         return null;
     }
@@ -541,34 +514,34 @@ function action_input_number_or_null(name) {
     }
 }
 function action_input_bool(name) {
-    return actions_core.getBooleanInput(name);
+    return _actions_core__WEBPACK_IMPORTED_MODULE_0__.getBooleanInput(name);
 }
-function main() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            if (!process.env["STATE_correlation"]) {
-                const correlation = `GH-${(0, node_crypto_1.randomUUID)()}`;
-                actions_core.saveState("correlation", correlation);
-                process.env["STATE_correlation"] = correlation;
-            }
-            const installer = new NixInstallerAction();
-            const isPost = !!process.env["STATE_isPost"];
-            if (!isPost) {
-                actions_core.saveState("isPost", "true");
-                yield installer.install();
-            }
-            else {
-                installer.report_overall();
-            }
+async function main() {
+    try {
+        if (!process.env["STATE_correlation"]) {
+            const correlation = `GH-${(0,node_crypto__WEBPACK_IMPORTED_MODULE_4__.randomUUID)()}`;
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("correlation", correlation);
+            process.env["STATE_correlation"] = correlation;
         }
-        catch (error) {
-            if (error instanceof Error)
-                actions_core.setFailed(error);
+        const installer = new NixInstallerAction();
+        const isPost = !!process.env["STATE_isPost"];
+        if (!isPost) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("isPost", "true");
+            await installer.install();
         }
-    });
+        else {
+            await installer.report_overall();
+        }
+    }
+    catch (error) {
+        if (error instanceof Error)
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error);
+    }
 }
-main();
+await main();
 
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } }, 1);
 
 /***/ }),
 
@@ -13589,6 +13562,14 @@ module.exports = require("node:stream");
 
 /***/ }),
 
+/***/ 6402:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:stream/promises");
+
+/***/ }),
+
 /***/ 2037:
 /***/ ((module) => {
 
@@ -13661,13 +13642,15 @@ module.exports = require("zlib");
 
 /***/ }),
 
-/***/ 9663:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ 1810:
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
+/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   "Z": () => (/* binding */ parseArgsStringToArgv)
+/* harmony export */ });
+/* unused harmony export parseArgsStringToArgv */
 
-exports.__esModule = true;
-exports.parseArgsStringToArgv = void 0;
 function parseArgsStringToArgv(value, env, file) {
     // ([^\s'"]([^\s'"]*(['"])([^\3]*?)\3)+[^\s'"]*) Matches nested quotes until the first space outside of quotes
     // [^\s'"]+ or Match if not a space ' or "
@@ -13694,8 +13677,6 @@ function parseArgsStringToArgv(value, env, file) {
     } while (match !== null);
     return myArray;
 }
-exports["default"] = parseArgsStringToArgv;
-exports.parseArgsStringToArgv = parseArgsStringToArgv;
 // Accepts any number of arguments, and returns the first one that is a string
 // (even an empty string)
 function firstString() {
@@ -13819,6 +13800,115 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/async module */
+/******/ 	(() => {
+/******/ 		var webpackQueues = typeof Symbol === "function" ? Symbol("webpack queues") : "__webpack_queues__";
+/******/ 		var webpackExports = typeof Symbol === "function" ? Symbol("webpack exports") : "__webpack_exports__";
+/******/ 		var webpackError = typeof Symbol === "function" ? Symbol("webpack error") : "__webpack_error__";
+/******/ 		var resolveQueue = (queue) => {
+/******/ 			if(queue && !queue.d) {
+/******/ 				queue.d = 1;
+/******/ 				queue.forEach((fn) => (fn.r--));
+/******/ 				queue.forEach((fn) => (fn.r-- ? fn.r++ : fn()));
+/******/ 			}
+/******/ 		}
+/******/ 		var wrapDeps = (deps) => (deps.map((dep) => {
+/******/ 			if(dep !== null && typeof dep === "object") {
+/******/ 				if(dep[webpackQueues]) return dep;
+/******/ 				if(dep.then) {
+/******/ 					var queue = [];
+/******/ 					queue.d = 0;
+/******/ 					dep.then((r) => {
+/******/ 						obj[webpackExports] = r;
+/******/ 						resolveQueue(queue);
+/******/ 					}, (e) => {
+/******/ 						obj[webpackError] = e;
+/******/ 						resolveQueue(queue);
+/******/ 					});
+/******/ 					var obj = {};
+/******/ 					obj[webpackQueues] = (fn) => (fn(queue));
+/******/ 					return obj;
+/******/ 				}
+/******/ 			}
+/******/ 			var ret = {};
+/******/ 			ret[webpackQueues] = x => {};
+/******/ 			ret[webpackExports] = dep;
+/******/ 			return ret;
+/******/ 		}));
+/******/ 		__nccwpck_require__.a = (module, body, hasAwait) => {
+/******/ 			var queue;
+/******/ 			hasAwait && ((queue = []).d = 1);
+/******/ 			var depQueues = new Set();
+/******/ 			var exports = module.exports;
+/******/ 			var currentDeps;
+/******/ 			var outerResolve;
+/******/ 			var reject;
+/******/ 			var promise = new Promise((resolve, rej) => {
+/******/ 				reject = rej;
+/******/ 				outerResolve = resolve;
+/******/ 			});
+/******/ 			promise[webpackExports] = exports;
+/******/ 			promise[webpackQueues] = (fn) => (queue && fn(queue), depQueues.forEach(fn), promise["catch"](x => {}));
+/******/ 			module.exports = promise;
+/******/ 			body((deps) => {
+/******/ 				currentDeps = wrapDeps(deps);
+/******/ 				var fn;
+/******/ 				var getResult = () => (currentDeps.map((d) => {
+/******/ 					if(d[webpackError]) throw d[webpackError];
+/******/ 					return d[webpackExports];
+/******/ 				}))
+/******/ 				var promise = new Promise((resolve) => {
+/******/ 					fn = () => (resolve(getResult));
+/******/ 					fn.r = 0;
+/******/ 					var fnQueue = (q) => (q !== queue && !depQueues.has(q) && (depQueues.add(q), q && !q.d && (fn.r++, q.push(fn))));
+/******/ 					currentDeps.map((dep) => (dep[webpackQueues](fnQueue)));
+/******/ 				});
+/******/ 				return fn.r ? promise : getResult();
+/******/ 			}, (err) => ((err ? reject(promise[webpackError] = err) : outerResolve(exports)), resolveQueue(queue)));
+/******/ 			queue && (queue.d = 0);
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__nccwpck_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__nccwpck_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__nccwpck_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__nccwpck_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
@@ -13827,7 +13917,7 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	// This entry module used 'module' so it can't be inlined
 /******/ 	var __webpack_exports__ = __nccwpck_require__(3109);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
