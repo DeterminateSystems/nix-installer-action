@@ -1,18 +1,12 @@
 import * as actions_core from "@actions/core";
 import * as github from "@actions/github";
-import { mkdtemp, chmod, access, writeFile, open } from "node:fs/promises";
-import { spawn } from "node:child_process";
+import * as actions_tool_cache from "@actions/tool-cache";
+import * as actions_exec from "@actions/exec";
+import { chmod, access, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
-import stream from "node:stream";
-import stream_web from "node:stream/web";
-import { finished } from "node:stream/promises";
 import fs from "node:fs";
 import stringArgv from "string-argv";
-
-import fetchRetry_ from "fetch-retry";
-const fetchRetry = fetchRetry_(global.fetch);
 
 class NixInstallerAction {
   platform: string;
@@ -267,33 +261,25 @@ class NixInstallerAction {
       args.concat(extra_args);
     }
 
-    const merged_env = {
-      ...process.env, // To get $PATH, etc
-      ...execution_env,
-    };
-
-    const spawned = spawn(`${binary_path}`, args, {
-      env: merged_env,
-    });
-
-    spawned.stdout.setEncoding("utf-8");
-    spawned.stdout.on("data", (data) => {
-      const trimmed = data.trimEnd();
-      if (trimmed.length >= 0) {
-        actions_core.info(trimmed);
-      }
-    });
-
-    spawned.stderr.setEncoding("utf-8");
-    spawned.stderr.on("data", (data) => {
-      const trimmed = data.trimEnd();
-      if (trimmed.length >= 0) {
-        actions_core.info(trimmed);
-      }
-    });
-
-    const exit_code: number = await new Promise((resolve, _reject) => {
-      spawned.on("close", resolve);
+    const exit_code = await actions_exec.exec(binary_path, args, {
+      env: {
+        ...execution_env,
+        ...process.env, // To get $PATH, etc
+      },
+      listeners: {
+        stdout: (data: Buffer) => {
+          const trimmed = data.toString("utf-8").trimEnd();
+          if (trimmed.length >= 0) {
+            actions_core.info(trimmed);
+          }
+        },
+        stderr: (data: Buffer) => {
+          const trimmed = data.toString("utf-8").trimEnd();
+          if (trimmed.length >= 0) {
+            actions_core.info(trimmed);
+          }
+        },
+      },
     });
 
     if (exit_code !== 0) {
@@ -369,32 +355,30 @@ class NixInstallerAction {
   }
 
   async execute_uninstall(): Promise<number> {
-    const spawned = spawn(`/nix/nix-installer`, ["uninstall"], {
-      env: {
-        NIX_INSTALLER_NO_CONFIRM: "true",
-        ...process.env, // To get $PATH, etc
+    const exit_code = await actions_exec.exec(
+      `/nix/nix-installer`,
+      ["uninstall"],
+      {
+        env: {
+          NIX_INSTALLER_NO_CONFIRM: "true",
+          ...process.env, // To get $PATH, etc
+        },
+        listeners: {
+          stdout: (data: Buffer) => {
+            const trimmed = data.toString("utf-8").trimEnd();
+            if (trimmed.length >= 0) {
+              actions_core.info(trimmed);
+            }
+          },
+          stderr: (data: Buffer) => {
+            const trimmed = data.toString("utf-8").trimEnd();
+            if (trimmed.length >= 0) {
+              actions_core.info(trimmed);
+            }
+          },
+        },
       },
-    });
-
-    spawned.stdout.setEncoding("utf-8");
-    spawned.stdout.on("data", (data) => {
-      const trimmed = data.trimEnd();
-      if (trimmed.length >= 0) {
-        actions_core.info(trimmed);
-      }
-    });
-
-    spawned.stderr.setEncoding("utf-8");
-    spawned.stderr.on("data", (data) => {
-      const trimmed = data.trimEnd();
-      if (trimmed.length >= 0) {
-        actions_core.info(trimmed);
-      }
-    });
-
-    const exit_code: number = await new Promise((resolve, _reject) => {
-      spawned.on("close", resolve);
-    });
+    );
 
     if (exit_code !== 0) {
       throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
@@ -418,50 +402,13 @@ class NixInstallerAction {
   private async fetch_binary(): Promise<string> {
     if (!this.local_root) {
       actions_core.info(`Fetching binary from ${this.nix_installer_url}`);
-      const response = await fetchRetry(this.nix_installer_url, {
-        retries: 5,
-        retryDelay(
-          attempt: number,
-          _error: Error | null,
-          _response: Response | null,
-        ) {
-          return Math.pow(2, attempt) * 1000; // 1000, 2000, 4000
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Got a status of ${response.status} from \`${this.nix_installer_url}\`, expected a 200`,
-        );
-      }
-
-      const tempdir = await mkdtemp(join(tmpdir(), "nix-installer-"));
-      const tempfile = join(tempdir, `nix-installer-${this.platform}`);
-
-      if (response.body !== null) {
-        const handle = await open(
-          tempfile,
-          fs.constants.O_CREAT |
-            fs.constants.O_TRUNC |
-            fs.constants.O_WRONLY |
-            fs.constants.O_DSYNC,
-        );
-        const fileStream = handle.createWriteStream();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const bodyCast = response.body as stream_web.ReadableStream<any>;
-        const bodyReader = stream.Readable.fromWeb(bodyCast);
-        await finished(bodyReader.pipe(fileStream));
-        fileStream.close();
-
-        actions_core.info(`Downloaded \`nix-installer\` to \`${tempfile}\``);
-      } else {
-        throw new Error("No response body recieved");
-      }
-
+      const binaryPath = await actions_tool_cache.downloadTool(
+        String(this.nix_installer_url),
+      );
       // Make executable
-      await chmod(tempfile, fs.constants.S_IXUSR | fs.constants.S_IXGRP);
+      await chmod(binaryPath, fs.constants.S_IXUSR | fs.constants.S_IXGRP);
 
-      return tempfile;
+      return binaryPath;
     } else {
       const local_path = join(
         this.local_root,
