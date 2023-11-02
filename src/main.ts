@@ -239,6 +239,13 @@ class NixInstallerAction {
       execution_env.NIX_INSTALLER_INIT = "none";
     }
 
+    if (process.env.NSC_VM_ID && !process.env.NOT_NAMESPACE) {
+      actions_core.info(
+        "Detected Namespace runner, assuming this is a https://namespace.so created container, set `NOT_NAMESPACE=true` to override this. This will change the setting of the `init` to be compatible with Namespace",
+      );
+      execution_env.NIX_INSTALLER_INIT = "none";
+    }
+
     return execution_env;
   }
 
