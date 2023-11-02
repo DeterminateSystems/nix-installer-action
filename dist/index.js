@@ -189,6 +189,10 @@ class NixInstallerAction {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`");
             execution_env.NIX_INSTALLER_INIT = "none";
         }
+        if (process.env.NSC_VM_ID && !process.env.NOT_NAMESPACE) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("Detected Namespace runner, assuming this is a https://namespace.so created container, set `NOT_NAMESPACE=true` to override this. This will change the setting of the `init` to be compatible with Namespace");
+            execution_env.NIX_INSTALLER_INIT = "none";
+        }
         return execution_env;
     }
     async execute_install(binary_path) {
