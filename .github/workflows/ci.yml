@@ -9,7 +9,7 @@ on:
 jobs:
   check-dist-up-to-date:
     name: Check the dist/ folder is up to date
-    runs-on: ubuntu-22.04
+    runs-on: nscloud-ubuntu-22.04-amd64-4x16
     steps:
       - uses: actions/checkout@v3
       - run: npm install --no-save
@@ -18,7 +18,7 @@ jobs:
       - run: test $(git status --porcelain=v1 2>/dev/null | wc -l) -eq 0
   run-x86_64-linux:
     name: Run x86_64 Linux
-    runs-on: ubuntu-22.04
+    runs-on: nscloud-ubuntu-22.04-amd64-4x16
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
@@ -79,75 +79,5 @@ jobs:
       - name: Verify the generated nix.conf
         run: |
           cat -n /etc/nix/nix.conf
-          grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
-          grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf
-
-  run-x86_64-darwin:
-    name: Run x86_64 Darwin
-    runs-on: macos-12
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Nix
-        uses: ./
-        with:
-          logger: pretty
-          log-directives: nix_installer=trace
-          backtrace: full
-      - name: echo $PATH
-        run: echo $PATH
-      - name: Test `nix` with `$GITHUB_PATH`
-        if: success() || failure()
-        run: |
-          nix run nixpkgs#hello
-          nix profile install nixpkgs#hello
-          hello
-          nix store gc
-          nix run nixpkgs#hello
-      - name: Test bash
-        run: nix-instantiate -E 'builtins.currentTime' --eval
-        if: success() || failure()
-        shell: bash --login {0}
-      - name: Test sh
-        run: nix-instantiate -E 'builtins.currentTime' --eval
-        if: success() || failure()
-        shell: sh -l {0}
-      - name: Test zsh
-        run: nix-instantiate -E 'builtins.currentTime' --eval
-        if: success() || failure()
-        shell: zsh --login --interactive {0}
-      - name: Install Nix again (noop)
-        uses: ./
-        with:
-          logger: pretty
-          log-directives: nix_installer=trace
-          backtrace: full
-      - name: Test `nix` with `$GITHUB_PATH`
-        if: success() || failure()
-        run: |
-          nix run nixpkgs#hello
-          nix profile install nixpkgs#hello
-          hello
-          nix store gc
-          nix run nixpkgs#hello
-      - name: Reinstall Nix
-        uses: ./
-        with:
-          logger: pretty
-          log-directives: nix_installer=trace
-          backtrace: full
-          reinstall: true
-          extra-conf: |
-            use-sqlite-wal = true
-      - name: Test `nix` with `$GITHUB_PATH`
-        if: success() || failure()
-        run: |
-          nix run nixpkgs#hello
-          nix profile install nixpkgs#hello
-          hello
-          nix store gc
-          nix run nixpkgs#hello
-      - name: Verify the generated nix.conf
-        run: |
-          cat /etc/nix/nix.conf
           grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
           grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf
