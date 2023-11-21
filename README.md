@@ -1,6 +1,19 @@
-# Nix Installer Action
+# The Determinate Nix Installer Action
 
-You can use [`nix-installer`](https://github.com/DeterminateSystems/nix-installer) as a Github action like so:
+Based on the [Determinate Nix Installer](https://github.com/DeterminateSystems/nix-installer), responsible for over tens of thousands of Nix installs daily.
+The fast, friendly, and reliable GitHub Action to install Nix with Flakes.
+
+## Supports
+
+ * ✅ **Accelerated KVM** on open source projects and larger runners. See: https://github.blog/changelog/2023-02-23-hardware-accelerated-android-virtualization-on-actions-windows-and-linux-larger-hosted-runners/.
+ * ✅ Linux, x86_64, aarch64, and i686
+ * ✅ macOS, x86_64 and aarch64
+ * ✅ WSL2, x86_64 and aarch64
+ * ✅ Containers
+ * ✅ Valve's SteamOS
+ * ✅ GitHub Hosted, self-hosted, and long running Actions Runners
+
+## Usage
 
 ```yaml
 on:
@@ -11,18 +24,16 @@ on:
 jobs:
   lints:
     name: Build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
-      - name: Run `nix build`
-        run: nix build .
+      - uses: DeterminateSystems/nix-installer-action@main
+      - run: nix build .
 ```
 
-See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for a full example.
+### With FlakeHub
 
-To use private flakes from FlakeHub, use a configuration like this:
+To fetch private flakes from FlakeHub, update the `permissions` block and pass `flakehub: true`:
 
 ```yaml
 on:
@@ -33,19 +44,41 @@ on:
 jobs:
   lints:
     name: Build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     permissions:
       id-token: "write"
       contents: "read"
     steps:
       - uses: actions/checkout@v3
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/nix-installer-action@main
         with:
           flakehub: true
-      - name: Run `nix build`
-        run: nix build .
+      - run: nix build .
 ```
+
+See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for a full example.
+
+### Advanced Usage
+
+* If KVM is available, the installer exports the `DETERMINATE_NIX_KVM` environment variable set to 1.
+  If KVM is not available, `DETERMINATE_NIX_KVM` is set to 0.
+  This can be used in combination with GitHub Actions' `if` syntax for turning on and off steps.
+
+## Installation Differences
+
+Differing from the upstream [Nix](https://github.com/NixOS/nix) installer scripts:
+
+* In `nix.conf`:
+  + the `nix-command` and `flakes` features are enabled
+  + `bash-prompt-prefix` is set
+  + `auto-optimise-store` is set to `true` (On Linux only)
+  * `extra-nix-path` is set to `nixpkgs=flake:nixpkgs`
+  * `max-jobs` is set to `auto`
+* KVM is enabled by default.
+* an installation receipt (for uninstalling) is stored at `/nix/receipt.json` as well as a copy of the install binary at `/nix/nix-installer`
+* `nix-channel --update` is not run, `~/.nix-channels` is not provisioned
+* `ssl-cert-file` is set in `/etc/nix/nix.conf` if the `ssl-cert-file` argument is used.
+
 
 ## Configuration
 
