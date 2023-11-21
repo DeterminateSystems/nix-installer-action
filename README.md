@@ -60,7 +60,7 @@ See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for a full example.
 
 ### Advanced Usage
 
-* If KVM is available, the installer exports the `DETERMINATE_NIX_KVM` environment variable set to 1.
+* If KVM is available, the installer sets up KVM so that Nix can use it ,and exports the `DETERMINATE_NIX_KVM` environment variable set to 1.
   If KVM is not available, `DETERMINATE_NIX_KVM` is set to 0.
   This can be used in combination with GitHub Actions' `if` syntax for turning on and off steps.
 
