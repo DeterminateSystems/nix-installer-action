@@ -5,7 +5,7 @@ The fast, friendly, and reliable GitHub Action to install Nix with Flakes.
 
 ## Supports
 
-* ✅ **Accelerated KVM** on open source projects and larger runners. See [GitHub's announcement](https://github.blog/changelog/2023-02-23-hardware-accelerated-androidvirtualization-on-actions-windows-and-linux-larger-hosted-runners) for more info.
+* ✅ **Accelerated KVM** on open source projects and larger runners. See [GitHub's announcement](https://github.blog/changelog/2023-02-23-hardware-accelerated-android-virtualization-on-actions-windows-and-linux-larger-hosted-runners/) for more info.
  * ✅ Linux, x86_64, aarch64, and i686
  * ✅ macOS, x86_64 and aarch64
  * ✅ WSL2, x86_64 and aarch64
