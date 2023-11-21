@@ -15,6 +15,7 @@ class NixInstallerAction {
   extra_args: string | null;
   extra_conf: string[] | null;
   flakehub: boolean;
+  kvm: boolean;
   github_token: string | null;
   // TODO: linux_init
   init: string | null;
@@ -53,6 +54,7 @@ class NixInstallerAction {
     this.extra_args = action_input_string_or_null("extra-args");
     this.extra_conf = action_input_multiline_string_or_null("extra-conf");
     this.flakehub = action_input_bool("flakehub");
+    this.kvm = action_input_bool("kvm");
     this.github_token = action_input_string_or_null("github-token");
     this.init = action_input_string_or_null("init");
     this.local_root = action_input_string_or_null("local-root");
@@ -305,6 +307,24 @@ class NixInstallerAction {
         return;
       }
     }
+
+    if (this.kvm) {
+      actions_core.startGroup("Configuring KVM");
+      if (await this.setup_kvm()) {
+        actions_core.endGroup();
+        actions_core.info(
+          "\u001b[32m Accelerated KVM is enabled \u001b[33m⚡️",
+        );
+        actions_core.exportVariable("DETERMINATE_NIX_KVM", "1");
+      } else {
+        actions_core.endGroup();
+        actions_core.info("KVM is not available.");
+        actions_core.exportVariable("DETERMINATE_NIX_KVM", "0");
+      }
+
+      actions_core.exportVariable("DETERMINATE_NIX_KVM", "0");
+    }
+
     // Normal just doing of the install
     const binary_path = await this.fetch_binary();
     await this.execute_install(binary_path);
@@ -395,6 +415,92 @@ class NixInstallerAction {
       return true;
     } catch {
       // No /nix/receipt.json
+      return false;
+    }
+  }
+
+  private async setup_kvm(): Promise<boolean> {
+    const kvm_rules =
+      "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
+    try {
+      const write_file_exit_code = await actions_exec.exec(
+        "sh",
+        [
+          "-c",
+          `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee ${kvm_rules} > /dev/null`,
+        ],
+        {
+          listeners: {
+            stderr: (data: Buffer) => {
+              const trimmed = data.toString("utf-8").trimEnd();
+              if (trimmed.length >= 0) {
+                actions_core.debug(trimmed);
+              }
+            },
+          },
+        },
+      );
+
+      if (write_file_exit_code !== 0) {
+        throw new Error(
+          `Non-zero exit code of \`${write_file_exit_code}\` detected while writing '${kvm_rules}'`,
+        );
+      }
+
+      const debug_run_throw = async (
+        action: string,
+        command: string,
+        args: string[],
+      ): Promise<void> => {
+        const reload_exit_code = await actions_exec.exec(command, args, {
+          listeners: {
+            stdout: (data: Buffer) => {
+              const trimmed = data.toString("utf-8").trimEnd();
+              if (trimmed.length >= 0) {
+                actions_core.debug(trimmed);
+              }
+            },
+            stderr: (data: Buffer) => {
+              const trimmed = data.toString("utf-8").trimEnd();
+              if (trimmed.length >= 0) {
+                actions_core.debug(trimmed);
+              }
+            },
+          },
+        });
+
+        if (reload_exit_code !== 0) {
+          throw new Error(
+            `Non-zero exit code of \`${reload_exit_code}\` detected while ${action}.`,
+          );
+        }
+      };
+
+      await debug_run_throw("reloading udev rules", `sudo`, [
+        "udevadm",
+        "control",
+        "--reload-rules",
+      ]);
+
+      await debug_run_throw("triggering udev against kvm", `sudo`, [
+        "udevadm",
+        "trigger",
+        "--name-match=kvm",
+      ]);
+
+      return true;
+    } catch (error) {
+      await actions_exec.exec("sudo", ["rm", "-f", kvm_rules], {
+        listeners: {
+          stderr: (data: Buffer) => {
+            const trimmed = data.toString("utf-8").trimEnd();
+            if (trimmed.length >= 0) {
+              actions_core.info(trimmed);
+            }
+          },
+        },
+      });
+
       return false;
     }
   }

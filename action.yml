@@ -23,6 +23,10 @@ inputs:
   init:
     description: "The init system to configure, requires `planner: linux-multi` (allowing the choice between `none` or `systemd`)"
     required: false
+  kvm:
+    description: Automatically configure the GitHub Actions Runner for NixOS test supports, if the host supports it.
+    required: false
+    default: true
   local-root:
     description: A local `nix-installer` binary root, overrides any settings which change the `nix-installer` used (binaries should be named `nix-installer-$ARCH-$OS`, eg. `nix-installer-x86_64-linux`)
     required: false

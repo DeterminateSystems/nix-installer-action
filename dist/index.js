@@ -41,6 +41,7 @@ class NixInstallerAction {
         this.extra_args = action_input_string_or_null("extra-args");
         this.extra_conf = action_input_multiline_string_or_null("extra-conf");
         this.flakehub = action_input_bool("flakehub");
+        this.kvm = action_input_bool("kvm");
         this.github_token = action_input_string_or_null("github-token");
         this.init = action_input_string_or_null("init");
         this.local_root = action_input_string_or_null("local-root");
@@ -236,6 +237,20 @@ class NixInstallerAction {
                 return;
             }
         }
+        if (this.kvm) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.startGroup("Configuring KVM");
+            if (await this.setup_kvm()) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.endGroup();
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("\u001b[32m Accelerated KVM is enabled \u001b[33m⚡️");
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.exportVariable("DETERMINATE_NIX_KVM", "1");
+            }
+            else {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.endGroup();
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("KVM is not available.");
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.exportVariable("DETERMINATE_NIX_KVM", "0");
+            }
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.exportVariable("DETERMINATE_NIX_KVM", "0");
+        }
         // Normal just doing of the install
         const binary_path = await this.fetch_binary();
         await this.execute_install(binary_path);
@@ -302,6 +317,72 @@ class NixInstallerAction {
         }
         catch (_a) {
             // No /nix/receipt.json
+            return false;
+        }
+    }
+    async setup_kvm() {
+        const kvm_rules = "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
+        try {
+            const write_file_exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("sh", [
+                "-c",
+                `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee ${kvm_rules} > /dev/null`,
+            ], {
+                listeners: {
+                    stderr: (data) => {
+                        const trimmed = data.toString("utf-8").trimEnd();
+                        if (trimmed.length >= 0) {
+                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                        }
+                    },
+                },
+            });
+            if (write_file_exit_code !== 0) {
+                throw new Error(`Non-zero exit code of \`${write_file_exit_code}\` detected while writing '${kvm_rules}'`);
+            }
+            const debug_run_throw = async (action, command, args) => {
+                const reload_exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec(command, args, {
+                    listeners: {
+                        stdout: (data) => {
+                            const trimmed = data.toString("utf-8").trimEnd();
+                            if (trimmed.length >= 0) {
+                                _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                            }
+                        },
+                        stderr: (data) => {
+                            const trimmed = data.toString("utf-8").trimEnd();
+                            if (trimmed.length >= 0) {
+                                _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                            }
+                        },
+                    },
+                });
+                if (reload_exit_code !== 0) {
+                    throw new Error(`Non-zero exit code of \`${reload_exit_code}\` detected while ${action}.`);
+                }
+            };
+            await debug_run_throw("reloading udev rules", `sudo`, [
+                "udevadm",
+                "control",
+                "--reload-rules",
+            ]);
+            await debug_run_throw("triggering udev against kvm", `sudo`, [
+                "udevadm",
+                "trigger",
+                "--name-match=kvm",
+            ]);
+            return true;
+        }
+        catch (error) {
+            await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("sudo", ["rm", "-f", kvm_rules], {
+                listeners: {
+                    stderr: (data) => {
+                        const trimmed = data.toString("utf-8").trimEnd();
+                        if (trimmed.length >= 0) {
+                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
+                        }
+                    },
+                },
+            });
             return false;
         }
     }
