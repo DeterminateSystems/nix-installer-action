@@ -16,6 +16,7 @@ class NixInstallerAction {
   extra_conf: string[] | null;
   flakehub: boolean;
   kvm: boolean;
+  github_server_url: string | null;
   github_token: string | null;
   // TODO: linux_init
   init: string | null;
@@ -56,6 +57,7 @@ class NixInstallerAction {
     this.flakehub = action_input_bool("flakehub");
     this.kvm = action_input_bool("kvm");
     this.github_token = action_input_string_or_null("github-token");
+    this.github_server_url = action_input_string_or_null("github-server-url");
     this.init = action_input_string_or_null("init");
     this.local_root = action_input_string_or_null("local-root");
     this.log_directives = action_input_string_or_null("log-directives");
@@ -210,8 +212,9 @@ class NixInstallerAction {
     }
 
     let extra_conf = "";
-    if (this.github_token !== null) {
-      extra_conf += `access-tokens = github.com=${this.github_token}`;
+    if (this.github_server_url !== null && this.github_token !== null) {
+      const server_url = this.github_server_url.replace("https://", "");
+      extra_conf += `access-tokens = ${server_url}=${this.github_token}`;
       extra_conf += "\n";
     }
     if (this.trust_runner_user !== null) {
