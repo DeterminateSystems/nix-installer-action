@@ -23,6 +23,7 @@ jobs:
         runner:
             - ubuntu-latest
             - nscloud-ubuntu-22.04-amd64-4x16
+            - namespace-profile-default-arm64
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v3
