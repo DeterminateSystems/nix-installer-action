@@ -34,7 +34,7 @@ __nccwpck_require__.r(__webpack_exports__);
 
 
 class NixInstallerAction {
-    constructor() {
+    constructor(correlation) {
         this.platform = get_nix_platform();
         this.nix_package_url = action_input_string_or_null("nix-package-url");
         this.backtrace = action_input_string_or_null("backtrace");
@@ -65,7 +65,7 @@ class NixInstallerAction {
         this.start_daemon = action_input_bool("start-daemon");
         this.diagnostic_endpoint = action_input_string_or_null("diagnostic-endpoint");
         this.trust_runner_user = action_input_bool("trust-runner-user");
-        this.correlation = process.env["STATE_correlation"];
+        this.correlation = correlation;
         this.nix_installer_url = resolve_nix_installer_url(this.platform, this.correlation);
     }
     async executionEnvironment() {
@@ -562,12 +562,16 @@ function action_input_bool(name) {
 }
 async function main() {
     try {
-        if (!process.env["STATE_correlation"]) {
-            const correlation = `GH-${(0,node_crypto__WEBPACK_IMPORTED_MODULE_5__.randomUUID)()}`;
+        let correlation;
+        if (process.env["STATE_correlation"]) {
+            correlation = process.env["STATE_correlation"];
+        }
+        else {
+            correlation = `GH-${(0,node_crypto__WEBPACK_IMPORTED_MODULE_5__.randomUUID)()}`;
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("correlation", correlation);
             process.env["STATE_correlation"] = correlation;
         }
-        const installer = new NixInstallerAction();
+        const installer = new NixInstallerAction(correlation);
         const isPost = !!process.env["STATE_isPost"];
         if (!isPost) {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("isPost", "true");

@@ -46,9 +46,9 @@ class NixInstallerAction {
   // This is for monitoring the real impact of Nix updates, to avoid breaking large
   // swaths of users at once with botched Nix releases. For example:
   // https://github.com/NixOS/nix/issues/9052.
-  correlation: string | undefined;
+  correlation: string;
 
-  constructor() {
+  constructor(correlation: string) {
     this.platform = get_nix_platform();
     this.nix_package_url = action_input_string_or_null("nix-package-url");
     this.backtrace = action_input_string_or_null("backtrace");
@@ -89,7 +89,7 @@ class NixInstallerAction {
       "diagnostic-endpoint",
     );
     this.trust_runner_user = action_input_bool("trust-runner-user");
-    this.correlation = process.env["STATE_correlation"];
+    this.correlation = correlation;
     this.nix_installer_url = resolve_nix_installer_url(
       this.platform,
       this.correlation,
@@ -751,12 +751,15 @@ function action_input_bool(name: string): boolean {
 
 async function main(): Promise<void> {
   try {
-    if (!process.env["STATE_correlation"]) {
-      const correlation = `GH-${randomUUID()}`;
+    let correlation: string;
+    if (process.env["STATE_correlation"]) {
+      correlation = process.env["STATE_correlation"];
+    } else {
+      correlation = `GH-${randomUUID()}`;
       actions_core.saveState("correlation", correlation);
       process.env["STATE_correlation"] = correlation;
     }
-    const installer = new NixInstallerAction();
+    const installer = new NixInstallerAction(correlation);
 
     const isPost = !!process.env["STATE_isPost"];
     if (!isPost) {
