@@ -2,7 +2,7 @@ import * as actions_core from "@actions/core";
 import * as github from "@actions/github";
 import * as actions_tool_cache from "@actions/tool-cache";
 import * as actions_exec from "@actions/exec";
-import { chmod, access, writeFile } from "node:fs/promises";
+import { chmod, access, writeFile, mkdir } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import fs from "node:fs";
@@ -18,7 +18,7 @@ class NixInstallerAction {
   kvm: boolean;
   github_server_url: string | null;
   github_token: string | null;
-  // TODO: linux_init
+  force_docker_shim: boolean | null;
   init: string | null;
   local_root: string | null;
   log_directives: string | null;
@@ -56,6 +56,7 @@ class NixInstallerAction {
     this.extra_conf = action_input_multiline_string_or_null("extra-conf");
     this.flakehub = action_input_bool("flakehub");
     this.kvm = action_input_bool("kvm");
+    this.force_docker_shim = action_input_bool("force-docker-shim");
     this.github_token = action_input_string_or_null("github-token");
     this.github_server_url = action_input_string_or_null("github-server-url");
     this.init = action_input_string_or_null("init");
@@ -94,6 +95,80 @@ class NixInstallerAction {
       this.platform,
       this.correlation,
     );
+  }
+
+  async detectAndForceDockerShim(): Promise<void> {
+    // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
+    // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
+    // and especially GitHub Enterprise Server.
+    if (process.env.RUNNER_OS !== "Linux") {
+      if (!this.force_docker_shim) {
+        actions_core.warning(
+          "force-docker-shim set to true, which is only supported on Linux.",
+        );
+      }
+      return;
+    }
+
+    const systemdCheck = fs.statSync("/run/systemd/system", {
+      throwIfNoEntry: false,
+    });
+    if (systemdCheck?.isDirectory()) {
+      if (this.force_docker_shim) {
+        actions_core.warning(
+          "Systemd is detected, but ignoring it since force-docker-shim is enabled.",
+        );
+      } else {
+        return;
+      }
+    }
+
+    actions_core.debug(
+      "Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor.",
+    );
+    const exit_code = await actions_exec.exec("docker", ["info"], {
+      listeners: {
+        stdout: (data: Buffer) => {
+          const trimmed = data.toString("utf-8").trimEnd();
+          if (trimmed.length >= 0) {
+            actions_core.debug(trimmed);
+          }
+        },
+        stderr: (data: Buffer) => {
+          const trimmed = data.toString("utf-8").trimEnd();
+          if (trimmed.length >= 0) {
+            actions_core.debug(trimmed);
+          }
+        },
+      },
+    });
+
+    if (exit_code !== 0) {
+      if (this.force_docker_shim) {
+        actions_core.warning(
+          "docker info check failed, but trying anyway since force-docker-shim is enabled.",
+        );
+      } else {
+        return;
+      }
+    }
+
+    actions_core.startGroup(
+      "Enabling the Docker shim for running Nix on Linux in CI without Systemd.",
+    );
+
+    if (this.init !== "none") {
+      actions_core.info(`Changing init from '${this.init}' to 'none'`);
+      this.init = "none";
+    }
+    if (this.planner !== "linux") {
+      actions_core.info(`Changing planner from '${this.planner}' to 'linux'`);
+      this.planner = "linux";
+    }
+
+    this.force_docker_shim = true;
+
+    actions_core.endGroup();
   }
 
   private async executionEnvironment(): Promise<ExecuteEnvironment> {
@@ -250,7 +325,7 @@ class NixInstallerAction {
 
   private async execute_install(binary_path: string): Promise<number> {
     const execution_env = await this.executionEnvironment();
-    actions_core.info(
+    actions_core.debug(
       `Execution environment: ${JSON.stringify(execution_env, null, 4)}`,
     );
 
@@ -331,7 +406,119 @@ class NixInstallerAction {
     // Normal just doing of the install
     const binary_path = await this.fetch_binary();
     await this.execute_install(binary_path);
+
+    if (this.force_docker_shim) {
+      await this.spawnDockerShim();
+    }
     await this.set_github_path();
+  }
+
+  async spawnDockerShim(): Promise<void> {
+    actions_core.startGroup(
+      "Configuring the Docker shim as the Nix Daemon's process supervisor",
+    );
+
+    const dockerfile_dir = `${process.env["RUNNER_TEMP"]}/DockerShim`;
+    const dockerfile = `${process.env["RUNNER_TEMP"]}/DockerShim/Dockerfile`;
+    await mkdir(dockerfile_dir, { recursive: true });
+    await writeFile(
+      dockerfile,
+      `
+      FROM scratch
+      ENTRYPOINT [ "/nix/var/nix/profiles/default/bin/nix-daemon"]
+      HEALTHCHECK \
+          --interval=5m \
+          --timeout=3s \
+          CMD ["/nix/var/nix/profiles/default/bin/nix", "store", "ping", "--store", "daemon"]
+      `,
+    );
+
+    actions_core.debug("Building image: determinate-nix-shim:latest...");
+    {
+      const exit_code = await actions_exec.exec(
+        "docker",
+        [
+          "build",
+          "--tag",
+          "determinate-nix-shim:latest",
+          "--load",
+          dockerfile_dir,
+        ],
+        {
+          listeners: {
+            stdout: (data: Buffer) => {
+              const trimmed = data.toString("utf-8").trimEnd();
+              if (trimmed.length >= 0) {
+                actions_core.debug(trimmed);
+              }
+            },
+            stderr: (data: Buffer) => {
+              const trimmed = data.toString("utf-8").trimEnd();
+              if (trimmed.length >= 0) {
+                actions_core.debug(trimmed);
+              }
+            },
+          },
+        },
+      );
+
+      if (exit_code !== 0) {
+        throw new Error(
+          `Failed to build the shim image, exit code: \`${exit_code}\``,
+        );
+      }
+    }
+
+    {
+      actions_core.debug("Starting the Nix daemon through Docker...");
+      const exit_code = await actions_exec.exec(
+        "docker",
+        [
+          "run",
+          "--detach",
+          "--privileged",
+          "--userns=host",
+          "--pid=host",
+          "--mount",
+          "type=bind,src=/tmp,dst=/tmp",
+          "--mount",
+          "type=bind,src=/nix,dst=/nix",
+          "--mount",
+          "type=bind,src=/etc,dst=/etc,readonly",
+          "--rm",
+          "--init",
+          "--name",
+          `determinate-nix-shim-${this.correlation}`,
+          "determinate-nix-shim:latest",
+        ],
+        {
+          listeners: {
+            stdout: (data: Buffer) => {
+              const trimmed = data.toString("utf-8").trimEnd();
+              if (trimmed.length >= 0) {
+                actions_core.debug(trimmed);
+              }
+            },
+            stderr: (data: Buffer) => {
+              const trimmed = data.toString("utf-8").trimEnd();
+              if (trimmed.length >= 0) {
+                actions_core.debug(trimmed);
+              }
+            },
+          },
+        },
+      );
+
+      if (exit_code !== 0) {
+        throw new Error(
+          `Failed to start the Nix daemon through Docker, exit code: \`${exit_code}\``,
+        );
+      }
+    }
+
+    actions_core.endGroup();
+
+    return;
   }
 
   async set_github_path(): Promise<void> {
@@ -760,6 +947,7 @@ async function main(): Promise<void> {
       process.env["STATE_correlation"] = correlation;
     }
     const installer = new NixInstallerAction(correlation);
+    await installer.detectAndForceDockerShim();
 
     const isPost = !!process.env["STATE_isPost"];
     if (!isPost) {
