@@ -2,11 +2,12 @@ import * as actions_core from "@actions/core";
 import * as github from "@actions/github";
 import * as actions_tool_cache from "@actions/tool-cache";
 import * as actions_exec from "@actions/exec";
-import { chmod, access, writeFile, mkdir } from "node:fs/promises";
+import { chmod, access, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import fs from "node:fs";
 import stringArgv from "string-argv";
+import * as path from "path";
 
 class NixInstallerAction {
   platform: string;
@@ -405,7 +406,9 @@ class NixInstallerAction {
 
     // Normal just doing of the install
     const binary_path = await this.fetch_binary();
+    actions_core.startGroup("Installing Nix");
     await this.execute_install(binary_path);
+    actions_core.endGroup();
 
     if (this.force_docker_shim) {
       await this.spawnDockerShim();
@@ -418,32 +421,24 @@ class NixInstallerAction {
       "Configuring the Docker shim as the Nix Daemon's process supervisor",
     );
 
-    const dockerfile_dir = `${process.env["RUNNER_TEMP"]}/DockerShim`;
-    const dockerfile = `${process.env["RUNNER_TEMP"]}/DockerShim/Dockerfile`;
-    await mkdir(dockerfile_dir, { recursive: true });
-    await writeFile(
-      dockerfile,
-      `
-      FROM scratch
-      ENTRYPOINT [ "/nix/var/nix/profiles/default/bin/nix-daemon"]
-      HEALTHCHECK \
-          --interval=5m \
-          --timeout=3s \
-          CMD ["/nix/var/nix/profiles/default/bin/nix", "store", "ping", "--store", "daemon"]
-      `,
-    );
+    const images: { [key: string]: string } = {
+      X64: path.join(__dirname, "/../docker-shim/amd64.tar.gz"),
+      ARM64: path.join(__dirname, "/../docker-shim/arm64.tar.gz"),
+    };
 
-    actions_core.debug("Building image: determinate-nix-shim:latest...");
+    let arch;
+    if (process.env.RUNNER_ARCH === "X64") {
+      arch = "X64";
+    } else if (process.env.RUNNER_ARCH === "ARM64") {
+      arch = "ARM64";
+    } else {
+      throw Error("Architecture not supported in Docker shim mode.");
+    }
+    actions_core.debug("Loading image: determinate-nix-shim:latest...");
     {
       const exit_code = await actions_exec.exec(
         "docker",
-        [
-          "build",
-          "--tag",
-          "determinate-nix-shim:latest",
-          "--load",
-          dockerfile_dir,
-        ],
+        ["image", "load", "--input", images[arch]],
         {
           listeners: {
             stdout: (data: Buffer) => {
@@ -474,6 +469,7 @@ class NixInstallerAction {
       const exit_code = await actions_exec.exec(
         "docker",
         [
+          "--log-level=debug",
           "run",
           "--detach",
           "--privileged",

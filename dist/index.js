@@ -23,7 +23,10 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__nccwpck_require__.n(node_path__WEBPACK_IMPORTED_MODULE_6__);
 /* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_7__ = __nccwpck_require__(7561);
 /* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__nccwpck_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var string_argv__WEBPACK_IMPORTED_MODULE_8__ = __nccwpck_require__(1810);
+/* harmony import */ var string_argv__WEBPACK_IMPORTED_MODULE_9__ = __nccwpck_require__(1810);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_8__ = __nccwpck_require__(1017);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__nccwpck_require__.n(path__WEBPACK_IMPORTED_MODULE_8__);
+
 
 
 
@@ -258,7 +261,7 @@ class NixInstallerAction {
             args.push(get_default_planner());
         }
         if (this.extra_args) {
-            const extra_args = (0,string_argv__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .Z)(this.extra_args);
+            const extra_args = (0,string_argv__WEBPACK_IMPORTED_MODULE_9__/* ["default"] */ .Z)(this.extra_args);
             args.concat(extra_args);
         }
         const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec(binary_path, args, {
@@ -314,7 +317,9 @@ class NixInstallerAction {
         }
         // Normal just doing of the install
         const binary_path = await this.fetch_binary();
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.startGroup("Installing Nix");
         await this.execute_install(binary_path);
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.endGroup();
         if (this.force_docker_shim) {
             await this.spawnDockerShim();
         }
@@ -322,26 +327,23 @@ class NixInstallerAction {
     }
     async spawnDockerShim() {
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.startGroup("Configuring the Docker shim as the Nix Daemon's process supervisor");
-        const dockerfile_dir = `${process.env["RUNNER_TEMP"]}/DockerShim`;
-        const dockerfile = `${process.env["RUNNER_TEMP"]}/DockerShim/Dockerfile`;
-        await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_4__.mkdir)(dockerfile_dir, { recursive: true });
-        await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_4__.writeFile)(dockerfile, `
-      FROM scratch
-      ENTRYPOINT [ "/nix/var/nix/profiles/default/bin/nix-daemon"]
-      HEALTHCHECK \
-          --interval=5m \
-          --timeout=3s \
-          CMD ["/nix/var/nix/profiles/default/bin/nix", "store", "ping", "--store", "daemon"]
-      `);
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug("Building image: determinate-nix-shim:latest...");
+        const images = {
+            X64: __nccwpck_require__.ab + "amd64.tar.gz",
+            ARM64: __nccwpck_require__.ab + "arm64.tar.gz",
+        };
+        let arch;
+        if (process.env.RUNNER_ARCH === "X64") {
+            arch = "X64";
+        }
+        else if (process.env.RUNNER_ARCH === "ARM64") {
+            arch = "ARM64";
+        }
+        else {
+            throw Error("Architecture not supported in Docker shim mode.");
+        }
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug("Loading image: determinate-nix-shim:latest...");
         {
-            const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", [
-                "build",
-                "--tag",
-                "determinate-nix-shim:latest",
-                "--load",
-                dockerfile_dir,
-            ], {
+            const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", ["image", "load", "--input", images[arch]], {
                 listeners: {
                     stdout: (data) => {
                         const trimmed = data.toString("utf-8").trimEnd();
@@ -364,6 +366,7 @@ class NixInstallerAction {
         {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug("Starting the Nix daemon through Docker...");
             const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", [
+                "--log-level=debug",
                 "run",
                 "--detach",
                 "--privileged",
