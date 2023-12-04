@@ -476,7 +476,6 @@ class NixInstallerAction {
           "type=bind,src=/nix,dst=/nix",
           "--mount",
           "type=bind,src=/etc,dst=/etc,readonly",
-          "--rm",
           "--restart",
           "always",
           "--init",
