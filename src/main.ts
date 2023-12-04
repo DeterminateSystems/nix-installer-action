@@ -6,6 +6,7 @@ import { chmod, access, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import fs from "node:fs";
+import { userInfo } from "node:os";
 import stringArgv from "string-argv";
 import * as path from "path";
 
@@ -294,7 +295,12 @@ class NixInstallerAction {
       extra_conf += "\n";
     }
     if (this.trust_runner_user !== null) {
-      extra_conf += `trusted-users = root ${process.env.USER}`;
+      const user = userInfo().username;
+      if (user) {
+        extra_conf += `trusted-users = root ${user}`;
+      } else {
+        extra_conf += `trusted-users = root`;
+      }
       extra_conf += "\n";
     }
     if (this.flakehub) {

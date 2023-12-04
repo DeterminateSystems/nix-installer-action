@@ -23,9 +23,12 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__nccwpck_require__.n(node_path__WEBPACK_IMPORTED_MODULE_6__);
 /* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_7__ = __nccwpck_require__(7561);
 /* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__nccwpck_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var string_argv__WEBPACK_IMPORTED_MODULE_9__ = __nccwpck_require__(1810);
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_8__ = __nccwpck_require__(1017);
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__nccwpck_require__.n(path__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var node_os__WEBPACK_IMPORTED_MODULE_8__ = __nccwpck_require__(612);
+/* harmony import */ var node_os__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__nccwpck_require__.n(node_os__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var string_argv__WEBPACK_IMPORTED_MODULE_10__ = __nccwpck_require__(1810);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_9__ = __nccwpck_require__(1017);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__nccwpck_require__.n(path__WEBPACK_IMPORTED_MODULE_9__);
+
 
 
 
@@ -228,7 +231,13 @@ class NixInstallerAction {
             extra_conf += "\n";
         }
         if (this.trust_runner_user !== null) {
-            extra_conf += `trusted-users = root ${process.env.USER}`;
+            const user = (0,node_os__WEBPACK_IMPORTED_MODULE_8__.userInfo)().username;
+            if (user) {
+                extra_conf += `trusted-users = root ${user}`;
+            }
+            else {
+                extra_conf += `trusted-users = root`;
+            }
             extra_conf += "\n";
         }
         if (this.flakehub) {
@@ -261,7 +270,7 @@ class NixInstallerAction {
             args.push(get_default_planner());
         }
         if (this.extra_args) {
-            const extra_args = (0,string_argv__WEBPACK_IMPORTED_MODULE_9__/* ["default"] */ .Z)(this.extra_args);
+            const extra_args = (0,string_argv__WEBPACK_IMPORTED_MODULE_10__/* ["default"] */ .Z)(this.extra_args);
             args.concat(extra_args);
         }
         const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec(binary_path, args, {
@@ -17443,6 +17452,14 @@ module.exports = require("node:fs");
 
 "use strict";
 module.exports = require("node:fs/promises");
+
+/***/ }),
+
+/***/ 612:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:os");
 
 /***/ }),
 
