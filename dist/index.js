@@ -23,7 +23,13 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__nccwpck_require__.n(node_path__WEBPACK_IMPORTED_MODULE_6__);
 /* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_7__ = __nccwpck_require__(7561);
 /* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__nccwpck_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var string_argv__WEBPACK_IMPORTED_MODULE_8__ = __nccwpck_require__(1810);
+/* harmony import */ var node_os__WEBPACK_IMPORTED_MODULE_8__ = __nccwpck_require__(612);
+/* harmony import */ var node_os__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__nccwpck_require__.n(node_os__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var string_argv__WEBPACK_IMPORTED_MODULE_10__ = __nccwpck_require__(1810);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_9__ = __nccwpck_require__(1017);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__nccwpck_require__.n(path__WEBPACK_IMPORTED_MODULE_9__);
+
+
 
 
 
@@ -34,7 +40,7 @@ __nccwpck_require__.r(__webpack_exports__);
 
 
 class NixInstallerAction {
-    constructor() {
+    constructor(correlation) {
         this.platform = get_nix_platform();
         this.nix_package_url = action_input_string_or_null("nix-package-url");
         this.backtrace = action_input_string_or_null("backtrace");
@@ -42,6 +48,7 @@ class NixInstallerAction {
         this.extra_conf = action_input_multiline_string_or_null("extra-conf");
         this.flakehub = action_input_bool("flakehub");
         this.kvm = action_input_bool("kvm");
+        this.force_docker_shim = action_input_bool("force-docker-shim");
         this.github_token = action_input_string_or_null("github-token");
         this.github_server_url = action_input_string_or_null("github-server-url");
         this.init = action_input_string_or_null("init");
@@ -65,8 +72,68 @@ class NixInstallerAction {
         this.start_daemon = action_input_bool("start-daemon");
         this.diagnostic_endpoint = action_input_string_or_null("diagnostic-endpoint");
         this.trust_runner_user = action_input_bool("trust-runner-user");
-        this.correlation = process.env["STATE_correlation"];
+        this.correlation = correlation;
         this.nix_installer_url = resolve_nix_installer_url(this.platform, this.correlation);
+    }
+    async detectAndForceDockerShim() {
+        // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
+        // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
+        // and especially GitHub Enterprise Server.
+        if (process.env.RUNNER_OS !== "Linux") {
+            if (this.force_docker_shim) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("Ignoring force-docker-shim which is set to true, as it is only supported on Linux.");
+                this.force_docker_shim = false;
+            }
+            return;
+        }
+        const systemdCheck = node_fs__WEBPACK_IMPORTED_MODULE_7___default().statSync("/run/systemd/system", {
+            throwIfNoEntry: false,
+        });
+        if (systemdCheck === null || systemdCheck === void 0 ? void 0 : systemdCheck.isDirectory()) {
+            if (this.force_docker_shim) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("Systemd is detected, but ignoring it since force-docker-shim is enabled.");
+            }
+            else {
+                return;
+            }
+        }
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug("Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor.");
+        const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", ["info"], {
+            silent: true,
+            listeners: {
+                stdout: (data) => {
+                    const trimmed = data.toString("utf-8").trimEnd();
+                    if (trimmed.length >= 0) {
+                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                    }
+                },
+                stderr: (data) => {
+                    const trimmed = data.toString("utf-8").trimEnd();
+                    if (trimmed.length >= 0) {
+                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                    }
+                },
+            },
+        });
+        if (exit_code !== 0) {
+            if (this.force_docker_shim) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("docker info check failed, but trying anyway since force-docker-shim is enabled.");
+            }
+            else {
+                return;
+            }
+        }
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.startGroup("Enabling the Docker shim for running Nix on Linux in CI without Systemd.");
+        if (this.init !== "none") {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Changing init from '${this.init}' to 'none'`);
+            this.init = "none";
+        }
+        if (this.planner !== "linux") {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Changing planner from '${this.planner}' to 'linux'`);
+            this.planner = "linux";
+        }
+        this.force_docker_shim = true;
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.endGroup();
     }
     async executionEnvironment() {
         const execution_env = {};
@@ -166,7 +233,13 @@ class NixInstallerAction {
             extra_conf += "\n";
         }
         if (this.trust_runner_user !== null) {
-            extra_conf += `trusted-users = root ${process.env.USER}`;
+            const user = (0,node_os__WEBPACK_IMPORTED_MODULE_8__.userInfo)().username;
+            if (user) {
+                extra_conf += `trusted-users = root ${user}`;
+            }
+            else {
+                extra_conf += `trusted-users = root`;
+            }
             extra_conf += "\n";
         }
         if (this.flakehub) {
@@ -190,7 +263,7 @@ class NixInstallerAction {
     }
     async execute_install(binary_path) {
         const execution_env = await this.executionEnvironment();
-        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Execution environment: ${JSON.stringify(execution_env, null, 4)}`);
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(`Execution environment: ${JSON.stringify(execution_env, null, 4)}`);
         const args = ["install"];
         if (this.planner) {
             args.push(this.planner);
@@ -199,25 +272,11 @@ class NixInstallerAction {
             args.push(get_default_planner());
         }
         if (this.extra_args) {
-            const extra_args = (0,string_argv__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .Z)(this.extra_args);
+            const extra_args = (0,string_argv__WEBPACK_IMPORTED_MODULE_10__/* ["default"] */ .Z)(this.extra_args);
             args.concat(extra_args);
         }
         const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec(binary_path, args, {
             env: Object.assign(Object.assign({}, execution_env), process.env),
-            listeners: {
-                stdout: (data) => {
-                    const trimmed = data.toString("utf-8").trimEnd();
-                    if (trimmed.length >= 0) {
-                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
-                    }
-                },
-                stderr: (data) => {
-                    const trimmed = data.toString("utf-8").trimEnd();
-                    if (trimmed.length >= 0) {
-                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
-                    }
-                },
-            },
         });
         if (exit_code !== 0) {
             throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
@@ -254,9 +313,109 @@ class NixInstallerAction {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.exportVariable("DETERMINATE_NIX_KVM", "0");
         }
         // Normal just doing of the install
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.startGroup("Installing Nix");
         const binary_path = await this.fetch_binary();
         await this.execute_install(binary_path);
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.endGroup();
+        if (this.force_docker_shim) {
+            await this.spawnDockerShim();
+        }
         await this.set_github_path();
+    }
+    async spawnDockerShim() {
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.startGroup("Configuring the Docker shim as the Nix Daemon's process supervisor");
+        const images = {
+            X64: __nccwpck_require__.ab + "amd64.tar.gz",
+            ARM64: __nccwpck_require__.ab + "arm64.tar.gz",
+        };
+        let arch;
+        if (process.env.RUNNER_ARCH === "X64") {
+            arch = "X64";
+        }
+        else if (process.env.RUNNER_ARCH === "ARM64") {
+            arch = "ARM64";
+        }
+        else {
+            throw Error("Architecture not supported in Docker shim mode.");
+        }
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug("Loading image: determinate-nix-shim:latest...");
+        {
+            const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", ["image", "load", "--input", images[arch]], {
+                silent: true,
+                listeners: {
+                    stdout: (data) => {
+                        const trimmed = data.toString("utf-8").trimEnd();
+                        if (trimmed.length >= 0) {
+                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                        }
+                    },
+                    stderr: (data) => {
+                        const trimmed = data.toString("utf-8").trimEnd();
+                        if (trimmed.length >= 0) {
+                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                        }
+                    },
+                },
+            });
+            if (exit_code !== 0) {
+                throw new Error(`Failed to build the shim image, exit code: \`${exit_code}\``);
+            }
+        }
+        {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug("Starting the Nix daemon through Docker...");
+            const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", [
+                "--log-level=debug",
+                "run",
+                "--detach",
+                "--privileged",
+                "--userns=host",
+                "--pid=host",
+                "--mount",
+                "type=bind,src=/tmp,dst=/tmp",
+                "--mount",
+                "type=bind,src=/nix,dst=/nix",
+                "--mount",
+                "type=bind,src=/etc,dst=/etc,readonly",
+                "--restart",
+                "always",
+                "--init",
+                "--name",
+                `determinate-nix-shim-${this.correlation}`,
+                "determinate-nix-shim:latest",
+            ], {
+                silent: true,
+                listeners: {
+                    stdline: (data) => {
+                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("docker_shim_container_id", data.trimEnd());
+                    },
+                    stdout: (data) => {
+                        const trimmed = data.toString("utf-8").trimEnd();
+                        if (trimmed.length >= 0) {
+                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                        }
+                    },
+                    stderr: (data) => {
+                        const trimmed = data.toString("utf-8").trimEnd();
+                        if (trimmed.length >= 0) {
+                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                        }
+                    },
+                },
+            });
+            if (exit_code !== 0) {
+                throw new Error(`Failed to start the Nix daemon through Docker, exit code: \`${exit_code}\``);
+            }
+        }
+        _actions_core__WEBPACK_IMPORTED_MODULE_0__.endGroup();
+        return;
+    }
+    async cleanupDockerShim() {
+        const container_id = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getState("docker_shim_container_id");
+        if (container_id !== "") {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.startGroup("Cleaning up the Nix daemon's Docker shim");
+            await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", ["rm", "--force", container_id]);
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.endGroup();
+        }
     }
     async set_github_path() {
         // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
@@ -290,20 +449,6 @@ class NixInstallerAction {
     async execute_uninstall() {
         const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec(`/nix/nix-installer`, ["uninstall"], {
             env: Object.assign({ NIX_INSTALLER_NO_CONFIRM: "true" }, process.env),
-            listeners: {
-                stdout: (data) => {
-                    const trimmed = data.toString("utf-8").trimEnd();
-                    if (trimmed.length >= 0) {
-                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
-                    }
-                },
-                stderr: (data) => {
-                    const trimmed = data.toString("utf-8").trimEnd();
-                    if (trimmed.length >= 0) {
-                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
-                    }
-                },
-            },
         });
         if (exit_code !== 0) {
             throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
@@ -329,7 +474,14 @@ class NixInstallerAction {
                 "-c",
                 `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee ${kvm_rules} > /dev/null`,
             ], {
+                silent: true,
                 listeners: {
+                    stdout: (data) => {
+                        const trimmed = data.toString("utf-8").trimEnd();
+                        if (trimmed.length >= 0) {
+                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                        }
+                    },
                     stderr: (data) => {
                         const trimmed = data.toString("utf-8").trimEnd();
                         if (trimmed.length >= 0) {
@@ -343,6 +495,7 @@ class NixInstallerAction {
             }
             const debug_run_throw = async (action, command, args) => {
                 const reload_exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec(command, args, {
+                    silent: true,
                     listeners: {
                         stdout: (data) => {
                             const trimmed = data.toString("utf-8").trimEnd();
@@ -375,16 +528,7 @@ class NixInstallerAction {
             return true;
         }
         catch (error) {
-            await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("sudo", ["rm", "-f", kvm_rules], {
-                listeners: {
-                    stderr: (data) => {
-                        const trimmed = data.toString("utf-8").trimEnd();
-                        if (trimmed.length >= 0) {
-                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
-                        }
-                    },
-                },
-            });
+            await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("sudo", ["rm", "-f", kvm_rules]);
             return false;
         }
     }
@@ -562,18 +706,20 @@ function action_input_bool(name) {
 }
 async function main() {
     try {
-        if (!process.env["STATE_correlation"]) {
-            const correlation = `GH-${(0,node_crypto__WEBPACK_IMPORTED_MODULE_5__.randomUUID)()}`;
+        let correlation = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getState("correlation");
+        if (correlation === "") {
+            correlation = `GH-${(0,node_crypto__WEBPACK_IMPORTED_MODULE_5__.randomUUID)()}`;
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("correlation", correlation);
-            process.env["STATE_correlation"] = correlation;
         }
-        const installer = new NixInstallerAction();
-        const isPost = !!process.env["STATE_isPost"];
-        if (!isPost) {
-            _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("isPost", "true");
+        const installer = new NixInstallerAction(correlation);
+        const isPost = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getState("isPost");
+        if (isPost !== "true") {
+            await installer.detectAndForceDockerShim();
             await installer.install();
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("isPost", "true");
         }
         else {
+            await installer.cleanupDockerShim();
             await installer.report_overall();
         }
     }
@@ -17290,6 +17436,14 @@ module.exports = require("node:fs");
 
 "use strict";
 module.exports = require("node:fs/promises");
+
+/***/ }),
+
+/***/ 612:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:os");
 
 /***/ }),
 

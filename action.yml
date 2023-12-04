@@ -17,6 +17,9 @@ inputs:
     description: Automatically log in to your [FlakeHub](https://flakehub.com) account, for accessing private flakes.
     required: false
     default: false
+  force-docker-shim:
+    description: Force the use of Docker as a process supervisor. This setting is automatically enabled when necessary.
+    default: false
   github-token:
     description: A GitHub token for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)
     default: ${{ github.token }}
