@@ -80,8 +80,9 @@ class NixInstallerAction {
         // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
         // and especially GitHub Enterprise Server.
         if (process.env.RUNNER_OS !== "Linux") {
-            if (!this.force_docker_shim) {
-                _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("force-docker-shim set to true, which is only supported on Linux.");
+            if (this.force_docker_shim) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("Ignoring force-docker-shim which is set to true, as it is only supported on Linux.");
+                this.force_docker_shim = false;
             }
             return;
         }
@@ -98,6 +99,7 @@ class NixInstallerAction {
         }
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug("Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor.");
         const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", ["info"], {
+            silent: true,
             listeners: {
                 stdout: (data) => {
                     const trimmed = data.toString("utf-8").trimEnd();
@@ -275,20 +277,6 @@ class NixInstallerAction {
         }
         const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec(binary_path, args, {
             env: Object.assign(Object.assign({}, execution_env), process.env),
-            listeners: {
-                stdout: (data) => {
-                    const trimmed = data.toString("utf-8").trimEnd();
-                    if (trimmed.length >= 0) {
-                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
-                    }
-                },
-                stderr: (data) => {
-                    const trimmed = data.toString("utf-8").trimEnd();
-                    if (trimmed.length >= 0) {
-                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
-                    }
-                },
-            },
         });
         if (exit_code !== 0) {
             throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
@@ -353,6 +341,7 @@ class NixInstallerAction {
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug("Loading image: determinate-nix-shim:latest...");
         {
             const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", ["image", "load", "--input", images[arch]], {
+                silent: true,
                 listeners: {
                     stdout: (data) => {
                         const trimmed = data.toString("utf-8").trimEnd();
@@ -388,11 +377,14 @@ class NixInstallerAction {
                 "--mount",
                 "type=bind,src=/etc,dst=/etc,readonly",
                 "--rm",
+                "--restart",
+                "always",
                 "--init",
                 "--name",
                 `determinate-nix-shim-${this.correlation}`,
                 "determinate-nix-shim:latest",
             ], {
+                silent: true,
                 listeners: {
                     stdout: (data) => {
                         const trimmed = data.toString("utf-8").trimEnd();
@@ -447,20 +439,6 @@ class NixInstallerAction {
     async execute_uninstall() {
         const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec(`/nix/nix-installer`, ["uninstall"], {
             env: Object.assign({ NIX_INSTALLER_NO_CONFIRM: "true" }, process.env),
-            listeners: {
-                stdout: (data) => {
-                    const trimmed = data.toString("utf-8").trimEnd();
-                    if (trimmed.length >= 0) {
-                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
-                    }
-                },
-                stderr: (data) => {
-                    const trimmed = data.toString("utf-8").trimEnd();
-                    if (trimmed.length >= 0) {
-                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
-                    }
-                },
-            },
         });
         if (exit_code !== 0) {
             throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
@@ -486,7 +464,14 @@ class NixInstallerAction {
                 "-c",
                 `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee ${kvm_rules} > /dev/null`,
             ], {
+                silent: true,
                 listeners: {
+                    stdout: (data) => {
+                        const trimmed = data.toString("utf-8").trimEnd();
+                        if (trimmed.length >= 0) {
+                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                        }
+                    },
                     stderr: (data) => {
                         const trimmed = data.toString("utf-8").trimEnd();
                         if (trimmed.length >= 0) {
@@ -500,6 +485,7 @@ class NixInstallerAction {
             }
             const debug_run_throw = async (action, command, args) => {
                 const reload_exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec(command, args, {
+                    silent: true,
                     listeners: {
                         stdout: (data) => {
                             const trimmed = data.toString("utf-8").trimEnd();
@@ -532,16 +518,7 @@ class NixInstallerAction {
             return true;
         }
         catch (error) {
-            await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("sudo", ["rm", "-f", kvm_rules], {
-                listeners: {
-                    stderr: (data) => {
-                        const trimmed = data.toString("utf-8").trimEnd();
-                        if (trimmed.length >= 0) {
-                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(trimmed);
-                        }
-                    },
-                },
-            });
+            await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("sudo", ["rm", "-f", kvm_rules]);
             return false;
         }
     }

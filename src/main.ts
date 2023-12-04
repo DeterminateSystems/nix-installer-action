@@ -104,10 +104,11 @@ class NixInstallerAction {
     // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
     // and especially GitHub Enterprise Server.
     if (process.env.RUNNER_OS !== "Linux") {
-      if (!this.force_docker_shim) {
+      if (this.force_docker_shim) {
         actions_core.warning(
-          "force-docker-shim set to true, which is only supported on Linux.",
+          "Ignoring force-docker-shim which is set to true, as it is only supported on Linux.",
         );
+        this.force_docker_shim = false;
       }
       return;
     }
@@ -129,6 +130,7 @@ class NixInstallerAction {
       "Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor.",
     );
     const exit_code = await actions_exec.exec("docker", ["info"], {
+      silent: true,
       listeners: {
         stdout: (data: Buffer) => {
           const trimmed = data.toString("utf-8").trimEnd();
@@ -353,20 +355,6 @@ class NixInstallerAction {
         ...execution_env,
         ...process.env, // To get $PATH, etc
       },
-      listeners: {
-        stdout: (data: Buffer) => {
-          const trimmed = data.toString("utf-8").trimEnd();
-          if (trimmed.length >= 0) {
-            actions_core.info(trimmed);
-          }
-        },
-        stderr: (data: Buffer) => {
-          const trimmed = data.toString("utf-8").trimEnd();
-          if (trimmed.length >= 0) {
-            actions_core.info(trimmed);
-          }
-        },
-      },
     });
 
     if (exit_code !== 0) {
@@ -446,6 +434,7 @@ class NixInstallerAction {
         "docker",
         ["image", "load", "--input", images[arch]],
         {
+          silent: true,
           listeners: {
             stdout: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
@@ -488,12 +477,15 @@ class NixInstallerAction {
           "--mount",
           "type=bind,src=/etc,dst=/etc,readonly",
           "--rm",
+          "--restart",
+          "always",
           "--init",
           "--name",
           `determinate-nix-shim-${this.correlation}`,
           "determinate-nix-shim:latest",
         ],
         {
+          silent: true,
           listeners: {
             stdout: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
@@ -575,20 +567,6 @@ class NixInstallerAction {
           NIX_INSTALLER_NO_CONFIRM: "true",
           ...process.env, // To get $PATH, etc
         },
-        listeners: {
-          stdout: (data: Buffer) => {
-            const trimmed = data.toString("utf-8").trimEnd();
-            if (trimmed.length >= 0) {
-              actions_core.info(trimmed);
-            }
-          },
-          stderr: (data: Buffer) => {
-            const trimmed = data.toString("utf-8").trimEnd();
-            if (trimmed.length >= 0) {
-              actions_core.info(trimmed);
-            }
-          },
-        },
       },
     );
 
@@ -622,7 +600,14 @@ class NixInstallerAction {
           `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee ${kvm_rules} > /dev/null`,
         ],
         {
+          silent: true,
           listeners: {
+            stdout: (data: Buffer) => {
+              const trimmed = data.toString("utf-8").trimEnd();
+              if (trimmed.length >= 0) {
+                actions_core.debug(trimmed);
+              }
+            },
             stderr: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
               if (trimmed.length >= 0) {
@@ -645,6 +630,7 @@ class NixInstallerAction {
         args: string[],
       ): Promise<void> => {
         const reload_exit_code = await actions_exec.exec(command, args, {
+          silent: true,
           listeners: {
             stdout: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
@@ -682,16 +668,7 @@ class NixInstallerAction {
 
       return true;
     } catch (error) {
-      await actions_exec.exec("sudo", ["rm", "-f", kvm_rules], {
-        listeners: {
-          stderr: (data: Buffer) => {
-            const trimmed = data.toString("utf-8").trimEnd();
-            if (trimmed.length >= 0) {
-              actions_core.info(trimmed);
-            }
-          },
-        },
-      });
+      await actions_exec.exec("sudo", ["rm", "-f", kvm_rules]);
 
       return false;
     }
