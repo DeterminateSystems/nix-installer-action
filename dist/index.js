@@ -313,8 +313,8 @@ class NixInstallerAction {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.exportVariable("DETERMINATE_NIX_KVM", "0");
         }
         // Normal just doing of the install
-        const binary_path = await this.fetch_binary();
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.startGroup("Installing Nix");
+        const binary_path = await this.fetch_binary();
         await this.execute_install(binary_path);
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.endGroup();
         if (this.force_docker_shim) {

@@ -399,8 +399,8 @@ class NixInstallerAction {
     }
 
     // Normal just doing of the install
-    const binary_path = await this.fetch_binary();
     actions_core.startGroup("Installing Nix");
+    const binary_path = await this.fetch_binary();
     await this.execute_install(binary_path);
     actions_core.endGroup();
 
