@@ -939,12 +939,12 @@ async function main(): Promise<void> {
     }
 
     const installer = new NixInstallerAction(correlation);
-    await installer.detectAndForceDockerShim();
 
     const isPost = actions_core.getState("isPost");
     if (isPost !== "true") {
-      actions_core.saveState("isPost", "true");
+      await installer.detectAndForceDockerShim();
       await installer.install();
+      actions_core.saveState("isPost", "true");
     } else {
       await installer.cleanupDockerShim();
       await installer.report_overall();

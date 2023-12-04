@@ -712,11 +712,11 @@ async function main() {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("correlation", correlation);
         }
         const installer = new NixInstallerAction(correlation);
-        await installer.detectAndForceDockerShim();
         const isPost = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getState("isPost");
         if (isPost !== "true") {
-            _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("isPost", "true");
+            await installer.detectAndForceDockerShim();
             await installer.install();
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("isPost", "true");
         }
         else {
             await installer.cleanupDockerShim();
