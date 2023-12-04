@@ -486,6 +486,12 @@ class NixInstallerAction {
         {
           silent: true,
           listeners: {
+            stdline: (data: string) => {
+              actions_core.saveState(
+                "docker_shim_container_id",
+                data.trimEnd(),
+              );
+            },
             stdout: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
               if (trimmed.length >= 0) {
@@ -512,6 +518,16 @@ class NixInstallerAction {
     actions_core.endGroup();
 
     return;
+  }
+  async cleanupDockerShim(): Promise<void> {
+    const container_id = actions_core.getState("docker_shim_container_id");
+    if (container_id !== "") {
+      actions_core.startGroup("Cleaning up the Nix daemon's Docker shim");
+
+      await actions_exec.exec("docker", ["rm", "--force", container_id]);
+
+      actions_core.endGroup();
+    }
   }
 
   async set_github_path(): Promise<void> {
@@ -916,22 +932,21 @@ function action_input_bool(name: string): boolean {
 
 async function main(): Promise<void> {
   try {
-    let correlation: string;
-    if (process.env["STATE_correlation"]) {
-      correlation = process.env["STATE_correlation"];
-    } else {
+    let correlation: string = actions_core.getState("correlation");
+    if (correlation === "") {
       correlation = `GH-${randomUUID()}`;
       actions_core.saveState("correlation", correlation);
-      process.env["STATE_correlation"] = correlation;
     }
+
     const installer = new NixInstallerAction(correlation);
     await installer.detectAndForceDockerShim();
 
-    const isPost = !!process.env["STATE_isPost"];
-    if (!isPost) {
+    const isPost = actions_core.getState("isPost");
+    if (isPost !== "true") {
       actions_core.saveState("isPost", "true");
       await installer.install();
     } else {
+      await installer.cleanupDockerShim();
       await installer.report_overall();
     }
   } catch (error) {

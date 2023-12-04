@@ -385,6 +385,9 @@ class NixInstallerAction {
             ], {
                 silent: true,
                 listeners: {
+                    stdline: (data) => {
+                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("docker_shim_container_id", data.trimEnd());
+                    },
                     stdout: (data) => {
                         const trimmed = data.toString("utf-8").trimEnd();
                         if (trimmed.length >= 0) {
@@ -405,6 +408,14 @@ class NixInstallerAction {
         }
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.endGroup();
         return;
+    }
+    async cleanupDockerShim() {
+        const container_id = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getState("docker_shim_container_id");
+        if (container_id !== "") {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.startGroup("Cleaning up the Nix daemon's Docker shim");
+            await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", ["rm", "--force", container_id]);
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.endGroup();
+        }
     }
     async set_github_path() {
         // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
@@ -695,23 +706,20 @@ function action_input_bool(name) {
 }
 async function main() {
     try {
-        let correlation;
-        if (process.env["STATE_correlation"]) {
-            correlation = process.env["STATE_correlation"];
-        }
-        else {
+        let correlation = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getState("correlation");
+        if (correlation === "") {
             correlation = `GH-${(0,node_crypto__WEBPACK_IMPORTED_MODULE_5__.randomUUID)()}`;
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("correlation", correlation);
-            process.env["STATE_correlation"] = correlation;
         }
         const installer = new NixInstallerAction(correlation);
         await installer.detectAndForceDockerShim();
-        const isPost = !!process.env["STATE_isPost"];
-        if (!isPost) {
+        const isPost = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getState("isPost");
+        if (isPost !== "true") {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.saveState("isPost", "true");
             await installer.install();
         }
         else {
+            await installer.cleanupDockerShim();
             await installer.report_overall();
         }
     }
