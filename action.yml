@@ -117,5 +117,8 @@ inputs:
 
 runs:
   using: "node20"
+  env:
+    UV_USE_IO_URING: 0
   main: 'dist/index.js'
   post: 'dist/index.js'
+
