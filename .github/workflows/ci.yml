@@ -27,6 +27,10 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v3
+      - name: Sanity Checls
+        run: |
+          set -x
+          uname -a
       - name: Install Nix
         uses: ./
         with:
