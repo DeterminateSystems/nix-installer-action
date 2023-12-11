@@ -413,7 +413,27 @@ class NixInstallerAction {
         const container_id = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getState("docker_shim_container_id");
         if (container_id !== "") {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.startGroup("Cleaning up the Nix daemon's Docker shim");
-            await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", ["rm", "--force", container_id]);
+            let cleaned = false;
+            try {
+                await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", ["rm", "--force", container_id]);
+                cleaned = true;
+            }
+            catch (_a) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("failed to cleanup nix daemon container");
+            }
+            if (!cleaned) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("trying to pkill the container's shim process");
+                try {
+                    await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("pkill", [container_id]);
+                    cleaned = true;
+                }
+                catch (_b) {
+                    _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("failed to forcibly kill the container's shim process");
+                }
+            }
+            if (!cleaned) {
+                _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("Giving up on cleaning up the nix daemon container");
+            }
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.endGroup();
         }
     }
