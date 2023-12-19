@@ -521,10 +521,35 @@ class NixInstallerAction {
   }
   async cleanupDockerShim(): Promise<void> {
     const container_id = actions_core.getState("docker_shim_container_id");
+
     if (container_id !== "") {
       actions_core.startGroup("Cleaning up the Nix daemon's Docker shim");
 
-      await actions_exec.exec("docker", ["rm", "--force", container_id]);
+      let cleaned = false;
+      try {
+        await actions_exec.exec("docker", ["rm", "--force", container_id]);
+        cleaned = true;
+      } catch {
+        actions_core.warning("failed to cleanup nix daemon container");
+      }
+
+      if (!cleaned) {
+        actions_core.info("trying to pkill the container's shim process");
+        try {
+          await actions_exec.exec("pkill", [container_id]);
+          cleaned = true;
+        } catch {
+          actions_core.warning(
+            "failed to forcibly kill the container's shim process",
+          );
+        }
+      }
+
+      if (!cleaned) {
+        actions_core.warning(
+          "Giving up on cleaning up the nix daemon container",
+        );
+      }
 
       actions_core.endGroup();
     }
