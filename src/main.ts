@@ -630,6 +630,10 @@ class NixInstallerAction {
   }
 
   private async setup_kvm(): Promise<boolean> {
+    const current_user = userInfo();
+    const is_root = current_user.username === "root";
+    const maybe_sudo = is_root ? "sudo" : "";
+
     const kvm_rules =
       "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
     try {
@@ -637,7 +641,7 @@ class NixInstallerAction {
         "sh",
         [
           "-c",
-          `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee ${kvm_rules} > /dev/null`,
+          `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | ${maybe_sudo} tee ${kvm_rules} > /dev/null`,
         ],
         {
           silent: true,
@@ -664,11 +668,15 @@ class NixInstallerAction {
         );
       }
 
-      const debug_run_throw = async (
+      const debug_root_run_throw = async (
         action: string,
         command: string,
         args: string[],
       ): Promise<void> => {
+        if (!is_root) {
+          args = [command, ...args];
+          command = "sudo";
+        }
         const reload_exit_code = await actions_exec.exec(command, args, {
           silent: true,
           listeners: {
@@ -694,21 +702,23 @@ class NixInstallerAction {
         }
       };
 
-      await debug_run_throw("reloading udev rules", `sudo`, [
-        "udevadm",
+      await debug_root_run_throw("reloading udev rules", "udevadm", [
         "control",
         "--reload-rules",
       ]);
 
-      await debug_run_throw("triggering udev against kvm", `sudo`, [
-        "udevadm",
+      await debug_root_run_throw("triggering udev against kvm", "udevadm", [
         "trigger",
         "--name-match=kvm",
       ]);
 
       return true;
     } catch (error) {
-      await actions_exec.exec("sudo", ["rm", "-f", kvm_rules]);
+      if (is_root) {
+        await actions_exec.exec("rm", ["-f", kvm_rules]);
+      } else {
+        await actions_exec.exec("sudo", ["rm", "-f", kvm_rules]);
+      }
 
       return false;
     }

@@ -488,11 +488,14 @@ class NixInstallerAction {
         }
     }
     async setup_kvm() {
+        const current_user = (0,node_os__WEBPACK_IMPORTED_MODULE_8__.userInfo)();
+        const is_root = current_user.username === "root";
+        const maybe_sudo = is_root ? "sudo" : "";
         const kvm_rules = "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
         try {
             const write_file_exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("sh", [
                 "-c",
-                `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee ${kvm_rules} > /dev/null`,
+                `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | ${maybe_sudo} tee ${kvm_rules} > /dev/null`,
             ], {
                 silent: true,
                 listeners: {
@@ -513,7 +516,11 @@ class NixInstallerAction {
             if (write_file_exit_code !== 0) {
                 throw new Error(`Non-zero exit code of \`${write_file_exit_code}\` detected while writing '${kvm_rules}'`);
             }
-            const debug_run_throw = async (action, command, args) => {
+            const debug_root_run_throw = async (action, command, args) => {
+                if (!is_root) {
+                    args = [command, ...args];
+                    command = "sudo";
+                }
                 const reload_exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec(command, args, {
                     silent: true,
                     listeners: {
@@ -535,20 +542,23 @@ class NixInstallerAction {
                     throw new Error(`Non-zero exit code of \`${reload_exit_code}\` detected while ${action}.`);
                 }
             };
-            await debug_run_throw("reloading udev rules", `sudo`, [
-                "udevadm",
+            await debug_root_run_throw("reloading udev rules", "udevadm", [
                 "control",
                 "--reload-rules",
             ]);
-            await debug_run_throw("triggering udev against kvm", `sudo`, [
-                "udevadm",
+            await debug_root_run_throw("triggering udev against kvm", "udevadm", [
                 "trigger",
                 "--name-match=kvm",
             ]);
             return true;
         }
         catch (error) {
-            await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("sudo", ["rm", "-f", kvm_rules]);
+            if (is_root) {
+                await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("rm", ["-f", kvm_rules]);
+            }
+            else {
+                await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("sudo", ["rm", "-f", kvm_rules]);
+            }
             return false;
         }
     }
