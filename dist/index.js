@@ -489,7 +489,7 @@ class NixInstallerAction {
     }
     async setup_kvm() {
         const current_user = (0,node_os__WEBPACK_IMPORTED_MODULE_8__.userInfo)();
-        const is_root = current_user.username === "root";
+        const is_root = current_user.uid === 0;
         const maybe_sudo = is_root ? "sudo" : "";
         const kvm_rules = "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
         try {

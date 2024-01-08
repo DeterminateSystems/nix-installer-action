@@ -631,7 +631,7 @@ class NixInstallerAction {
 
   private async setup_kvm(): Promise<boolean> {
     const current_user = userInfo();
-    const is_root = current_user.username === "root";
+    const is_root = current_user.uid === 0;
     const maybe_sudo = is_root ? "sudo" : "";
 
     const kvm_rules =
