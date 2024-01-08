@@ -632,7 +632,7 @@ class NixInstallerAction {
   private async setup_kvm(): Promise<boolean> {
     const current_user = userInfo();
     const is_root = current_user.uid === 0;
-    const maybe_sudo = is_root ? "sudo" : "";
+    const maybe_sudo = is_root ? "" : "sudo";
 
     const kvm_rules =
       "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
