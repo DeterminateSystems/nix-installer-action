@@ -129,23 +129,30 @@ class NixInstallerAction {
     actions_core.debug(
       "Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor.",
     );
-    const exit_code = await actions_exec.exec("docker", ["info"], {
-      silent: true,
-      listeners: {
-        stdout: (data: Buffer) => {
-          const trimmed = data.toString("utf-8").trimEnd();
-          if (trimmed.length >= 0) {
-            actions_core.debug(trimmed);
-          }
+
+    let exit_code;
+    try {
+      exit_code = await actions_exec.exec("docker", ["info"], {
+        silent: true,
+        listeners: {
+          stdout: (data: Buffer) => {
+            const trimmed = data.toString("utf-8").trimEnd();
+            if (trimmed.length >= 0) {
+              actions_core.debug(trimmed);
+            }
+          },
+          stderr: (data: Buffer) => {
+            const trimmed = data.toString("utf-8").trimEnd();
+            if (trimmed.length >= 0) {
+              actions_core.debug(trimmed);
+            }
+          },
         },
-        stderr: (data: Buffer) => {
-          const trimmed = data.toString("utf-8").trimEnd();
-          if (trimmed.length >= 0) {
-            actions_core.debug(trimmed);
-          }
-        },
-      },
-    });
+      });
+    } catch (e) {
+      actions_core.debug("Docker not detected, not enabling docker shim.");
+      return;
+    }
 
     if (exit_code !== 0) {
       if (this.force_docker_shim) {

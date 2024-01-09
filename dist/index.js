@@ -98,23 +98,30 @@ class NixInstallerAction {
             }
         }
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug("Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor.");
-        const exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", ["info"], {
-            silent: true,
-            listeners: {
-                stdout: (data) => {
-                    const trimmed = data.toString("utf-8").trimEnd();
-                    if (trimmed.length >= 0) {
-                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
-                    }
+        let exit_code;
+        try {
+            exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", ["info"], {
+                silent: true,
+                listeners: {
+                    stdout: (data) => {
+                        const trimmed = data.toString("utf-8").trimEnd();
+                        if (trimmed.length >= 0) {
+                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                        }
+                    },
+                    stderr: (data) => {
+                        const trimmed = data.toString("utf-8").trimEnd();
+                        if (trimmed.length >= 0) {
+                            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
+                        }
+                    },
                 },
-                stderr: (data) => {
-                    const trimmed = data.toString("utf-8").trimEnd();
-                    if (trimmed.length >= 0) {
-                        _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(trimmed);
-                    }
-                },
-            },
-        });
+            });
+        }
+        catch (e) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug("Docker not detected, not enabling docker shim.");
+            return;
+        }
         if (exit_code !== 0) {
             if (this.force_docker_shim) {
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.warning("docker info check failed, but trying anyway since force-docker-shim is enabled.");
