@@ -130,6 +130,11 @@ class NixInstallerAction {
                 return;
             }
         }
+        if (!this.force_docker_shim &&
+            (await this.detectDockerWithMountedDockerSocket())) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug("Detected a Docker container with a Docker socket mounted, not enabling docker shim.");
+            return;
+        }
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.startGroup("Enabling the Docker shim for running Nix on Linux in CI without Systemd.");
         if (this.init !== "none") {
             _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Changing init from '${this.init}' to 'none'`);
@@ -141,6 +146,90 @@ class NixInstallerAction {
         }
         this.force_docker_shim = true;
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.endGroup();
+    }
+    // Detect if we are running under `act` or some other system which is not using docker-in-docker,
+    // and instead using a mounted docker socket.
+    // In the case of the socket mount solution, the shim will cause issues since the given mount paths will
+    // equate to mount paths on the host, not mount paths to the docker container in question.
+    async detectDockerWithMountedDockerSocket() {
+        let cgroups_buffer;
+        try {
+            // If we are inside a docker container, the last line of `/proc/self/cgroup` should be
+            // 0::/docker/$SOME_ID
+            //
+            // If we are not, the line will likely be `0::/`
+            cgroups_buffer = await (0,node_fs_promises__WEBPACK_IMPORTED_MODULE_4__.readFile)("/proc/self/cgroup", {
+                encoding: "utf-8",
+            });
+        }
+        catch (e) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(`Did not detect \`/proc/self/cgroup\` existence, bailing on docker container ID detection:\n${e}`);
+            return false;
+        }
+        const cgroups = cgroups_buffer.trim().split("\n");
+        const last_cgroup = cgroups[cgroups.length - 1];
+        const last_cgroup_parts = last_cgroup.split(":");
+        const last_cgroup_path = last_cgroup_parts[last_cgroup_parts.length - 1];
+        if (!last_cgroup_path.includes("/docker/")) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug("Did not detect a container ID, bailing on docker.sock detection");
+            return false;
+        }
+        // We are in a docker container, now to determine if this container is visible from
+        // the `docker` command, and if so, if there is a `docker.socket` mounted.
+        const last_cgroup_path_parts = last_cgroup_path.split("/");
+        const container_id = last_cgroup_path_parts[last_cgroup_path_parts.length - 1];
+        // If we cannot `docker inspect` this discovered container ID, we'll fall through to the `catch` below.
+        let stdout_buffer = "";
+        let stderr_buffer = "";
+        let exit_code;
+        try {
+            exit_code = await _actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec("docker", ["inspect", container_id], {
+                silent: true,
+                listeners: {
+                    stdout: (data) => {
+                        stdout_buffer += data.toString("utf-8");
+                    },
+                    stderr: (data) => {
+                        stderr_buffer += data.toString("utf-8");
+                    },
+                },
+            });
+        }
+        catch (e) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(`Could not execute \`docker inspect ${container_id}\`, bailing on docker container inspection:\n${e}`);
+            return false;
+        }
+        if (exit_code !== 0) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(`Unable to inspect detected docker container with id \`${container_id}\`, bailing on container inspection (exit ${exit_code}):\n${stderr_buffer}`);
+            return false;
+        }
+        const output = JSON.parse(stdout_buffer);
+        // `docker inspect $ID` prints an array containing objects.
+        // In our use case, we should only see 1 item in the array.
+        if (output.length !== 1) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(`Got \`docker inspect ${container_id}\` output which was not one item (was ${output.length}), bailing on docker.sock detection.`);
+            return false;
+        }
+        const item = output[0];
+        // On this array item we want the `Mounts` field, which is an array
+        // containing `{ Type, Source, Destination, Mode}`.
+        // We are looking for a `Destination` ending with `docker.sock`.
+        const mounts = item["Mounts"];
+        if (typeof mounts !== "object") {
+            _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(`Got non-object in \`Mounts\` field of \`docker inspect ${container_id}\` output, bailing on docker.sock detection.`);
+            return false;
+        }
+        let found_docker_sock_mount = false;
+        for (const mount of mounts) {
+            const destination = mount["Destination"];
+            if (typeof destination === "string") {
+                if (destination.endsWith("docker.sock")) {
+                    found_docker_sock_mount = true;
+                    break;
+                }
+            }
+        }
+        return found_docker_sock_mount;
     }
     async executionEnvironment() {
         const execution_env = {};
