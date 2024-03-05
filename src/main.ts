@@ -217,7 +217,7 @@ class NixInstallerAction {
     const last_cgroup = cgroups[cgroups.length - 1];
     const last_cgroup_parts = last_cgroup.split(":");
     const last_cgroup_path = last_cgroup_parts[last_cgroup_parts.length - 1];
-    if (!last_cgroup_path.includes("/docker/")) {
+    if (!last_cgroup_path.includes("/docker/") && !last_cgroup_path.includes("/system.slice/docker-")) {
       actions_core.debug(
         "Did not detect a container ID, bailing on docker.sock detection",
       );
@@ -225,10 +225,14 @@ class NixInstallerAction {
     }
     // We are in a docker container, now to determine if this container is visible from
     // the `docker` command, and if so, if there is a `docker.socket` mounted.
-    const last_cgroup_path_parts = last_cgroup_path.split("/");
-    const container_id =
-      last_cgroup_path_parts[last_cgroup_path_parts.length - 1];
-
+    let container_id;
+    if (last_cgroup_path.includes("/docker/")) {
+      const last_cgroup_path_parts = last_cgroup_path.split("/");
+      container_id = last_cgroup_path_parts[last_cgroup_path_parts.length - 1];
+    } else if (last_cgroup_path.includes("/system.slice/docker-")) {
+      const last_cgroup_path_parts = last_cgroup_path.split("-");
+      container_id = last_cgroup_path_parts[last_cgroup_path_parts.length - 1].split(".")[0];
+    }
     // If we cannot `docker inspect` this discovered container ID, we'll fall through to the `catch` below.
     let stdout_buffer = "";
     let stderr_buffer = "";
