@@ -16,15 +16,18 @@ jobs:
       - run: npm run all
       - run: git status --porcelain=v1
       - run: test $(git status --porcelain=v1 2>/dev/null | wc -l) -eq 0
-  run-x86_64-linux:
-    name: Run x86_64 Linux
+  run-test-suite:
+    name: Run test suite
     strategy:
       matrix:
         runner:
-            - ubuntu-latest
-            - nscloud-ubuntu-22.04-amd64-4x16
-            - namespace-profile-default-arm64
+          - ubuntu-latest
+          - nscloud-ubuntu-22.04-amd64-4x16
+          - namespace-profile-default-arm64
     runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
@@ -33,8 +36,15 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: echo $PATH
         run: echo $PATH
+
+      - name: Render the devshell
+        if: success() || failure()
+        run: |
+          nix develop --command date
+
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -43,6 +53,7 @@ jobs:
           hello
           nix store gc
           nix run nixpkgs#hello
+
       - name: Test bash
         run: nix-instantiate -E 'builtins.currentTime' --eval
         if: success() || failure()
@@ -91,6 +102,9 @@ jobs:
   run-x86_64-darwin:
     name: Run x86_64 Darwin
     runs-on: macos-12
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
@@ -99,6 +113,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
@@ -135,6 +150,10 @@ jobs:
           hello
           nix store gc
           nix run nixpkgs#hello
+      - name: Terminate the magic nix cache pre-reinstall
+        if: success() || failure()
+        run: |
+          pkill magic-nix-cache
       - name: Reinstall Nix
         uses: ./
         with:

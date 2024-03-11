@@ -513,8 +513,6 @@ class NixInstallerAction {
         actions_core.info("KVM is not available.");
         actions_core.exportVariable("DETERMINATE_NIX_KVM", "0");
       }
-
-      actions_core.exportVariable("DETERMINATE_NIX_KVM", "0");
     }
 
     // Normal just doing of the install
@@ -587,8 +585,15 @@ class NixInstallerAction {
           "run",
           "--detach",
           "--privileged",
+          "--network=host",
           "--userns=host",
           "--pid=host",
+          "--mount",
+          "type=bind,src=/bin,dst=/bin,readonly",
+          "--mount",
+          "type=bind,src=/lib,dst=/lib,readonly",
+          "--mount",
+          "type=bind,src=/home,dst=/home,readonly",
           "--mount",
           "type=bind,src=/tmp,dst=/tmp",
           "--mount",
