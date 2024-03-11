@@ -603,6 +603,12 @@ class NixInstallerAction {
           "--init",
           "--name",
           `determinate-nix-shim-${this.correlation}`,
+
+          "-e",
+          "RUST_LOG=trace,magic_nix_cache=debug,gha_cache=debug",
+          "-e",
+          "RUST_BACKTRACE=full",
+
           "determinate-nix-shim:latest",
         ],
         {
