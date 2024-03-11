@@ -590,6 +590,8 @@ class NixInstallerAction {
           "--userns=host",
           "--pid=host",
           "--mount",
+          "type=bind,src=/bin,dst=/bin,readonly",
+          "--mount",
           "type=bind,src=/tmp,dst=/tmp",
           "--mount",
           "type=bind,src=/nix,dst=/nix",
