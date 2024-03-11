@@ -39,6 +39,17 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: echo $PATH
         run: echo $PATH
+
+      - name: Render the devshell
+        if: success() || failure()
+        run: |
+          nix develop --command date
+      - name: Breakpoint to check the build results
+        uses: namespacelabs/breakpoint-action@v0
+        with:
+          duration: 30m
+          authorized-users: grahamc
+
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -47,10 +58,7 @@ jobs:
           hello
           nix store gc
           nix run nixpkgs#hello
-      - name: Render the devshell
-        if: success() || failure()
-        run: |
-          nix develop --command date
+
       - name: Test bash
         run: nix-instantiate -E 'builtins.currentTime' --eval
         if: success() || failure()
