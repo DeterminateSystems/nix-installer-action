@@ -591,6 +591,8 @@ class NixInstallerAction {
           "--mount",
           "type=bind,src=/bin,dst=/bin,readonly",
           "--mount",
+          "type=bind,src=/lib,dst=/lib,readonly",
+          "--mount",
           "type=bind,src=/home,dst=/home,readonly",
           "--mount",
           "type=bind,src=/tmp,dst=/tmp",
@@ -605,7 +607,7 @@ class NixInstallerAction {
           `determinate-nix-shim-${this.correlation}`,
 
           "-e",
-          "RUST_LOG=trace,magic_nix_cache=debug,gha_cache=debug",
+          "RUST_LOG=trace",
           "-e",
           "RUST_BACKTRACE=full",
 
