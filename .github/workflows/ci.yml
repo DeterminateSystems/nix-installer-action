@@ -37,8 +37,6 @@ jobs:
           log-directives: nix_installer=trace
           backtrace: full
       - uses: DeterminateSystems/magic-nix-cache-action@main
-        with:
-          use-gha-cache: false
       - name: echo $PATH
         run: echo $PATH
 
