@@ -46,12 +46,6 @@ jobs:
         if: success() || failure()
         run: |
           nix develop --command date
-      - name: Breakpoint to check the build results
-        if: success() || failure()
-        uses: namespacelabs/breakpoint-action@v0
-        with:
-          duration: 30m
-          authorized-users: grahamc
 
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
@@ -158,6 +152,10 @@ jobs:
           hello
           nix store gc
           nix run nixpkgs#hello
+      - name: Terminate the magic nix cache pre-reinstall
+        if: success() || failure()
+        run: |
+          pkill magic-nix-cache
       - name: Reinstall Nix
         uses: ./
         with:
