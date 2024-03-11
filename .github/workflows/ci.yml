@@ -16,8 +16,8 @@ jobs:
       - run: npm run all
       - run: git status --porcelain=v1
       - run: test $(git status --porcelain=v1 2>/dev/null | wc -l) -eq 0
-  run-x86_64-linux:
-    name: Run x86_64 Linux
+  run-test-suite:
+    name: Run test suite
     strategy:
       matrix:
         runner:
@@ -47,6 +47,10 @@ jobs:
           hello
           nix store gc
           nix run nixpkgs#hello
+      - name: Render the devshell
+        if: success() || failure()
+        run: |
+          nix develop --command date
       - name: Test bash
         run: nix-instantiate -E 'builtins.currentTime' --eval
         if: success() || failure()
