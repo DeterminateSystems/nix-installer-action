@@ -406,7 +406,6 @@ class NixInstallerAction {
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("KVM is not available.");
                 _actions_core__WEBPACK_IMPORTED_MODULE_0__.exportVariable("DETERMINATE_NIX_KVM", "0");
             }
-            _actions_core__WEBPACK_IMPORTED_MODULE_0__.exportVariable("DETERMINATE_NIX_KVM", "0");
         }
         // Normal just doing of the install
         _actions_core__WEBPACK_IMPORTED_MODULE_0__.startGroup("Installing Nix");

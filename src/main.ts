@@ -513,8 +513,6 @@ class NixInstallerAction {
         actions_core.info("KVM is not available.");
         actions_core.exportVariable("DETERMINATE_NIX_KVM", "0");
       }
-
-      actions_core.exportVariable("DETERMINATE_NIX_KVM", "0");
     }
 
     // Normal just doing of the install
