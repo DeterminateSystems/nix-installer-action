@@ -25,6 +25,9 @@ jobs:
           - nscloud-ubuntu-22.04-amd64-4x16
           - namespace-profile-default-arm64
     runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
@@ -92,6 +95,9 @@ jobs:
   run-x86_64-darwin:
     name: Run x86_64 Darwin
     runs-on: macos-12
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v3
       - name: Install Nix
