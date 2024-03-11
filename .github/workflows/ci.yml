@@ -21,9 +21,9 @@ jobs:
     strategy:
       matrix:
         runner:
-            - ubuntu-latest
-            - nscloud-ubuntu-22.04-amd64-4x16
-            - namespace-profile-default-arm64
+          - ubuntu-latest
+          - nscloud-ubuntu-22.04-amd64-4x16
+          - namespace-profile-default-arm64
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v3
@@ -33,6 +33,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
@@ -99,6 +100,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
