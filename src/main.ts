@@ -1,16 +1,17 @@
 import * as actions_core from "@actions/core";
 import * as github from "@actions/github";
-import * as actions_tool_cache from "@actions/tool-cache";
 import * as actions_exec from "@actions/exec";
-import { chmod, access, writeFile, readFile } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
+import { access, writeFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import fs from "node:fs";
 import { userInfo } from "node:os";
 import stringArgv from "string-argv";
 import * as path from "path";
+import { IdsToolbox } from "detsys-ts";
+import { randomUUID } from "node:crypto";
 
 class NixInstallerAction {
+  idslib: IdsToolbox;
   platform: string;
   nix_package_url: string | null;
   backtrace: string | null;
@@ -40,17 +41,14 @@ class NixInstallerAction {
   planner: string | null;
   reinstall: boolean;
   start_daemon: boolean;
-  diagnostic_endpoint: string | null;
   trust_runner_user: boolean | null;
-  nix_installer_url: URL;
 
-  // Connects the installation diagnostic report to the post-run diagnostic report.
-  // This is for monitoring the real impact of Nix updates, to avoid breaking large
-  // swaths of users at once with botched Nix releases. For example:
-  // https://github.com/NixOS/nix/issues/9052.
-  correlation: string;
+  constructor() {
+    this.idslib = new IdsToolbox({
+      name: "nix-installer",
+      fetchStyle: "nix-style",
+    });
 
-  constructor(correlation: string) {
     this.platform = get_nix_platform();
     this.nix_package_url = action_input_string_or_null("nix-package-url");
     this.backtrace = action_input_string_or_null("backtrace");
@@ -88,15 +86,7 @@ class NixInstallerAction {
     this.planner = action_input_string_or_null("planner");
     this.reinstall = action_input_bool("reinstall");
     this.start_daemon = action_input_bool("start-daemon");
-    this.diagnostic_endpoint = action_input_string_or_null(
-      "diagnostic-endpoint",
-    );
     this.trust_runner_user = action_input_bool("trust-runner-user");
-    this.correlation = correlation;
-    this.nix_installer_url = resolve_nix_installer_url(
-      this.platform,
-      this.correlation,
-    );
   }
 
   async detectAndForceDockerShim(): Promise<void> {
@@ -122,14 +112,17 @@ class NixInstallerAction {
           "Systemd is detected, but ignoring it since force-docker-shim is enabled.",
         );
       } else {
+        this.idslib.addFact("has_systemd", true);
         return;
       }
     }
+    this.idslib.addFact("has_systemd", false);
 
     actions_core.debug(
       "Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor.",
     );
 
+    this.idslib.addFact("has_docker", false); // Set to false here, and only in the success case do we set it to true
     let exit_code;
     try {
       exit_code = await actions_exec.exec("docker", ["info"], {
@@ -163,6 +156,7 @@ class NixInstallerAction {
         return;
       }
     }
+    this.idslib.addFact("has_docker", true);
 
     if (
       !this.force_docker_shim &&
@@ -298,7 +292,9 @@ class NixInstallerAction {
     const execution_env: ExecuteEnvironment = {};
 
     execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
-    execution_env.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = this.correlation;
+    execution_env.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(
+      this.idslib.getCorrelationHashes(),
+    );
 
     if (this.backtrace !== null) {
       execution_env.RUST_BACKTRACE = this.backtrace;
@@ -345,10 +341,8 @@ class NixInstallerAction {
       execution_env.NIX_INSTALLER_SSL_CERT_FILE = this.ssl_cert_file;
     }
 
-    if (this.diagnostic_endpoint !== null) {
-      execution_env.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
-        this.diagnostic_endpoint;
-    }
+    execution_env.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
+      this.idslib.getDiagnosticsUrl()?.toString() || "";
 
     // TODO: Error if the user uses these on not-MacOS
     if (this.mac_encrypt !== null) {
@@ -435,6 +429,7 @@ class NixInstallerAction {
     execution_env.NIX_INSTALLER_EXTRA_CONF = extra_conf;
 
     if (process.env.ACT && !process.env.NOT_ACT) {
+      this.idslib.addFact("in_act", true);
       actions_core.info(
         "Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`",
       );
@@ -442,6 +437,7 @@ class NixInstallerAction {
     }
 
     if (process.env.NSC_VM_ID && !process.env.NOT_NAMESPACE) {
+      this.idslib.addFact("in_namespace_so", true);
       actions_core.info(
         "Detected Namespace runner, assuming this is a https://namespace.so created container, set `NOT_NAMESPACE=true` to override this. This will change the setting of the `init` to be compatible with Namespace",
       );
@@ -459,8 +455,10 @@ class NixInstallerAction {
 
     const args = ["install"];
     if (this.planner) {
+      this.idslib.addFact("nix_installer_planner", this.planner);
       args.push(this.planner);
     } else {
+      this.idslib.addFact("nix_installer_planner", get_default_planner());
       args.push(get_default_planner());
     }
 
@@ -469,6 +467,7 @@ class NixInstallerAction {
       args.concat(extra_args);
     }
 
+    this.idslib.recordEvent("install_nix_start");
     const exit_code = await actions_exec.exec(binary_path, args, {
       env: {
         ...execution_env,
@@ -477,8 +476,13 @@ class NixInstallerAction {
     });
 
     if (exit_code !== 0) {
+      this.idslib.recordEvent("install_nix_failure", {
+        exit_code,
+      });
       throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
     }
+
+    this.idslib.recordEvent("install_nix_success");
 
     return exit_code;
   }
@@ -578,6 +582,7 @@ class NixInstallerAction {
 
     {
       actions_core.debug("Starting the Nix daemon through Docker...");
+      this.idslib.recordEvent("start_docker_shim");
       const exit_code = await actions_exec.exec(
         "docker",
         [
@@ -604,7 +609,7 @@ class NixInstallerAction {
           "always",
           "--init",
           "--name",
-          `determinate-nix-shim-${this.correlation}`,
+          `determinate-nix-shim-${this.idslib.getUniqueId()}-${randomUUID()}`,
           "determinate-nix-shim:latest",
         ],
         {
@@ -669,7 +674,9 @@ class NixInstallerAction {
         }
       }
 
-      if (!cleaned) {
+      if (cleaned) {
+        this.idslib.recordEvent("clean_up_docker_shim");
+      } else {
         actions_core.warning(
           "Giving up on cleaning up the nix daemon container",
         );
@@ -697,6 +704,7 @@ class NixInstallerAction {
   }
 
   async flakehub_login(): Promise<string> {
+    this.idslib.recordEvent("login_to_flakehub");
     const netrc_path = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
 
     const jwt = await actions_core.getIDToken("api.flakehub.com");
@@ -723,6 +731,7 @@ class NixInstallerAction {
   }
 
   async execute_uninstall(): Promise<number> {
+    this.idslib.recordEvent("uninstall");
     const exit_code = await actions_exec.exec(
       `/nix/nix-installer`,
       ["uninstall"],
@@ -754,6 +763,7 @@ class NixInstallerAction {
   }
 
   private async setup_kvm(): Promise<boolean> {
+    this.idslib.recordEvent("setup_kvm");
     const current_user = userInfo();
     const is_root = current_user.uid === 0;
     const maybe_sudo = is_root ? "" : "sudo";
@@ -850,14 +860,7 @@ class NixInstallerAction {
 
   private async fetch_binary(): Promise<string> {
     if (!this.local_root) {
-      actions_core.info(`Fetching binary from ${this.nix_installer_url}`);
-      const binaryPath = await actions_tool_cache.downloadTool(
-        String(this.nix_installer_url),
-      );
-      // Make executable
-      await chmod(binaryPath, fs.constants.S_IXUSR | fs.constants.S_IXGRP);
-
-      return binaryPath;
+      return await this.idslib.fetchExecutable();
     } else {
       const local_path = join(
         this.local_root,
@@ -869,21 +872,9 @@ class NixInstallerAction {
   }
 
   async report_overall(): Promise<void> {
-    if (this.diagnostic_endpoint == null) {
-      return;
-    }
-
     try {
-      await fetch(this.diagnostic_endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          "post-github-workflow-run-report": true,
-          correlation: this.correlation,
-          conclusion: await this.get_workflow_conclusion(),
-        }),
+      this.idslib.recordEvent("conclude_workflow", {
+        conclusion: await this.get_workflow_conclusion(),
       });
     } catch (error) {
       actions_core.debug(
@@ -998,66 +989,6 @@ function get_default_planner(): string {
   }
 }
 
-function resolve_nix_installer_url(
-  platform: string,
-  correlation?: string,
-): URL {
-  // Only one of these are allowed.
-  const nix_installer_branch = action_input_string_or_null(
-    "nix-installer-branch",
-  );
-  const nix_installer_pr = action_input_number_or_null("nix-installer-pr");
-  const nix_installer_revision = action_input_string_or_null(
-    "nix-installer-revision",
-  );
-  const nix_installer_tag = action_input_string_or_null("nix-installer-tag");
-  const nix_installer_url = action_input_string_or_null("nix-installer-url");
-  const url_suffix = `ci=github&correlation=${correlation}`;
-  let resolved_nix_installer_url = null;
-  let num_set = 0;
-
-  if (nix_installer_branch !== null) {
-    num_set += 1;
-    resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/branch/${nix_installer_branch}/nix-installer-${platform}?${url_suffix}`,
-    );
-  }
-  if (nix_installer_pr !== null) {
-    num_set += 1;
-    resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/pr/${nix_installer_pr}/nix-installer-${platform}?${url_suffix}`,
-    );
-  }
-  if (nix_installer_revision !== null) {
-    num_set += 1;
-    resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/rev/${nix_installer_revision}/nix-installer-${platform}?${url_suffix}`,
-    );
-  }
-  if (nix_installer_tag !== null) {
-    num_set += 1;
-    resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/tag/${nix_installer_tag}/nix-installer-${platform}?${url_suffix}`,
-    );
-  }
-  if (nix_installer_url !== null) {
-    num_set += 1;
-    resolved_nix_installer_url = new URL(nix_installer_url);
-  }
-  if (resolved_nix_installer_url == null) {
-    resolved_nix_installer_url = new URL(
-      `https://install.determinate.systems/nix/nix-installer-${platform}?${url_suffix}`,
-    );
-  }
-
-  if (num_set > 1) {
-    throw new Error(
-      `The following options are mututally exclusive, but ${num_set} were set: \`nix_installer_branch\`, \`nix_installer_pr\`, \`nix_installer_revision\`, \`nix_installer_tag\`, and \`nix_installer_url\``,
-    );
-  }
-  return resolved_nix_installer_url;
-}
-
 function action_input_string_or_null(name: string): string | null {
   const value = actions_core.getInput(name);
   if (value === "") {
@@ -1090,20 +1021,14 @@ function action_input_bool(name: string): boolean {
 }
 
 async function main(): Promise<void> {
+  const installer = new NixInstallerAction();
+
   try {
-    let correlation: string = actions_core.getState("correlation");
-    if (correlation === "") {
-      correlation = `GH-${randomUUID()}`;
-      actions_core.saveState("correlation", correlation);
-    }
-
-    const installer = new NixInstallerAction(correlation);
-
     const isPost = actions_core.getState("isPost");
+    actions_core.saveState("isPost", "true");
     if (isPost !== "true") {
       await installer.detectAndForceDockerShim();
       await installer.install();
-      actions_core.saveState("isPost", "true");
     } else {
       await installer.cleanupDockerShim();
       await installer.report_overall();
@@ -1111,6 +1036,13 @@ async function main(): Promise<void> {
   } catch (error) {
     if (error instanceof Error) actions_core.setFailed(error);
   }
+
+  await installer.idslib.complete();
 }
 
-await main();
+// eslint-disable-next-line github/no-then
+main().catch((error) => {
+  // eslint-disable-next-line no-console
+  console.log(error);
+  process.exitCode = 1;
+});

@@ -2,13 +2,14 @@
   "name": "nix-installer-action",
   "version": "1.0.0",
   "description": "You can use [`nix-installer`](https://github.com/DeterminateSystems/nix-installer) as a Github action:",
-  "main": "lib/main.js",
+  "main": "./dist/main.js",
+  "types": "./dist/main.d.ts",
+  "type": "module",
   "scripts": {
     "build": "tsc",
-    "format": "prettier --write '**/*.ts'",
+    "format": "prettier --write .",
     "lint": "eslint src/**/*.ts",
-    "package": "ncc build --source-map --license licenses.txt",
-    "all": "npm run build && npm run format && npm run lint && npm run package"
+    "all": "pnpm run format && pnpm run lint && pnpm run build"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
   },
   "homepage": "https://github.com/DeterminateSystems/nix-installer-action#readme",
   "dependencies": {
+    "detsys-ts": "github:DeterminateSystems/detsys-ts",
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^5.1.1",
@@ -30,14 +32,18 @@
     "string-argv": "^0.3.2"
   },
   "devDependencies": {
-    "@types/node": "^18.16.3",
-    "@typescript-eslint/parser": "^5.59.2",
-    "@vercel/ncc": "^0.36.1",
-    "eslint": "^8.44.0",
+    "@vercel/ncc": "^0.38.1",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@types/node": "^18.19.30",
+    "@types/uuid": "^9.0.8",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "eslint": "^8.57.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-github": "^4.3.6",
-    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-prettier": "^5.0.0-alpha.1",
     "prettier": "^3.0.0",
+    "tsup": "^8.0.2",
     "typescript": "^5.1.6"
   }
 }

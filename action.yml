@@ -110,12 +110,12 @@ inputs:
     default: true
   diagnostic-endpoint:
     description: "Diagnostic endpoint url where the installer sends data to. To disable set this to an empty string."
-    default: "https://install.determinate.systems/nix/diagnostic"
+    default: "https://install.determinate.systems/nix-installer/diagnostic"
   trust-runner-user:
     description: Whether to make the runner user trusted by the Nix daemon
     default: "true"
 
 runs:
   using: "node20"
-  main: 'dist/index.js'
-  post: 'dist/index.js'
+  main: "dist/index.js"
+  post: "dist/index.js"
