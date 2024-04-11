@@ -781,8 +781,11 @@ function action_input_bool(name) {
 function main() {
     const installer = new NixInstallerAction();
     installer.idslib.onMain(async () => {
+        throw new Error("hello!");
+        /*
         await installer.detectAndForceDockerShim();
         await installer.install();
+        */
     });
     installer.idslib.onPost(async () => {
         await installer.cleanupDockerShim();

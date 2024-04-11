@@ -1026,8 +1026,10 @@ function main(): void {
 
   installer.idslib.onMain(async () => {
     throw new Error("hello!");
+    /*
     await installer.detectAndForceDockerShim();
     await installer.install();
+    */
   });
 
   installer.idslib.onPost(async () => {
