@@ -14,6 +14,7 @@ class NixInstallerAction {
         this.idslib = new IdsToolbox({
             name: "nix-installer",
             fetchStyle: "nix-style",
+            legacySourcePrefix: "nix-installer",
         });
         this.platform = get_nix_platform();
         this.nix_package_url = action_input_string_or_null("nix-package-url");

@@ -9,7 +9,8 @@
     "build": "tsc",
     "format": "prettier --write .",
     "lint": "eslint src/**/*.ts",
-    "all": "pnpm run format && pnpm run lint && pnpm run build"
+    "package": "ncc build",
+    "all": "pnpm run format && pnpm run lint && pnpm run build && pnpm run package"
   },
   "repository": {
     "type": "git",
@@ -23,7 +24,7 @@
   },
   "homepage": "https://github.com/DeterminateSystems/nix-installer-action#readme",
   "dependencies": {
-    "detsys-ts": "github:DeterminateSystems/detsys-ts",
+    "detsys-ts": "github:DeterminateSystems/detsys-ts#no-bundle",
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^5.1.1",
