@@ -22,6 +22,7 @@
           packages = with pkgs; [
             nodejs_latest
             nixpkgs-fmt
+            nodePackages_latest.pnpm
             nodePackages_latest.typescript-language-server
           ];
         };

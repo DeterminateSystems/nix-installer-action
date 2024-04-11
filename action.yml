@@ -79,19 +79,19 @@ inputs:
   nix-build-user-prefix:
     description: The Nix build user prefix (user numbers will be postfixed)
     required: false
-  nix-installer-branch:
-    description: The branch of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-revision`, `nix-installer-pr`)
+  source-branch:
+    description: The branch of `nix-installer` to use (conflicts with `source-tag`, `source-revision`, `source-pr`)
     required: false
-  nix-installer-pr:
-    description: The PR of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-revision`, `nix-installer-branch`)
+  source-pr:
+    description: The PR of `nix-installer` to use (conflicts with `source-tag`, `source-revision`, `source-branch`)
     required: false
-  nix-installer-revision:
-    description: The revision of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-branch`, `nix-installer-pr`)
+  source-revision:
+    description: The revision of `nix-installer` to use (conflicts with `source-tag`, `source-branch`, `source-pr`)
     required: false
-  nix-installer-tag:
-    description: The tag of `nix-installer` to use (conflicts with `nix-installer-revision`, `nix-installer-branch`, `nix-installer-pr`)
+  source-tag:
+    description: The tag of `nix-installer` to use (conflicts with `source-revision`, `source-branch`, `source-pr`)
     required: false
-  nix-installer-url:
+  source-url:
     description: A URL pointing to a `nix-installer.sh` script
     required: false
   nix-package-url:
@@ -110,12 +110,27 @@ inputs:
     default: true
   diagnostic-endpoint:
     description: "Diagnostic endpoint url where the installer sends data to. To disable set this to an empty string."
-    default: "https://install.determinate.systems/nix/diagnostic"
+    default: "https://install.determinate.systems/nix-installer/diagnostic"
   trust-runner-user:
     description: Whether to make the runner user trusted by the Nix daemon
     default: "true"
+  nix-installer-branch:
+    description: (deprecated) The branch of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-revision`, `nix-installer-pr`)
+    required: false
+  nix-installer-pr:
+    description: (deprecated) The PR of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-revision`, `nix-installer-branch`)
+    required: false
+  nix-installer-revision:
+    description: (deprecated) The revision of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-branch`, `nix-installer-pr`)
+    required: false
+  nix-installer-tag:
+    description: (deprecated) The tag of `nix-installer` to use (conflicts with `nix-installer-revision`, `nix-installer-branch`, `nix-installer-pr`)
+    required: false
+  nix-installer-url:
+    description: (deprecated) A URL pointing to a `nix-installer.sh` script
+    required: false
 
 runs:
   using: "node20"
-  main: 'dist/index.js'
-  post: 'dist/index.js'
+  main: "dist/index.js"
+  post: "dist/index.js"
