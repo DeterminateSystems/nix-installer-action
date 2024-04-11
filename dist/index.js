@@ -6236,9 +6236,9 @@ var uuid = __nccwpck_require__(7338);
 var util = __nccwpck_require__(3837);
 var tslib = __nccwpck_require__(3134);
 var xml2js = __nccwpck_require__(1136);
-var coreUtil = __nccwpck_require__(1337);
-var logger$1 = __nccwpck_require__(1446);
-var coreAuth = __nccwpck_require__(5515);
+var coreUtil = __nccwpck_require__(3302);
+var logger$1 = __nccwpck_require__(2587);
+var coreAuth = __nccwpck_require__(9334);
 var os = __nccwpck_require__(2037);
 var http = __nccwpck_require__(3685);
 var https = __nccwpck_require__(5687);
@@ -11933,13 +11933,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 var coreHttp = __nccwpck_require__(9808);
 var tslib = __nccwpck_require__(3134);
 var coreTracing = __nccwpck_require__(9011);
-var logger$1 = __nccwpck_require__(1446);
+var logger$1 = __nccwpck_require__(2587);
 var abortController = __nccwpck_require__(4732);
 var os = __nccwpck_require__(2037);
 var crypto = __nccwpck_require__(6113);
 var stream = __nccwpck_require__(2781);
-__nccwpck_require__(9126);
-var coreLro = __nccwpck_require__(4352);
+__nccwpck_require__(1181);
+var coreLro = __nccwpck_require__(2045);
 var events = __nccwpck_require__(2361);
 var fs = __nccwpck_require__(7147);
 var util = __nccwpck_require__(3837);
@@ -40511,7 +40511,7 @@ var SamplingResult_1 = __nccwpck_require__(4409);
 Object.defineProperty(exports, "SamplingDecision", ({ enumerable: true, get: function () { return SamplingResult_1.SamplingDecision; } }));
 var span_kind_1 = __nccwpck_require__(1127);
 Object.defineProperty(exports, "SpanKind", ({ enumerable: true, get: function () { return span_kind_1.SpanKind; } }));
-var status_1 = __nccwpck_require__(2587);
+var status_1 = __nccwpck_require__(4381);
 Object.defineProperty(exports, "SpanStatusCode", ({ enumerable: true, get: function () { return status_1.SpanStatusCode; } }));
 var trace_flags_1 = __nccwpck_require__(6836);
 Object.defineProperty(exports, "TraceFlags", ({ enumerable: true, get: function () { return trace_flags_1.TraceFlags; } }));
@@ -41988,7 +41988,7 @@ exports.wrapSpanContext = wrapSpanContext;
 
 /***/ }),
 
-/***/ 2587:
+/***/ 4381:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -85869,7 +85869,7 @@ module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("zlib");
 
 /***/ }),
 
-/***/ 3004:
+/***/ 6693:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -85906,7 +85906,7 @@ exports.AbortError = AbortError;
 
 /***/ }),
 
-/***/ 798:
+/***/ 5964:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -85914,13 +85914,13 @@ exports.AbortError = AbortError;
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AbortError = void 0;
-var AbortError_js_1 = __nccwpck_require__(3004);
+var AbortError_js_1 = __nccwpck_require__(6693);
 Object.defineProperty(exports, "AbortError", ({ enumerable: true, get: function () { return AbortError_js_1.AbortError; } }));
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ 753:
+/***/ 8143:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -85933,7 +85933,6 @@ exports.AzureKeyCredential = void 0;
  * the underlying key value.
  */
 class AzureKeyCredential {
-    _key;
     /**
      * The value of the key to be used in authentication
      */
@@ -85969,7 +85968,7 @@ exports.AzureKeyCredential = AzureKeyCredential;
 
 /***/ }),
 
-/***/ 9602:
+/***/ 6058:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -85977,14 +85976,12 @@ exports.AzureKeyCredential = AzureKeyCredential;
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isNamedKeyCredential = exports.AzureNamedKeyCredential = void 0;
-const core_util_1 = __nccwpck_require__(1337);
+const core_util_1 = __nccwpck_require__(3302);
 /**
  * A static name/key-based credential that supports updating
  * the underlying name and key values.
  */
 class AzureNamedKeyCredential {
-    _key;
-    _name;
     /**
      * The value of the key to be used in authentication.
      */
@@ -86044,7 +86041,7 @@ exports.isNamedKeyCredential = isNamedKeyCredential;
 
 /***/ }),
 
-/***/ 5481:
+/***/ 6512:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -86052,13 +86049,12 @@ exports.isNamedKeyCredential = isNamedKeyCredential;
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isSASCredential = exports.AzureSASCredential = void 0;
-const core_util_1 = __nccwpck_require__(1337);
+const core_util_1 = __nccwpck_require__(3302);
 /**
  * A static-signature-based credential that supports updating
  * the underlying signature value.
  */
 class AzureSASCredential {
-    _signature;
     /**
      * The value of the shared access signature to be used in authentication
      */
@@ -86106,7 +86102,7 @@ exports.isSASCredential = isSASCredential;
 
 /***/ }),
 
-/***/ 5515:
+/***/ 9334:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -86114,23 +86110,23 @@ exports.isSASCredential = isSASCredential;
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isTokenCredential = exports.isSASCredential = exports.AzureSASCredential = exports.isNamedKeyCredential = exports.AzureNamedKeyCredential = exports.isKeyCredential = exports.AzureKeyCredential = void 0;
-var azureKeyCredential_js_1 = __nccwpck_require__(753);
+var azureKeyCredential_js_1 = __nccwpck_require__(8143);
 Object.defineProperty(exports, "AzureKeyCredential", ({ enumerable: true, get: function () { return azureKeyCredential_js_1.AzureKeyCredential; } }));
-var keyCredential_js_1 = __nccwpck_require__(1027);
+var keyCredential_js_1 = __nccwpck_require__(3921);
 Object.defineProperty(exports, "isKeyCredential", ({ enumerable: true, get: function () { return keyCredential_js_1.isKeyCredential; } }));
-var azureNamedKeyCredential_js_1 = __nccwpck_require__(9602);
+var azureNamedKeyCredential_js_1 = __nccwpck_require__(6058);
 Object.defineProperty(exports, "AzureNamedKeyCredential", ({ enumerable: true, get: function () { return azureNamedKeyCredential_js_1.AzureNamedKeyCredential; } }));
 Object.defineProperty(exports, "isNamedKeyCredential", ({ enumerable: true, get: function () { return azureNamedKeyCredential_js_1.isNamedKeyCredential; } }));
-var azureSASCredential_js_1 = __nccwpck_require__(5481);
+var azureSASCredential_js_1 = __nccwpck_require__(6512);
 Object.defineProperty(exports, "AzureSASCredential", ({ enumerable: true, get: function () { return azureSASCredential_js_1.AzureSASCredential; } }));
 Object.defineProperty(exports, "isSASCredential", ({ enumerable: true, get: function () { return azureSASCredential_js_1.isSASCredential; } }));
-var tokenCredential_js_1 = __nccwpck_require__(4544);
+var tokenCredential_js_1 = __nccwpck_require__(8045);
 Object.defineProperty(exports, "isTokenCredential", ({ enumerable: true, get: function () { return tokenCredential_js_1.isTokenCredential; } }));
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ 1027:
+/***/ 3921:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -86138,7 +86134,7 @@ Object.defineProperty(exports, "isTokenCredential", ({ enumerable: true, get: fu
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.isKeyCredential = void 0;
-const core_util_1 = __nccwpck_require__(1337);
+const core_util_1 = __nccwpck_require__(3302);
 /**
  * Tests an object to determine whether it implements KeyCredential.
  *
@@ -86152,7 +86148,7 @@ exports.isKeyCredential = isKeyCredential;
 
 /***/ }),
 
-/***/ 4544:
+/***/ 8045:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -86181,7 +86177,7 @@ exports.isTokenCredential = isTokenCredential;
 
 /***/ }),
 
-/***/ 4778:
+/***/ 6562:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -86189,11 +86185,11 @@ exports.isTokenCredential = isTokenCredential;
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.pollHttpOperation = exports.isOperationError = exports.getResourceLocation = exports.getOperationStatus = exports.getOperationLocation = exports.initHttpOperation = exports.getStatusFromInitialResponse = exports.getErrorFromResponse = exports.parseRetryAfter = exports.inferLroMode = void 0;
-const operation_js_1 = __nccwpck_require__(9625);
-const logger_js_1 = __nccwpck_require__(4624);
+const operation_js_1 = __nccwpck_require__(5258);
+const logger_js_1 = __nccwpck_require__(6558);
 function getOperationLocationPollingUrl(inputs) {
     const { azureAsyncOperation, operationLocation } = inputs;
-    return operationLocation ?? azureAsyncOperation;
+    return operationLocation !== null && operationLocation !== void 0 ? operationLocation : azureAsyncOperation;
 }
 function getLocationHeader(rawResponse) {
     return rawResponse.headers["location"];
@@ -86205,6 +86201,7 @@ function getAzureAsyncOperationHeader(rawResponse) {
     return rawResponse.headers["azure-asyncoperation"];
 }
 function findResourceLocation(inputs) {
+    var _a;
     const { location, requestMethod, requestPath, resourceLocationConfig } = inputs;
     switch (requestMethod) {
         case "PUT": {
@@ -86214,7 +86211,7 @@ function findResourceLocation(inputs) {
             return undefined;
         }
         case "PATCH": {
-            return getDefault() ?? requestPath;
+            return (_a = getDefault()) !== null && _a !== void 0 ? _a : requestPath;
         }
         default: {
             return getDefault();
@@ -86241,7 +86238,7 @@ function inferLroMode(inputs) {
     const azureAsyncOperation = getAzureAsyncOperationHeader(rawResponse);
     const pollingUrl = getOperationLocationPollingUrl({ operationLocation, azureAsyncOperation });
     const location = getLocationHeader(rawResponse);
-    const normalizedRequestMethod = requestMethod?.toLocaleUpperCase();
+    const normalizedRequestMethod = requestMethod === null || requestMethod === void 0 ? void 0 : requestMethod.toLocaleUpperCase();
     if (pollingUrl !== undefined) {
         return {
             mode: "OperationLocation",
@@ -86276,7 +86273,7 @@ function transformStatus(inputs) {
     if (typeof status !== "string" && status !== undefined) {
         throw new Error(`Polling was unsuccessful. Expected status to have a string value or no value but it has instead: ${status}. This doesn't necessarily indicate the operation has failed. Check your Azure subscription or resource status for more information.`);
     }
-    switch (status?.toLocaleLowerCase()) {
+    switch (status === null || status === void 0 ? void 0 : status.toLocaleLowerCase()) {
         case undefined:
             return toOperationStatus(statusCode);
         case "succeeded":
@@ -86299,12 +86296,14 @@ function transformStatus(inputs) {
     }
 }
 function getStatus(rawResponse) {
-    const { status } = rawResponse.body ?? {};
+    var _a;
+    const { status } = (_a = rawResponse.body) !== null && _a !== void 0 ? _a : {};
     return transformStatus({ status, statusCode: rawResponse.statusCode });
 }
 function getProvisioningState(rawResponse) {
-    const { properties, provisioningState } = rawResponse.body ?? {};
-    const status = properties?.provisioningState ?? provisioningState;
+    var _a, _b;
+    const { properties, provisioningState } = (_a = rawResponse.body) !== null && _a !== void 0 ? _a : {};
+    const status = (_b = properties === null || properties === void 0 ? void 0 : properties.provisioningState) !== null && _b !== void 0 ? _b : provisioningState;
     return transformStatus({ status, statusCode: rawResponse.statusCode });
 }
 function toOperationStatus(statusCode) {
@@ -86354,7 +86353,8 @@ function calculatePollingIntervalFromDate(retryAfterDate) {
 function getStatusFromInitialResponse(inputs) {
     const { response, state, operationLocation } = inputs;
     function helper() {
-        const mode = state.config.metadata?.["mode"];
+        var _a;
+        const mode = (_a = state.config.metadata) === null || _a === void 0 ? void 0 : _a["mode"];
         switch (mode) {
             case undefined:
                 return toOperationStatus(response.rawResponse.statusCode);
@@ -86382,12 +86382,7 @@ async function initHttpOperation(inputs) {
                 requestMethod: lro.requestMethod,
                 resourceLocationConfig,
             });
-            return {
-                response,
-                operationLocation: config?.operationLocation,
-                resourceLocation: config?.resourceLocation,
-                ...(config?.mode ? { metadata: { mode: config.mode } } : {}),
-            };
+            return Object.assign({ response, operationLocation: config === null || config === void 0 ? void 0 : config.operationLocation, resourceLocation: config === null || config === void 0 ? void 0 : config.resourceLocation }, ((config === null || config === void 0 ? void 0 : config.mode) ? { metadata: { mode: config.mode } } : {}));
         },
         stateProxy,
         processResult: processResult
@@ -86399,7 +86394,8 @@ async function initHttpOperation(inputs) {
 }
 exports.initHttpOperation = initHttpOperation;
 function getOperationLocation({ rawResponse }, state) {
-    const mode = state.config.metadata?.["mode"];
+    var _a;
+    const mode = (_a = state.config.metadata) === null || _a === void 0 ? void 0 : _a["mode"];
     switch (mode) {
         case "OperationLocation": {
             return getOperationLocationPollingUrl({
@@ -86418,7 +86414,8 @@ function getOperationLocation({ rawResponse }, state) {
 }
 exports.getOperationLocation = getOperationLocation;
 function getOperationStatus({ rawResponse }, state) {
-    const mode = state.config.metadata?.["mode"];
+    var _a;
+    const mode = (_a = state.config.metadata) === null || _a === void 0 ? void 0 : _a["mode"];
     switch (mode) {
         case "OperationLocation": {
             return getStatus(rawResponse);
@@ -86435,7 +86432,8 @@ function getOperationStatus({ rawResponse }, state) {
 }
 exports.getOperationStatus = getOperationStatus;
 function accessBodyProperty({ flatResponse, rawResponse }, prop) {
-    return flatResponse?.[prop] ?? rawResponse.body?.[prop];
+    var _a, _b;
+    return (_a = flatResponse === null || flatResponse === void 0 ? void 0 : flatResponse[prop]) !== null && _a !== void 0 ? _a : (_b = rawResponse.body) === null || _b === void 0 ? void 0 : _b[prop];
 }
 function getResourceLocation(res, state) {
     const loc = accessBodyProperty(res, "resourceLocation");
@@ -86480,7 +86478,7 @@ exports.pollHttpOperation = pollHttpOperation;
 
 /***/ }),
 
-/***/ 5975:
+/***/ 8969:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -86488,8 +86486,8 @@ exports.pollHttpOperation = pollHttpOperation;
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createHttpPoller = void 0;
-const operation_js_1 = __nccwpck_require__(4778);
-const poller_js_1 = __nccwpck_require__(6744);
+const operation_js_1 = __nccwpck_require__(6562);
+const poller_js_1 = __nccwpck_require__(2233);
 /**
  * Creates a poller that can be used to poll a long-running operation.
  * @param lro - Description of the long-running operation
@@ -86516,12 +86514,7 @@ async function createHttpPoller(lro, options) {
                 requestMethod: lro.requestMethod,
                 resourceLocationConfig,
             });
-            return {
-                response,
-                operationLocation: config?.operationLocation,
-                resourceLocation: config?.resourceLocation,
-                ...(config?.mode ? { metadata: { mode: config.mode } } : {}),
-            };
+            return Object.assign({ response, operationLocation: config === null || config === void 0 ? void 0 : config.operationLocation, resourceLocation: config === null || config === void 0 ? void 0 : config.resourceLocation }, ((config === null || config === void 0 ? void 0 : config.mode) ? { metadata: { mode: config.mode } } : {}));
         },
         poll: lro.sendPollRequest,
     }, {
@@ -86539,7 +86532,7 @@ exports.createHttpPoller = createHttpPoller;
 
 /***/ }),
 
-/***/ 4352:
+/***/ 2045:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -86548,7 +86541,7 @@ exports.createHttpPoller = createHttpPoller;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createHttpPoller = void 0;
 const tslib_1 = __nccwpck_require__(3134);
-var poller_js_1 = __nccwpck_require__(5975);
+var poller_js_1 = __nccwpck_require__(8969);
 Object.defineProperty(exports, "createHttpPoller", ({ enumerable: true, get: function () { return poller_js_1.createHttpPoller; } }));
 /**
  * This can be uncommented to expose the protocol-agnostic poller
@@ -86562,14 +86555,14 @@ Object.defineProperty(exports, "createHttpPoller", ({ enumerable: true, get: fun
 // } from "./poller/models";
 // export { buildCreatePoller } from "./poller/poller";
 /** legacy */
-tslib_1.__exportStar(__nccwpck_require__(4850), exports);
-tslib_1.__exportStar(__nccwpck_require__(5166), exports);
-tslib_1.__exportStar(__nccwpck_require__(4615), exports);
+tslib_1.__exportStar(__nccwpck_require__(2066), exports);
+tslib_1.__exportStar(__nccwpck_require__(7426), exports);
+tslib_1.__exportStar(__nccwpck_require__(3053), exports);
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ 4850:
+/***/ 2066:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -86577,13 +86570,13 @@ tslib_1.__exportStar(__nccwpck_require__(4615), exports);
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LroEngine = void 0;
-var lroEngine_js_1 = __nccwpck_require__(172);
+var lroEngine_js_1 = __nccwpck_require__(4279);
 Object.defineProperty(exports, "LroEngine", ({ enumerable: true, get: function () { return lroEngine_js_1.LroEngine; } }));
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ 172:
+/***/ 4279:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -86591,15 +86584,14 @@ Object.defineProperty(exports, "LroEngine", ({ enumerable: true, get: function (
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LroEngine = void 0;
-const operation_js_1 = __nccwpck_require__(1719);
-const constants_js_1 = __nccwpck_require__(4347);
-const poller_js_1 = __nccwpck_require__(5166);
-const operation_js_2 = __nccwpck_require__(9625);
+const operation_js_1 = __nccwpck_require__(9418);
+const constants_js_1 = __nccwpck_require__(474);
+const poller_js_1 = __nccwpck_require__(7426);
+const operation_js_2 = __nccwpck_require__(5258);
 /**
  * The LRO Engine, a class that performs polling.
  */
 class LroEngine extends poller_js_1.Poller {
-    config;
     constructor(lro, options) {
         const { intervalInMs = constants_js_1.POLL_INTERVAL_IN_MS, resumeFrom, resolveOnUnsuccessful = false, isDone, lroResourceLocationConfig, processResult, updateState, } = options || {};
         const state = resumeFrom
@@ -86623,7 +86615,7 @@ exports.LroEngine = LroEngine;
 
 /***/ }),
 
-/***/ 1719:
+/***/ 9418:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -86631,8 +86623,8 @@ exports.LroEngine = LroEngine;
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GenericPollOperation = void 0;
-const operation_js_1 = __nccwpck_require__(4778);
-const logger_js_1 = __nccwpck_require__(4624);
+const operation_js_1 = __nccwpck_require__(6562);
+const logger_js_1 = __nccwpck_require__(6558);
 const createStateProxy = () => ({
     initState: (config) => ({ config, isStarted: true }),
     setCanceled: (state) => (state.isCancelled = true),
@@ -86651,14 +86643,6 @@ const createStateProxy = () => ({
     isSucceeded: (state) => Boolean(state.isCompleted && !state.isCancelled && !state.error),
 });
 class GenericPollOperation {
-    state;
-    lro;
-    setErrorAsResult;
-    lroResourceLocationConfig;
-    processResult;
-    updateState;
-    isDone;
-    pollerConfig;
     constructor(state, lro, setErrorAsResult, lroResourceLocationConfig, processResult, updateState, isDone) {
         this.state = state;
         this.lro = lro;
@@ -86672,18 +86656,16 @@ class GenericPollOperation {
         this.pollerConfig = pollerConfig;
     }
     async update(options) {
+        var _a;
         const stateProxy = createStateProxy();
         if (!this.state.isStarted) {
-            this.state = {
-                ...this.state,
-                ...(await (0, operation_js_1.initHttpOperation)({
-                    lro: this.lro,
-                    stateProxy,
-                    resourceLocationConfig: this.lroResourceLocationConfig,
-                    processResult: this.processResult,
-                    setErrorAsResult: this.setErrorAsResult,
-                })),
-            };
+            this.state = Object.assign(Object.assign({}, this.state), (await (0, operation_js_1.initHttpOperation)({
+                lro: this.lro,
+                stateProxy,
+                resourceLocationConfig: this.lroResourceLocationConfig,
+                processResult: this.processResult,
+                setErrorAsResult: this.setErrorAsResult,
+            })));
         }
         const updateState = this.updateState;
         const isDone = this.isDone;
@@ -86706,7 +86688,7 @@ class GenericPollOperation {
                 setErrorAsResult: this.setErrorAsResult,
             });
         }
-        options?.fireProgress?.(this.state);
+        (_a = options === null || options === void 0 ? void 0 : options.fireProgress) === null || _a === void 0 ? void 0 : _a.call(options, this.state);
         return this;
     }
     async cancel() {
@@ -86727,7 +86709,7 @@ exports.GenericPollOperation = GenericPollOperation;
 
 /***/ }),
 
-/***/ 4615:
+/***/ 3053:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -86738,7 +86720,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 /***/ }),
 
-/***/ 5166:
+/***/ 7426:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -86833,20 +86815,6 @@ exports.PollerCancelledError = PollerCancelledError;
  */
 // eslint-disable-next-line no-use-before-define
 class Poller {
-    /** controls whether to throw an error if the operation failed or was canceled. */
-    resolveOnUnsuccessful = false;
-    stopped = true;
-    resolve;
-    reject;
-    pollOncePromise;
-    cancelPromise;
-    promise;
-    pollProgressCallbacks = [];
-    /**
-     * The poller's operation is available in full to any of the methods of the Poller class
-     * and any class extending the Poller class.
-     */
-    operation;
     /**
      * A poller needs to be initialized by passing in at least the basic properties of the `PollOperation<TState, TResult>`.
      *
@@ -86913,6 +86881,10 @@ class Poller {
      * @param operation - Must contain the basic properties of `PollOperation<State, TResult>`.
      */
     constructor(operation) {
+        /** controls whether to throw an error if the operation failed or was canceled. */
+        this.resolveOnUnsuccessful = false;
+        this.stopped = true;
+        this.pollProgressCallbacks = [];
         this.operation = operation;
         this.promise = new Promise((resolve, reject) => {
             this.resolve = resolve;
@@ -87157,7 +87129,7 @@ exports.Poller = Poller;
 
 /***/ }),
 
-/***/ 4624:
+/***/ 6558:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -87165,7 +87137,7 @@ exports.Poller = Poller;
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.logger = void 0;
-const logger_1 = __nccwpck_require__(1446);
+const logger_1 = __nccwpck_require__(2587);
 /**
  * The `@azure/logger` configuration for this package.
  * @internal
@@ -87175,7 +87147,7 @@ exports.logger = (0, logger_1.createClientLogger)("core-lro");
 
 /***/ }),
 
-/***/ 4347:
+/***/ 474:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -87195,7 +87167,7 @@ exports.terminalStates = ["succeeded", "canceled", "failed"];
 
 /***/ }),
 
-/***/ 9625:
+/***/ 5258:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -87203,8 +87175,8 @@ exports.terminalStates = ["succeeded", "canceled", "failed"];
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.pollOperation = exports.initOperation = exports.deserializeState = void 0;
-const logger_js_1 = __nccwpck_require__(4624);
-const constants_js_1 = __nccwpck_require__(4347);
+const logger_js_1 = __nccwpck_require__(6558);
+const constants_js_1 = __nccwpck_require__(474);
 /**
  * Deserializes the state
  */
@@ -87256,7 +87228,7 @@ function processOperationStatus(result) {
             break;
         }
         case "failed": {
-            const err = getError?.(response);
+            const err = getError === null || getError === void 0 ? void 0 : getError(response);
             let postfix = "";
             if (err) {
                 const { code, message } = simplifyError(err);
@@ -87273,7 +87245,7 @@ function processOperationStatus(result) {
             break;
         }
     }
-    if (isDone?.(response, state) ||
+    if ((isDone === null || isDone === void 0 ? void 0 : isDone(response, state)) ||
         (isDone === undefined &&
             ["succeeded", "canceled"].concat(setErrorAsResult ? [] : ["failed"]).includes(status))) {
         stateProxy.setResult(state, buildResult({
@@ -87294,7 +87266,7 @@ async function initOperation(inputs) {
     const { init, stateProxy, processResult, getOperationStatus, withOperationLocation, setErrorAsResult, } = inputs;
     const { operationLocation, resourceLocation, metadata, response } = await init();
     if (operationLocation)
-        withOperationLocation?.(operationLocation, false);
+        withOperationLocation === null || withOperationLocation === void 0 ? void 0 : withOperationLocation(operationLocation, false);
     const config = {
         metadata,
         operationLocation,
@@ -87353,19 +87325,19 @@ async function pollOperation(inputs) {
             setErrorAsResult,
         });
         if (!constants_js_1.terminalStates.includes(status)) {
-            const intervalInMs = getPollingInterval?.(response);
+            const intervalInMs = getPollingInterval === null || getPollingInterval === void 0 ? void 0 : getPollingInterval(response);
             if (intervalInMs)
                 setDelay(intervalInMs);
-            const location = getOperationLocation?.(response, state);
+            const location = getOperationLocation === null || getOperationLocation === void 0 ? void 0 : getOperationLocation(response, state);
             if (location !== undefined) {
                 const isUpdated = operationLocation !== location;
                 state.config.operationLocation = location;
-                withOperationLocation?.(location, isUpdated);
+                withOperationLocation === null || withOperationLocation === void 0 ? void 0 : withOperationLocation(location, isUpdated);
             }
             else
-                withOperationLocation?.(operationLocation, false);
+                withOperationLocation === null || withOperationLocation === void 0 ? void 0 : withOperationLocation(operationLocation, false);
         }
-        updateState?.(state, response);
+        updateState === null || updateState === void 0 ? void 0 : updateState(state, response);
     }
 }
 exports.pollOperation = pollOperation;
@@ -87373,7 +87345,7 @@ exports.pollOperation = pollOperation;
 
 /***/ }),
 
-/***/ 6744:
+/***/ 2233:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -87381,9 +87353,9 @@ exports.pollOperation = pollOperation;
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.buildCreatePoller = void 0;
-const operation_js_1 = __nccwpck_require__(9625);
-const constants_js_1 = __nccwpck_require__(4347);
-const core_util_1 = __nccwpck_require__(1337);
+const operation_js_1 = __nccwpck_require__(5258);
+const constants_js_1 = __nccwpck_require__(474);
+const core_util_1 = __nccwpck_require__(3302);
 const createStateProxy = () => ({
     /**
      * The state at this point is created to be of type OperationState<TResult>.
@@ -87456,18 +87428,18 @@ function buildCreatePoller(inputs) {
                 handlers.set(s, callback);
                 return () => handlers.delete(s);
             },
-            pollUntilDone: (pollOptions) => (resultPromise ??= (async () => {
+            pollUntilDone: (pollOptions) => (resultPromise !== null && resultPromise !== void 0 ? resultPromise : (resultPromise = (async () => {
                 const { abortSignal: inputAbortSignal } = pollOptions || {};
                 // In the future we can use AbortSignal.any() instead
                 function abortListener() {
                     abortController.abort();
                 }
                 const abortSignal = abortController.signal;
-                if (inputAbortSignal?.aborted) {
+                if (inputAbortSignal === null || inputAbortSignal === void 0 ? void 0 : inputAbortSignal.aborted) {
                     abortController.abort();
                 }
                 else if (!abortSignal.aborted) {
-                    inputAbortSignal?.addEventListener("abort", abortListener, { once: true });
+                    inputAbortSignal === null || inputAbortSignal === void 0 ? void 0 : inputAbortSignal.addEventListener("abort", abortListener, { once: true });
                 }
                 try {
                     if (!poller.isDone()) {
@@ -87479,7 +87451,7 @@ function buildCreatePoller(inputs) {
                     }
                 }
                 finally {
-                    inputAbortSignal?.removeEventListener("abort", abortListener);
+                    inputAbortSignal === null || inputAbortSignal === void 0 ? void 0 : inputAbortSignal.removeEventListener("abort", abortListener);
                 }
                 if (resolveOnUnsuccessful) {
                     return poller.getResult();
@@ -87499,7 +87471,7 @@ function buildCreatePoller(inputs) {
                 }
             })().finally(() => {
                 resultPromise = undefined;
-            })),
+            }))),
             async poll(pollOptions) {
                 if (resolveOnUnsuccessful) {
                     if (poller.isDone())
@@ -87553,14 +87525,15 @@ exports.buildCreatePoller = buildCreatePoller;
 
 /***/ }),
 
-/***/ 330:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ 2766:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getPagedAsyncIterator = void 0;
+const tslib_1 = __nccwpck_require__(3134);
 /**
  * returns an async iterator that iterates over results. It also has a `byPage`
  * method that returns pages of items at once.
@@ -87569,6 +87542,7 @@ exports.getPagedAsyncIterator = void 0;
  * @returns a paged async iterator that iterates over results.
  */
 function getPagedAsyncIterator(pagedResult) {
+    var _a;
     const iter = getItemAsyncIterator(pagedResult);
     return {
         next() {
@@ -87577,65 +87551,93 @@ function getPagedAsyncIterator(pagedResult) {
         [Symbol.asyncIterator]() {
             return this;
         },
-        byPage: pagedResult?.byPage ??
-            ((settings) => {
-                const { continuationToken, maxPageSize } = settings ?? {};
-                return getPageAsyncIterator(pagedResult, {
-                    pageLink: continuationToken,
-                    maxPageSize,
-                });
-            }),
+        byPage: (_a = pagedResult === null || pagedResult === void 0 ? void 0 : pagedResult.byPage) !== null && _a !== void 0 ? _a : ((settings) => {
+            const { continuationToken, maxPageSize } = settings !== null && settings !== void 0 ? settings : {};
+            return getPageAsyncIterator(pagedResult, {
+                pageLink: continuationToken,
+                maxPageSize,
+            });
+        }),
     };
 }
 exports.getPagedAsyncIterator = getPagedAsyncIterator;
-async function* getItemAsyncIterator(pagedResult) {
-    const pages = getPageAsyncIterator(pagedResult);
-    const firstVal = await pages.next();
-    // if the result does not have an array shape, i.e. TPage = TElement, then we return it as is
-    if (!Array.isArray(firstVal.value)) {
-        // can extract elements from this page
-        const { toElements } = pagedResult;
-        if (toElements) {
-            yield* toElements(firstVal.value);
-            for await (const page of pages) {
-                yield* toElements(page);
+function getItemAsyncIterator(pagedResult) {
+    return tslib_1.__asyncGenerator(this, arguments, function* getItemAsyncIterator_1() {
+        var _a, e_1, _b, _c, _d, e_2, _e, _f;
+        const pages = getPageAsyncIterator(pagedResult);
+        const firstVal = yield tslib_1.__await(pages.next());
+        // if the result does not have an array shape, i.e. TPage = TElement, then we return it as is
+        if (!Array.isArray(firstVal.value)) {
+            // can extract elements from this page
+            const { toElements } = pagedResult;
+            if (toElements) {
+                yield tslib_1.__await(yield* tslib_1.__asyncDelegator(tslib_1.__asyncValues(toElements(firstVal.value))));
+                try {
+                    for (var _g = true, pages_1 = tslib_1.__asyncValues(pages), pages_1_1; pages_1_1 = yield tslib_1.__await(pages_1.next()), _a = pages_1_1.done, !_a; _g = true) {
+                        _c = pages_1_1.value;
+                        _g = false;
+                        const page = _c;
+                        yield tslib_1.__await(yield* tslib_1.__asyncDelegator(tslib_1.__asyncValues(toElements(page))));
+                    }
+                }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (!_g && !_a && (_b = pages_1.return)) yield tslib_1.__await(_b.call(pages_1));
+                    }
+                    finally { if (e_1) throw e_1.error; }
+                }
+            }
+            else {
+                yield yield tslib_1.__await(firstVal.value);
+                // `pages` is of type `AsyncIterableIterator<TPage>` but TPage = TElement in this case
+                yield tslib_1.__await(yield* tslib_1.__asyncDelegator(tslib_1.__asyncValues(pages)));
             }
         }
         else {
-            yield firstVal.value;
-            // `pages` is of type `AsyncIterableIterator<TPage>` but TPage = TElement in this case
-            yield* pages;
+            yield tslib_1.__await(yield* tslib_1.__asyncDelegator(tslib_1.__asyncValues(firstVal.value)));
+            try {
+                for (var _h = true, pages_2 = tslib_1.__asyncValues(pages), pages_2_1; pages_2_1 = yield tslib_1.__await(pages_2.next()), _d = pages_2_1.done, !_d; _h = true) {
+                    _f = pages_2_1.value;
+                    _h = false;
+                    const page = _f;
+                    // pages is of type `AsyncIterableIterator<TPage>` so `page` is of type `TPage`. In this branch,
+                    // it must be the case that `TPage = TElement[]`
+                    yield tslib_1.__await(yield* tslib_1.__asyncDelegator(tslib_1.__asyncValues(page)));
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (!_h && !_d && (_e = pages_2.return)) yield tslib_1.__await(_e.call(pages_2));
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
         }
-    }
-    else {
-        yield* firstVal.value;
-        for await (const page of pages) {
-            // pages is of type `AsyncIterableIterator<TPage>` so `page` is of type `TPage`. In this branch,
-            // it must be the case that `TPage = TElement[]`
-            yield* page;
-        }
-    }
+    });
 }
-async function* getPageAsyncIterator(pagedResult, options = {}) {
-    const { pageLink, maxPageSize } = options;
-    let response = await pagedResult.getPage(pageLink ?? pagedResult.firstPageLink, maxPageSize);
-    if (!response) {
-        return;
-    }
-    yield response.page;
-    while (response.nextPageLink) {
-        response = await pagedResult.getPage(response.nextPageLink, maxPageSize);
+function getPageAsyncIterator(pagedResult, options = {}) {
+    return tslib_1.__asyncGenerator(this, arguments, function* getPageAsyncIterator_1() {
+        const { pageLink, maxPageSize } = options;
+        let response = yield tslib_1.__await(pagedResult.getPage(pageLink !== null && pageLink !== void 0 ? pageLink : pagedResult.firstPageLink, maxPageSize));
         if (!response) {
-            return;
+            return yield tslib_1.__await(void 0);
         }
-        yield response.page;
-    }
+        yield yield tslib_1.__await(response.page);
+        while (response.nextPageLink) {
+            response = yield tslib_1.__await(pagedResult.getPage(response.nextPageLink, maxPageSize));
+            if (!response) {
+                return yield tslib_1.__await(void 0);
+            }
+            yield yield tslib_1.__await(response.page);
+        }
+    });
 }
 //# sourceMappingURL=getPagedAsyncIterator.js.map
 
 /***/ }),
 
-/***/ 9126:
+/***/ 1181:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -87643,13 +87645,13 @@ async function* getPageAsyncIterator(pagedResult, options = {}) {
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const tslib_1 = __nccwpck_require__(3134);
-tslib_1.__exportStar(__nccwpck_require__(9157), exports);
-tslib_1.__exportStar(__nccwpck_require__(330), exports);
+tslib_1.__exportStar(__nccwpck_require__(7483), exports);
+tslib_1.__exportStar(__nccwpck_require__(2766), exports);
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ 9157:
+/***/ 7483:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -87660,7 +87662,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 /***/ }),
 
-/***/ 3398:
+/***/ 621:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -87672,17 +87674,18 @@ exports.cancelablePromiseRace = void 0;
  * promise.race() wrapper that aborts rest of promises as soon as the first promise settles.
  */
 async function cancelablePromiseRace(abortablePromiseBuilders, options) {
+    var _a, _b;
     const aborter = new AbortController();
     function abortHandler() {
         aborter.abort();
     }
-    options?.abortSignal?.addEventListener("abort", abortHandler);
+    (_a = options === null || options === void 0 ? void 0 : options.abortSignal) === null || _a === void 0 ? void 0 : _a.addEventListener("abort", abortHandler);
     try {
         return await Promise.race(abortablePromiseBuilders.map((p) => p({ abortSignal: aborter.signal })));
     }
     finally {
         aborter.abort();
-        options?.abortSignal?.removeEventListener("abort", abortHandler);
+        (_b = options === null || options === void 0 ? void 0 : options.abortSignal) === null || _b === void 0 ? void 0 : _b.removeEventListener("abort", abortHandler);
     }
 }
 exports.cancelablePromiseRace = cancelablePromiseRace;
@@ -87690,7 +87693,7 @@ exports.cancelablePromiseRace = cancelablePromiseRace;
 
 /***/ }),
 
-/***/ 651:
+/***/ 4407:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -87722,14 +87725,15 @@ exports.stringToUint8Array = stringToUint8Array;
 
 /***/ }),
 
-/***/ 1574:
+/***/ 7657:
 /***/ ((__unused_webpack_module, exports) => {
 
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isReactNative = exports.isNode = exports.isBun = exports.isDeno = exports.isWebWorker = exports.isBrowser = void 0;
+exports.isReactNative = exports.isNodeRuntime = exports.isNode = exports.isNodeLike = exports.isBun = exports.isDeno = exports.isWebWorker = exports.isBrowser = void 0;
 /**
  * A constant that indicates whether the environment the code is running is a Web Browser.
  */
@@ -87739,10 +87743,10 @@ exports.isBrowser = typeof window !== "undefined" && typeof window.document !== 
  * A constant that indicates whether the environment the code is running is a Web Worker.
  */
 exports.isWebWorker = typeof self === "object" &&
-    typeof self?.importScripts === "function" &&
-    (self.constructor?.name === "DedicatedWorkerGlobalScope" ||
-        self.constructor?.name === "ServiceWorkerGlobalScope" ||
-        self.constructor?.name === "SharedWorkerGlobalScope");
+    typeof (self === null || self === void 0 ? void 0 : self.importScripts) === "function" &&
+    (((_a = self.constructor) === null || _a === void 0 ? void 0 : _a.name) === "DedicatedWorkerGlobalScope" ||
+        ((_b = self.constructor) === null || _b === void 0 ? void 0 : _b.name) === "ServiceWorkerGlobalScope" ||
+        ((_c = self.constructor) === null || _c === void 0 ? void 0 : _c.name) === "SharedWorkerGlobalScope");
 /**
  * A constant that indicates whether the environment the code is running is Deno.
  */
@@ -87754,24 +87758,30 @@ exports.isDeno = typeof Deno !== "undefined" &&
  */
 exports.isBun = typeof Bun !== "undefined" && typeof Bun.version !== "undefined";
 /**
+ * A constant that indicates whether the environment the code is running is a Node.js compatible environment.
+ */
+exports.isNodeLike = typeof globalThis.process !== "undefined" &&
+    Boolean(globalThis.process.version) &&
+    Boolean((_d = globalThis.process.versions) === null || _d === void 0 ? void 0 : _d.node);
+/**
+ * A constant that indicates whether the environment the code is running is a Node.js compatible environment.
+ * @deprecated Use `isNodeLike` instead.
+ */
+exports.isNode = exports.isNodeLike;
+/**
  * A constant that indicates whether the environment the code is running is Node.JS.
  */
-exports.isNode = typeof globalThis.process !== "undefined" &&
-    Boolean(globalThis.process.version) &&
-    Boolean(globalThis.process.versions?.node) &&
-    // Deno thought it was a good idea to spoof process.versions.node, see https://deno.land/std@0.177.0/node/process.ts?s=versions
-    !exports.isDeno &&
-    !exports.isBun;
+exports.isNodeRuntime = exports.isNodeLike && !exports.isBun && !exports.isDeno;
 /**
  * A constant that indicates whether the environment the code is running is in React-Native.
  */
 // https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Core/setUpNavigator.js
-exports.isReactNative = typeof navigator !== "undefined" && navigator?.product === "ReactNative";
+exports.isReactNative = typeof navigator !== "undefined" && (navigator === null || navigator === void 0 ? void 0 : navigator.product) === "ReactNative";
 //# sourceMappingURL=checkEnvironment.js.map
 
 /***/ }),
 
-/***/ 103:
+/***/ 4028:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -87779,7 +87789,7 @@ exports.isReactNative = typeof navigator !== "undefined" && navigator?.product =
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createAbortablePromise = void 0;
-const abort_controller_1 = __nccwpck_require__(798);
+const abort_controller_1 = __nccwpck_require__(5964);
 /**
  * Creates an abortable promise.
  * @param buildPromise - A function that takes the resolve and reject functions as parameters.
@@ -87787,20 +87797,20 @@ const abort_controller_1 = __nccwpck_require__(798);
  * @returns A promise that can be aborted.
  */
 function createAbortablePromise(buildPromise, options) {
-    const { cleanupBeforeAbort, abortSignal, abortErrorMsg } = options ?? {};
+    const { cleanupBeforeAbort, abortSignal, abortErrorMsg } = options !== null && options !== void 0 ? options : {};
     return new Promise((resolve, reject) => {
         function rejectOnAbort() {
-            reject(new abort_controller_1.AbortError(abortErrorMsg ?? "The operation was aborted."));
+            reject(new abort_controller_1.AbortError(abortErrorMsg !== null && abortErrorMsg !== void 0 ? abortErrorMsg : "The operation was aborted."));
         }
         function removeListeners() {
-            abortSignal?.removeEventListener("abort", onAbort);
+            abortSignal === null || abortSignal === void 0 ? void 0 : abortSignal.removeEventListener("abort", onAbort);
         }
         function onAbort() {
-            cleanupBeforeAbort?.();
+            cleanupBeforeAbort === null || cleanupBeforeAbort === void 0 ? void 0 : cleanupBeforeAbort();
             removeListeners();
             rejectOnAbort();
         }
-        if (abortSignal?.aborted) {
+        if (abortSignal === null || abortSignal === void 0 ? void 0 : abortSignal.aborted) {
             return rejectOnAbort();
         }
         try {
@@ -87815,7 +87825,7 @@ function createAbortablePromise(buildPromise, options) {
         catch (err) {
             reject(err);
         }
-        abortSignal?.addEventListener("abort", onAbort);
+        abortSignal === null || abortSignal === void 0 ? void 0 : abortSignal.addEventListener("abort", onAbort);
     });
 }
 exports.createAbortablePromise = createAbortablePromise;
@@ -87823,7 +87833,7 @@ exports.createAbortablePromise = createAbortablePromise;
 
 /***/ }),
 
-/***/ 7023:
+/***/ 1895:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -87831,7 +87841,7 @@ exports.createAbortablePromise = createAbortablePromise;
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.delay = void 0;
-const createAbortablePromise_js_1 = __nccwpck_require__(103);
+const createAbortablePromise_js_1 = __nccwpck_require__(4028);
 const StandardAbortMessage = "The delay was aborted.";
 /**
  * A wrapper for setTimeout that resolves a promise after timeInMs milliseconds.
@@ -87841,13 +87851,13 @@ const StandardAbortMessage = "The delay was aborted.";
  */
 function delay(timeInMs, options) {
     let token;
-    const { abortSignal, abortErrorMsg } = options ?? {};
+    const { abortSignal, abortErrorMsg } = options !== null && options !== void 0 ? options : {};
     return (0, createAbortablePromise_js_1.createAbortablePromise)((resolve) => {
         token = setTimeout(resolve, timeInMs);
     }, {
         cleanupBeforeAbort: () => clearTimeout(token),
         abortSignal,
-        abortErrorMsg: abortErrorMsg ?? StandardAbortMessage,
+        abortErrorMsg: abortErrorMsg !== null && abortErrorMsg !== void 0 ? abortErrorMsg : StandardAbortMessage,
     });
 }
 exports.delay = delay;
@@ -87855,7 +87865,7 @@ exports.delay = delay;
 
 /***/ }),
 
-/***/ 1870:
+/***/ 1562:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -87863,7 +87873,7 @@ exports.delay = delay;
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getErrorMessage = exports.isError = void 0;
-const object_js_1 = __nccwpck_require__(8446);
+const object_js_1 = __nccwpck_require__(565);
 /**
  * Typeguard for an error object shape (has name and message)
  * @param e - Something caught by a catch clause.
@@ -87908,51 +87918,53 @@ exports.getErrorMessage = getErrorMessage;
 
 /***/ }),
 
-/***/ 1337:
+/***/ 3302:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.stringToUint8Array = exports.uint8ArrayToString = exports.isWebWorker = exports.isReactNative = exports.isDeno = exports.isNode = exports.isBun = exports.isBrowser = exports.randomUUID = exports.objectHasProperty = exports.isObjectWithProperties = exports.isDefined = exports.computeSha256Hmac = exports.computeSha256Hash = exports.getErrorMessage = exports.isError = exports.isObject = exports.getRandomIntegerInclusive = exports.createAbortablePromise = exports.cancelablePromiseRace = exports.delay = void 0;
-var delay_js_1 = __nccwpck_require__(7023);
+exports.stringToUint8Array = exports.uint8ArrayToString = exports.isWebWorker = exports.isReactNative = exports.isDeno = exports.isNodeRuntime = exports.isNodeLike = exports.isNode = exports.isBun = exports.isBrowser = exports.randomUUID = exports.objectHasProperty = exports.isObjectWithProperties = exports.isDefined = exports.computeSha256Hmac = exports.computeSha256Hash = exports.getErrorMessage = exports.isError = exports.isObject = exports.getRandomIntegerInclusive = exports.createAbortablePromise = exports.cancelablePromiseRace = exports.delay = void 0;
+var delay_js_1 = __nccwpck_require__(1895);
 Object.defineProperty(exports, "delay", ({ enumerable: true, get: function () { return delay_js_1.delay; } }));
-var aborterUtils_js_1 = __nccwpck_require__(3398);
+var aborterUtils_js_1 = __nccwpck_require__(621);
 Object.defineProperty(exports, "cancelablePromiseRace", ({ enumerable: true, get: function () { return aborterUtils_js_1.cancelablePromiseRace; } }));
-var createAbortablePromise_js_1 = __nccwpck_require__(103);
+var createAbortablePromise_js_1 = __nccwpck_require__(4028);
 Object.defineProperty(exports, "createAbortablePromise", ({ enumerable: true, get: function () { return createAbortablePromise_js_1.createAbortablePromise; } }));
-var random_js_1 = __nccwpck_require__(3248);
+var random_js_1 = __nccwpck_require__(6265);
 Object.defineProperty(exports, "getRandomIntegerInclusive", ({ enumerable: true, get: function () { return random_js_1.getRandomIntegerInclusive; } }));
-var object_js_1 = __nccwpck_require__(8446);
+var object_js_1 = __nccwpck_require__(565);
 Object.defineProperty(exports, "isObject", ({ enumerable: true, get: function () { return object_js_1.isObject; } }));
-var error_js_1 = __nccwpck_require__(1870);
+var error_js_1 = __nccwpck_require__(1562);
 Object.defineProperty(exports, "isError", ({ enumerable: true, get: function () { return error_js_1.isError; } }));
 Object.defineProperty(exports, "getErrorMessage", ({ enumerable: true, get: function () { return error_js_1.getErrorMessage; } }));
-var sha256_js_1 = __nccwpck_require__(3346);
+var sha256_js_1 = __nccwpck_require__(6261);
 Object.defineProperty(exports, "computeSha256Hash", ({ enumerable: true, get: function () { return sha256_js_1.computeSha256Hash; } }));
 Object.defineProperty(exports, "computeSha256Hmac", ({ enumerable: true, get: function () { return sha256_js_1.computeSha256Hmac; } }));
-var typeGuards_js_1 = __nccwpck_require__(1007);
+var typeGuards_js_1 = __nccwpck_require__(4609);
 Object.defineProperty(exports, "isDefined", ({ enumerable: true, get: function () { return typeGuards_js_1.isDefined; } }));
 Object.defineProperty(exports, "isObjectWithProperties", ({ enumerable: true, get: function () { return typeGuards_js_1.isObjectWithProperties; } }));
 Object.defineProperty(exports, "objectHasProperty", ({ enumerable: true, get: function () { return typeGuards_js_1.objectHasProperty; } }));
-var uuidUtils_js_1 = __nccwpck_require__(9692);
+var uuidUtils_js_1 = __nccwpck_require__(8962);
 Object.defineProperty(exports, "randomUUID", ({ enumerable: true, get: function () { return uuidUtils_js_1.randomUUID; } }));
-var checkEnvironment_js_1 = __nccwpck_require__(1574);
+var checkEnvironment_js_1 = __nccwpck_require__(7657);
 Object.defineProperty(exports, "isBrowser", ({ enumerable: true, get: function () { return checkEnvironment_js_1.isBrowser; } }));
 Object.defineProperty(exports, "isBun", ({ enumerable: true, get: function () { return checkEnvironment_js_1.isBun; } }));
 Object.defineProperty(exports, "isNode", ({ enumerable: true, get: function () { return checkEnvironment_js_1.isNode; } }));
+Object.defineProperty(exports, "isNodeLike", ({ enumerable: true, get: function () { return checkEnvironment_js_1.isNodeLike; } }));
+Object.defineProperty(exports, "isNodeRuntime", ({ enumerable: true, get: function () { return checkEnvironment_js_1.isNodeRuntime; } }));
 Object.defineProperty(exports, "isDeno", ({ enumerable: true, get: function () { return checkEnvironment_js_1.isDeno; } }));
 Object.defineProperty(exports, "isReactNative", ({ enumerable: true, get: function () { return checkEnvironment_js_1.isReactNative; } }));
 Object.defineProperty(exports, "isWebWorker", ({ enumerable: true, get: function () { return checkEnvironment_js_1.isWebWorker; } }));
-var bytesEncoding_js_1 = __nccwpck_require__(651);
+var bytesEncoding_js_1 = __nccwpck_require__(4407);
 Object.defineProperty(exports, "uint8ArrayToString", ({ enumerable: true, get: function () { return bytesEncoding_js_1.uint8ArrayToString; } }));
 Object.defineProperty(exports, "stringToUint8Array", ({ enumerable: true, get: function () { return bytesEncoding_js_1.stringToUint8Array; } }));
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ 8446:
+/***/ 565:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -87976,7 +87988,7 @@ exports.isObject = isObject;
 
 /***/ }),
 
-/***/ 3248:
+/***/ 6265:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -88007,7 +88019,7 @@ exports.getRandomIntegerInclusive = getRandomIntegerInclusive;
 
 /***/ }),
 
-/***/ 3346:
+/***/ 6261:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -88040,7 +88052,7 @@ exports.computeSha256Hash = computeSha256Hash;
 
 /***/ }),
 
-/***/ 1007:
+/***/ 4609:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -88086,17 +88098,18 @@ exports.objectHasProperty = objectHasProperty;
 
 /***/ }),
 
-/***/ 9692:
+/***/ 8962:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.randomUUID = void 0;
 const crypto_1 = __nccwpck_require__(6113);
 // NOTE: This is a workaround until we can use `globalThis.crypto.randomUUID` in Node.js 19+.
-const uuidFunction = typeof globalThis?.crypto?.randomUUID === "function"
+const uuidFunction = typeof ((_a = globalThis === null || globalThis === void 0 ? void 0 : globalThis.crypto) === null || _a === void 0 ? void 0 : _a.randomUUID) === "function"
     ? globalThis.crypto.randomUUID.bind(globalThis.crypto)
     : crypto_1.randomUUID;
 /**
@@ -88112,14 +88125,14 @@ exports.randomUUID = randomUUID;
 
 /***/ }),
 
-/***/ 6696:
+/***/ 8713:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const log_js_1 = __nccwpck_require__(8364);
+const log_js_1 = __nccwpck_require__(9626);
 const debugEnvVariable = (typeof process !== "undefined" && process.env && process.env.DEBUG) || undefined;
 let enabledString;
 let enabledNamespaces = [];
@@ -88213,7 +88226,7 @@ exports["default"] = debugObj;
 
 /***/ }),
 
-/***/ 1446:
+/***/ 2587:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -88222,7 +88235,7 @@ exports["default"] = debugObj;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createClientLogger = exports.getLogLevel = exports.setLogLevel = exports.AzureLogger = void 0;
 const tslib_1 = __nccwpck_require__(3134);
-const debug_js_1 = tslib_1.__importDefault(__nccwpck_require__(6696));
+const debug_js_1 = tslib_1.__importDefault(__nccwpck_require__(8713));
 const registeredLoggers = new Set();
 const logLevelFromEnv = (typeof process !== "undefined" && process.env && process.env.AZURE_LOG_LEVEL) || undefined;
 let azureLogLevel;
@@ -88324,7 +88337,7 @@ function isAzureLogLevel(logLevel) {
 
 /***/ }),
 
-/***/ 8364:
+/***/ 9626:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 
@@ -90074,7 +90087,7 @@ function firstString() {
 var external_path_ = __nccwpck_require__(1017);
 ;// CONCATENATED MODULE: external "node:crypto"
 const external_node_crypto_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:crypto");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@08afc332a1bfc634fea88bacafcbfddac665a1ac_blm5tzusrdrp3cjmzbybzkbs5y/node_modules/detsys-ts/dist/correlation.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@e23e47b776fb2564040f797900fbd375a257b485_ssaajea7r2te23tesiexfyoyei/node_modules/detsys-ts/dist/correlation.js
 
 
 function identify(projectName) {
@@ -90143,9 +90156,9 @@ function hashEnvironmentVariables(prefix, variables) {
     return `${prefix}-${hash.digest("hex")}`;
 }
 
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@08afc332a1bfc634fea88bacafcbfddac665a1ac_blm5tzusrdrp3cjmzbybzkbs5y/node_modules/detsys-ts/dist/package.json
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@e23e47b776fb2564040f797900fbd375a257b485_ssaajea7r2te23tesiexfyoyei/node_modules/detsys-ts/dist/package.json
 const package_namespaceObject = {"i8":"1.0.0"};
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@08afc332a1bfc634fea88bacafcbfddac665a1ac_blm5tzusrdrp3cjmzbybzkbs5y/node_modules/detsys-ts/dist/platform.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@e23e47b776fb2564040f797900fbd375a257b485_ssaajea7r2te23tesiexfyoyei/node_modules/detsys-ts/dist/platform.js
 
 function getArchOs() {
     const envArch = process.env.RUNNER_ARCH;
@@ -90175,7 +90188,7 @@ function getNixPlatform(archOs) {
     }
 }
 
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@08afc332a1bfc634fea88bacafcbfddac665a1ac_blm5tzusrdrp3cjmzbybzkbs5y/node_modules/detsys-ts/dist/sourcedef.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@e23e47b776fb2564040f797900fbd375a257b485_ssaajea7r2te23tesiexfyoyei/node_modules/detsys-ts/dist/sourcedef.js
 
 function constructSourceParameters(legacyPrefix) {
     const noisilyGetInput = (suffix) => {
@@ -97186,7 +97199,7 @@ const validate = uuid_dist/* validate */.Gu;
 const stringify = uuid_dist/* stringify */.Pz;
 const parse = uuid_dist/* parse */.Qc;
 
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@08afc332a1bfc634fea88bacafcbfddac665a1ac_blm5tzusrdrp3cjmzbybzkbs5y/node_modules/detsys-ts/dist/main.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@e23e47b776fb2564040f797900fbd375a257b485_ssaajea7r2te23tesiexfyoyei/node_modules/detsys-ts/dist/main.js
 
 // eslint-disable-next-line import/extensions
 
