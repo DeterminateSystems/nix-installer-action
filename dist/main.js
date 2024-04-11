@@ -796,10 +796,16 @@ async function main() {
     }
     catch (error) {
         if (error instanceof Error) {
+            // eslint-disable-next-line no-console
+            console.log("setting failed!");
             actions_core.setFailed(error);
+            // eslint-disable-next-line no-console
+            console.log("failed set!");
         }
     }
     finally {
+        // eslint-disable-next-line no-console
+        console.log("hellloooo!");
         await installer.idslib.complete();
     }
 }
