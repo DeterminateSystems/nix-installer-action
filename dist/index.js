@@ -90087,7 +90087,7 @@ function firstString() {
 var external_path_ = __nccwpck_require__(1017);
 ;// CONCATENATED MODULE: external "node:crypto"
 const external_node_crypto_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:crypto");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@707859ddb731c8eb8045e742159eb77ca6a20092_5xv5xdj4st2ouirq36lyorkgxm/node_modules/detsys-ts/dist/correlation.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@54997e25f6d1eb824204fb17993e738e6e3c6e0c_zusoj7ejanbgahoiv2adotbxii/node_modules/detsys-ts/dist/correlation.js
 
 
 function identify(projectName) {
@@ -90156,9 +90156,9 @@ function hashEnvironmentVariables(prefix, variables) {
     return `${prefix}-${hash.digest("hex")}`;
 }
 
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@707859ddb731c8eb8045e742159eb77ca6a20092_5xv5xdj4st2ouirq36lyorkgxm/node_modules/detsys-ts/dist/package.json
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@54997e25f6d1eb824204fb17993e738e6e3c6e0c_zusoj7ejanbgahoiv2adotbxii/node_modules/detsys-ts/dist/package.json
 const package_namespaceObject = {"i8":"1.0.0"};
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@707859ddb731c8eb8045e742159eb77ca6a20092_5xv5xdj4st2ouirq36lyorkgxm/node_modules/detsys-ts/dist/platform.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@54997e25f6d1eb824204fb17993e738e6e3c6e0c_zusoj7ejanbgahoiv2adotbxii/node_modules/detsys-ts/dist/platform.js
 
 function getArchOs() {
     const envArch = process.env.RUNNER_ARCH;
@@ -90188,7 +90188,7 @@ function getNixPlatform(archOs) {
     }
 }
 
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@707859ddb731c8eb8045e742159eb77ca6a20092_5xv5xdj4st2ouirq36lyorkgxm/node_modules/detsys-ts/dist/sourcedef.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@54997e25f6d1eb824204fb17993e738e6e3c6e0c_zusoj7ejanbgahoiv2adotbxii/node_modules/detsys-ts/dist/sourcedef.js
 
 function constructSourceParameters(legacyPrefix) {
     const noisilyGetInput = (suffix) => {
@@ -97199,7 +97199,7 @@ const validate = uuid_dist/* validate */.Gu;
 const stringify = uuid_dist/* stringify */.Pz;
 const parse = uuid_dist/* parse */.Qc;
 
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@707859ddb731c8eb8045e742159eb77ca6a20092_5xv5xdj4st2ouirq36lyorkgxm/node_modules/detsys-ts/dist/main.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@54997e25f6d1eb824204fb17993e738e6e3c6e0c_zusoj7ejanbgahoiv2adotbxii/node_modules/detsys-ts/dist/main.js
 
 // eslint-disable-next-line import/extensions
 
@@ -97217,22 +97217,11 @@ const parse = uuid_dist/* parse */.Qc;
 
 const DEFAULT_IDS_HOST = "https://install.determinate.systems";
 const IDS_HOST = process.env["IDS_HOST"] ?? DEFAULT_IDS_HOST;
-const gotClient = got_dist_source.extend({
-    retry: {
-        limit: 3,
-        methods: ["GET", "HEAD"],
-    },
-    hooks: {
-        beforeRetry: [
-            (error, retryCount) => {
-                core.info(`Retrying after error ${error.code}, retry #: ${retryCount}`);
-            },
-        ],
-    },
-});
 class IdsToolbox {
     constructor(actionOptions) {
         this.actionOptions = makeOptionsConfident(actionOptions);
+        this.hookMain = undefined;
+        this.hookPost = undefined;
         this.events = [];
         this.client = got_dist_source.extend({
             retry: {
@@ -97297,6 +97286,43 @@ class IdsToolbox {
         this.sourceParameters = constructSourceParameters(this.actionOptions.legacySourcePrefix);
         this.recordEvent(`begin_${this.executionPhase}`);
     }
+    onMain(callback) {
+        this.hookMain = callback;
+    }
+    onPost(callback) {
+        this.hookPost = callback;
+    }
+    execute() {
+        // eslint-disable-next-line github/no-then
+        this.executeAsync().catch((error) => {
+            // eslint-disable-next-line no-console
+            console.log(error);
+            process.exitCode = 1;
+        });
+    }
+    async executeAsync() {
+        try {
+            if (this.executionPhase === "main" && this.hookMain) {
+                await this.hookMain();
+            }
+            else if (this.executionPhase === "post" && this.hookPost) {
+                await this.hookPost();
+            }
+            this.addFact("ended_with_exception", false);
+        }
+        catch (error) {
+            this.addFact("ended_with_exception", true);
+            const reportable = error instanceof Error || typeof error == "string"
+                ? error.toString()
+                : JSON.stringify(error);
+            this.addFact("final_exception", reportable);
+            core.setFailed(reportable);
+            this.recordEvent("exception");
+        }
+        finally {
+            await this.complete();
+        }
+    }
     addFact(key, value) {
         this.facts[key] = value;
     }
@@ -97325,7 +97351,7 @@ class IdsToolbox {
         const correlatedUrl = this.getUrl();
         correlatedUrl.searchParams.set("ci", "github");
         correlatedUrl.searchParams.set("correlation", JSON.stringify(this.identity));
-        const versionCheckup = await gotClient.head(correlatedUrl);
+        const versionCheckup = await this.client.head(correlatedUrl);
         if (versionCheckup.headers.etag) {
             const v = versionCheckup.headers.etag;
             core.debug(`Checking the tool cache for ${this.getUrl()} at ${v}`);
@@ -97339,7 +97365,7 @@ class IdsToolbox {
         this.facts["artifact_fetched_from_cache"] = false;
         core.debug(`No match from the cache, re-fetching from the redirect: ${versionCheckup.url}`);
         const destFile = this.getTemporaryName();
-        const fetchStream = gotClient.stream(versionCheckup.url);
+        const fetchStream = this.client.stream(versionCheckup.url);
         await (0,external_node_stream_promises_namespaceObject.pipeline)(fetchStream, (0,external_node_fs_namespaceObject.createWriteStream)(destFile, {
             encoding: "binary",
             mode: 0o755,
@@ -97446,7 +97472,7 @@ class IdsToolbox {
             events: this.events,
         };
         try {
-            await gotClient.post(this.actionOptions.diagnosticsUrl, {
+            await this.client.post(this.actionOptions.diagnosticsUrl, {
                 json: batch,
             });
         }
@@ -98315,43 +98341,19 @@ function action_input_number_or_null(name) {
 function action_input_bool(name) {
     return core.getBooleanInput(name);
 }
-async function main() {
+function main() {
     const installer = new NixInstallerAction();
-    try {
-        throw new Error("testing busted run");
-        /*
-        const isPost = actions_core.getState("isPost");
-        actions_core.saveState("isPost", "true");
-        if (isPost !== "true") {
-          await installer.detectAndForceDockerShim();
-          await installer.install();
-        } else {
-          await installer.cleanupDockerShim();
-          await installer.report_overall();
-        }
-        */
-    }
-    catch (error) {
-        if (error instanceof Error) {
-            // eslint-disable-next-line no-console
-            console.log("setting failed!");
-            core.setFailed(error);
-            // eslint-disable-next-line no-console
-            console.log("failed set!");
-        }
-    }
-    finally {
-        // eslint-disable-next-line no-console
-        console.log("hellloooo!");
-        await installer.idslib.complete();
-    }
+    installer.idslib.onMain(async () => {
+        await installer.detectAndForceDockerShim();
+        await installer.install();
+    });
+    installer.idslib.onPost(async () => {
+        await installer.cleanupDockerShim();
+        await installer.report_overall();
+    });
+    installer.idslib.execute();
 }
-// eslint-disable-next-line github/no-then
-main().catch((error) => {
-    // eslint-disable-next-line no-console
-    console.log(error);
-    process.exitCode = 1;
-});
+main();
 
 })();
 

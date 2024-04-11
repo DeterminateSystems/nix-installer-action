@@ -778,40 +778,16 @@ function action_input_number_or_null(name) {
 function action_input_bool(name) {
     return actions_core.getBooleanInput(name);
 }
-async function main() {
+function main() {
     const installer = new NixInstallerAction();
-    try {
-        throw new Error("testing busted run");
-        /*
-        const isPost = actions_core.getState("isPost");
-        actions_core.saveState("isPost", "true");
-        if (isPost !== "true") {
-          await installer.detectAndForceDockerShim();
-          await installer.install();
-        } else {
-          await installer.cleanupDockerShim();
-          await installer.report_overall();
-        }
-        */
-    }
-    catch (error) {
-        if (error instanceof Error) {
-            // eslint-disable-next-line no-console
-            console.log("setting failed!");
-            actions_core.setFailed(error);
-            // eslint-disable-next-line no-console
-            console.log("failed set!");
-        }
-    }
-    finally {
-        // eslint-disable-next-line no-console
-        console.log("hellloooo!");
-        await installer.idslib.complete();
-    }
+    installer.idslib.onMain(async () => {
+        await installer.detectAndForceDockerShim();
+        await installer.install();
+    });
+    installer.idslib.onPost(async () => {
+        await installer.cleanupDockerShim();
+        await installer.report_overall();
+    });
+    installer.idslib.execute();
 }
-// eslint-disable-next-line github/no-then
-main().catch((error) => {
-    // eslint-disable-next-line no-console
-    console.log(error);
-    process.exitCode = 1;
-});
+main();
