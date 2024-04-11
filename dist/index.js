@@ -98330,10 +98330,13 @@ async function main() {
         }
     }
     catch (error) {
-        if (error instanceof Error)
+        if (error instanceof Error) {
             core.setFailed(error);
+        }
     }
-    await installer.idslib.complete();
+    finally {
+        await installer.idslib.complete();
+    }
 }
 // eslint-disable-next-line github/no-then
 main().catch((error) => {

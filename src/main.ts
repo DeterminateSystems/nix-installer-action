@@ -1035,10 +1035,12 @@ async function main(): Promise<void> {
       await installer.report_overall();
     }
   } catch (error) {
-    if (error instanceof Error) actions_core.setFailed(error);
+    if (error instanceof Error) {
+      actions_core.setFailed(error);
+    }
+  } finally {
+    await installer.idslib.complete();
   }
-
-  await installer.idslib.complete();
 }
 
 // eslint-disable-next-line github/no-then
