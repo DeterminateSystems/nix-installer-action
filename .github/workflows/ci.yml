@@ -104,7 +104,7 @@ jobs:
         if: failure()
         uses: namespacelabs/breakpoint-action@v0
         with:
-          duration: 30m
+          duration: 5m
           authorized-users: grahamc
 
   run-x86_64-darwin:
@@ -188,5 +188,5 @@ jobs:
         if: failure()
         uses: namespacelabs/breakpoint-action@v0
         with:
-          duration: 30m
+          duration: 5m
           authorized-users: grahamc
