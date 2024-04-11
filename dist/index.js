@@ -98318,16 +98318,18 @@ function action_input_bool(name) {
 async function main() {
     const installer = new NixInstallerAction();
     try {
-        const isPost = core.getState("isPost");
-        core.saveState("isPost", "true");
+        throw new Error("testing busted run");
+        /*
+        const isPost = actions_core.getState("isPost");
+        actions_core.saveState("isPost", "true");
         if (isPost !== "true") {
-            await installer.detectAndForceDockerShim();
-            await installer.install();
+          await installer.detectAndForceDockerShim();
+          await installer.install();
+        } else {
+          await installer.cleanupDockerShim();
+          await installer.report_overall();
         }
-        else {
-            await installer.cleanupDockerShim();
-            await installer.report_overall();
-        }
+        */
     }
     catch (error) {
         if (error instanceof Error) {

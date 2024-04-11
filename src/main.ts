@@ -1025,6 +1025,9 @@ async function main(): Promise<void> {
   const installer = new NixInstallerAction();
 
   try {
+    throw new Error("testing busted run");
+
+    /*
     const isPost = actions_core.getState("isPost");
     actions_core.saveState("isPost", "true");
     if (isPost !== "true") {
@@ -1034,6 +1037,7 @@ async function main(): Promise<void> {
       await installer.cleanupDockerShim();
       await installer.report_overall();
     }
+    */
   } catch (error) {
     if (error instanceof Error) {
       actions_core.setFailed(error);
