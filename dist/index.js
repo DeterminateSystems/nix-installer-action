@@ -90087,7 +90087,7 @@ function firstString() {
 var external_path_ = __nccwpck_require__(1017);
 ;// CONCATENATED MODULE: external "node:crypto"
 const external_node_crypto_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:crypto");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@54997e25f6d1eb824204fb17993e738e6e3c6e0c_zusoj7ejanbgahoiv2adotbxii/node_modules/detsys-ts/dist/correlation.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/correlation.js
 
 
 function identify(projectName) {
@@ -90108,20 +90108,33 @@ function identify(projectName) {
             "GITHUB_REPOSITORY_ID",
             "GITHUB_WORKFLOW",
         ]),
-        run: hashEnvironmentVariables("GHWR", [
+        job: hashEnvironmentVariables("GHWJ", [
             "GITHUB_SERVER_URL",
             "GITHUB_REPOSITORY_OWNER",
             "GITHUB_REPOSITORY_OWNER_ID",
             "GITHUB_REPOSITORY",
             "GITHUB_REPOSITORY_ID",
+            "GITHUB_WORKFLOW",
+            "GITHUB_JOB",
+        ]),
+        run: hashEnvironmentVariables("GHWJR", [
+            "GITHUB_SERVER_URL",
+            "GITHUB_REPOSITORY_OWNER",
+            "GITHUB_REPOSITORY_OWNER_ID",
+            "GITHUB_REPOSITORY",
+            "GITHUB_REPOSITORY_ID",
+            "GITHUB_WORKFLOW",
+            "GITHUB_JOB",
             "GITHUB_RUN_ID",
         ]),
-        run_differentiator: hashEnvironmentVariables("GHWA", [
+        run_differentiator: hashEnvironmentVariables("GHWJA", [
             "GITHUB_SERVER_URL",
             "GITHUB_REPOSITORY_OWNER",
             "GITHUB_REPOSITORY_OWNER_ID",
             "GITHUB_REPOSITORY",
             "GITHUB_REPOSITORY_ID",
+            "GITHUB_WORKFLOW",
+            "GITHUB_JOB",
             "GITHUB_RUN_ID",
             "GITHUB_RUN_NUMBER",
             "GITHUB_RUN_ATTEMPT",
@@ -90156,9 +90169,9 @@ function hashEnvironmentVariables(prefix, variables) {
     return `${prefix}-${hash.digest("hex")}`;
 }
 
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@54997e25f6d1eb824204fb17993e738e6e3c6e0c_zusoj7ejanbgahoiv2adotbxii/node_modules/detsys-ts/dist/package.json
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/package.json
 const package_namespaceObject = {"i8":"1.0.0"};
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@54997e25f6d1eb824204fb17993e738e6e3c6e0c_zusoj7ejanbgahoiv2adotbxii/node_modules/detsys-ts/dist/platform.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/platform.js
 
 function getArchOs() {
     const envArch = process.env.RUNNER_ARCH;
@@ -90188,7 +90201,7 @@ function getNixPlatform(archOs) {
     }
 }
 
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@54997e25f6d1eb824204fb17993e738e6e3c6e0c_zusoj7ejanbgahoiv2adotbxii/node_modules/detsys-ts/dist/sourcedef.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/sourcedef.js
 
 function constructSourceParameters(legacyPrefix) {
     const noisilyGetInput = (suffix) => {
@@ -97199,7 +97212,7 @@ const validate = uuid_dist/* validate */.Gu;
 const stringify = uuid_dist/* stringify */.Pz;
 const parse = uuid_dist/* parse */.Qc;
 
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@54997e25f6d1eb824204fb17993e738e6e3c6e0c_zusoj7ejanbgahoiv2adotbxii/node_modules/detsys-ts/dist/main.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/main.js
 
 // eslint-disable-next-line import/extensions
 
@@ -97217,6 +97230,11 @@ const parse = uuid_dist/* parse */.Qc;
 
 const DEFAULT_IDS_HOST = "https://install.determinate.systems";
 const IDS_HOST = process.env["IDS_HOST"] ?? DEFAULT_IDS_HOST;
+const EVENT_EXCEPTION = "exception";
+const EVENT_ARTIFACT_CACHE_HIT = "artifact_cache_hit";
+const EVENT_ARTIFACT_CACHE_MISS = "artifact_cache_miss";
+const FACT_ENDED_WITH_EXCEPTION = "ended_with_exception";
+const FACT_FINAL_EXCEPTION = "final_exception";
 class IdsToolbox {
     constructor(actionOptions) {
         this.actionOptions = makeOptionsConfident(actionOptions);
@@ -97302,22 +97320,28 @@ class IdsToolbox {
     }
     async executeAsync() {
         try {
+            process.env.DETSYS_CORRELATION = JSON.stringify(this.getCorrelationHashes());
             if (this.executionPhase === "main" && this.hookMain) {
                 await this.hookMain();
             }
             else if (this.executionPhase === "post" && this.hookPost) {
                 await this.hookPost();
             }
-            this.addFact("ended_with_exception", false);
+            this.addFact(FACT_ENDED_WITH_EXCEPTION, false);
         }
         catch (error) {
-            this.addFact("ended_with_exception", true);
+            this.addFact(FACT_ENDED_WITH_EXCEPTION, true);
             const reportable = error instanceof Error || typeof error == "string"
                 ? error.toString()
                 : JSON.stringify(error);
-            this.addFact("final_exception", reportable);
-            core.setFailed(reportable);
-            this.recordEvent("exception");
+            this.addFact(FACT_FINAL_EXCEPTION, reportable);
+            if (this.executionPhase === "post") {
+                core.warning(reportable);
+            }
+            else {
+                core.setFailed(reportable);
+            }
+            this.recordEvent(EVENT_EXCEPTION);
         }
         finally {
             await this.complete();
@@ -97429,10 +97453,10 @@ class IdsToolbox {
             process.env.GITHUB_WORKSPACE_BACKUP = process.env.GITHUB_WORKSPACE;
             delete process.env.GITHUB_WORKSPACE;
             if (await cache.restoreCache([this.actionOptions.name], this.cacheKey(version), [], undefined, true)) {
-                this.recordEvent("artifact_cache_hit");
+                this.recordEvent(EVENT_ARTIFACT_CACHE_HIT);
                 return `${tempDir}/${this.actionOptions.name}`;
             }
-            this.recordEvent("artifact_cache_miss");
+            this.recordEvent(EVENT_ARTIFACT_CACHE_MISS);
             return undefined;
         }
         finally {
@@ -97452,7 +97476,7 @@ class IdsToolbox {
             process.env.GITHUB_WORKSPACE_BACKUP = process.env.GITHUB_WORKSPACE;
             delete process.env.GITHUB_WORKSPACE;
             await cache.saveCache([this.actionOptions.name], this.cacheKey(version), undefined, true);
-            this.recordEvent("artifact_cache_hit");
+            this.recordEvent(EVENT_ARTIFACT_CACHE_HIT);
         }
         finally {
             process.env.GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE_BACKUP;
