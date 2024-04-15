@@ -97673,6 +97673,25 @@ function mungeDiagnosticEndpoint(inputUrl) {
 
 
 
+// Nix installation events
+const EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
+const EVENT_INSTALL_NIX_START = "install_nix_start";
+const EVENT_INSTALL_NIX_SUCCESS = "install_nix_start";
+const EVENT_SETUP_KVM = "setup_kvm";
+const EVENT_UNINSTALL_NIX = "uninstall";
+// Docker events
+const EVENT_CLEAN_UP_DOCKER_SHIM = "clean_up_docker_shim";
+const EVENT_START_DOCKER_SHIM = "start_docker_shim";
+// FlakeHub events
+const EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
+// Other events
+const EVENT_CONCLUDE_WORKFLOW = "conclude_workflow";
+// Facts
+const FACT_HAS_DOCKER = "has_docker";
+const FACT_HAS_SYSTEMD = "has_systemd";
+const FACT_IN_GITHUB_ACTIONS = "in_act";
+const FACT_IN_NAMESPACE_SO = "in_namespace_so";
+const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 class NixInstallerAction {
     constructor() {
         this.idslib = new IdsToolbox({
@@ -97730,13 +97749,13 @@ class NixInstallerAction {
                 core.warning("Systemd is detected, but ignoring it since force-docker-shim is enabled.");
             }
             else {
-                this.idslib.addFact("has_systemd", true);
+                this.idslib.addFact(FACT_HAS_SYSTEMD, true);
                 return;
             }
         }
-        this.idslib.addFact("has_systemd", false);
+        this.idslib.addFact(FACT_HAS_SYSTEMD, false);
         core.debug("Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor.");
-        this.idslib.addFact("has_docker", false); // Set to false here, and only in the success case do we set it to true
+        this.idslib.addFact(FACT_HAS_DOCKER, false); // Set to false here, and only in the success case do we set it to true
         let exitCode;
         try {
             exitCode = await exec.exec("docker", ["info"], {
@@ -97769,7 +97788,7 @@ class NixInstallerAction {
                 return;
             }
         }
-        this.idslib.addFact("has_docker", true);
+        this.idslib.addFact(FACT_HAS_DOCKER, true);
         if (!this.forceDockerShim &&
             (await this.detectDockerWithMountedDockerSocket())) {
             core.debug("Detected a Docker container with a Docker socket mounted, not enabling docker shim.");
@@ -97985,12 +98004,12 @@ class NixInstallerAction {
         }
         executionEnv.NIX_INSTALLER_EXTRA_CONF = extraConf;
         if (process.env.ACT && !process.env.NOT_ACT) {
-            this.idslib.addFact("in_act", true);
+            this.idslib.addFact(FACT_IN_GITHUB_ACTIONS, true);
             core.info("Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`");
             executionEnv.NIX_INSTALLER_INIT = "none";
         }
         if (process.env.NSC_VM_ID && !process.env.NOT_NAMESPACE) {
-            this.idslib.addFact("in_namespace_so", true);
+            this.idslib.addFact(FACT_IN_NAMESPACE_SO, true);
             core.info("Detected Namespace runner, assuming this is a https://namespace.so created container, set `NOT_NAMESPACE=true` to override this. This will change the setting of the `init` to be compatible with Namespace");
             executionEnv.NIX_INSTALLER_INIT = "none";
         }
@@ -98001,18 +98020,18 @@ class NixInstallerAction {
         core.debug(`Execution environment: ${JSON.stringify(executionEnv, null, 4)}`);
         const args = ["install"];
         if (this.planner) {
-            this.idslib.addFact("nix_installer_planner", this.planner);
+            this.idslib.addFact(FACT_NIX_INSTALLER_PLANNER, this.planner);
             args.push(this.planner);
         }
         else {
-            this.idslib.addFact("nix_installer_planner", getDefaultPlanner());
+            this.idslib.addFact(FACT_NIX_INSTALLER_PLANNER, getDefaultPlanner());
             args.push(getDefaultPlanner());
         }
         if (this.extraArgs) {
             const extraArgs = parseArgsStringToArgv(this.extraArgs);
             args.concat(extraArgs);
         }
-        this.idslib.recordEvent("install_nix_start");
+        this.idslib.recordEvent(EVENT_INSTALL_NIX_START);
         const exitCode = await exec.exec(binaryPath, args, {
             env: {
                 ...executionEnv,
@@ -98020,12 +98039,12 @@ class NixInstallerAction {
             },
         });
         if (exitCode !== 0) {
-            this.idslib.recordEvent("install_nix_failure", {
+            this.idslib.recordEvent(EVENT_INSTALL_NIX_FAILURE, {
                 exitCode,
             });
             throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
         }
-        this.idslib.recordEvent("install_nix_success");
+        this.idslib.recordEvent(EVENT_INSTALL_NIX_SUCCESS);
         return exitCode;
     }
     async install() {
@@ -98107,7 +98126,7 @@ class NixInstallerAction {
         }
         {
             core.debug("Starting the Nix daemon through Docker...");
-            this.idslib.recordEvent("start_docker_shim");
+            this.idslib.recordEvent(EVENT_START_DOCKER_SHIM);
             const exitCode = await exec.exec("docker", [
                 "--log-level=debug",
                 "run",
@@ -98184,7 +98203,7 @@ class NixInstallerAction {
                 }
             }
             if (cleaned) {
-                this.idslib.recordEvent("clean_up_docker_shim");
+                this.idslib.recordEvent(EVENT_CLEAN_UP_DOCKER_SHIM);
             }
             else {
                 core.warning("Giving up on cleaning up the nix daemon container");
@@ -98206,7 +98225,7 @@ class NixInstallerAction {
         }
     }
     async flakehubLogin() {
-        this.idslib.recordEvent("login_to_flakehub");
+        this.idslib.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
         const netrcPath = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
         const jwt = await core.getIDToken("api.flakehub.com");
         await (0,promises_namespaceObject.writeFile)(netrcPath, [
@@ -98222,7 +98241,7 @@ class NixInstallerAction {
         return netrcPath;
     }
     async executeUninstall() {
-        this.idslib.recordEvent("uninstall");
+        this.idslib.recordEvent(EVENT_UNINSTALL_NIX);
         const exitCode = await exec.exec(`/nix/nix-installer`, ["uninstall"], {
             env: {
                 NIX_INSTALLER_NO_CONFIRM: "true",
@@ -98247,7 +98266,7 @@ class NixInstallerAction {
         }
     }
     async setupKvm() {
-        this.idslib.recordEvent("setup_kvm");
+        this.idslib.recordEvent(EVENT_SETUP_KVM);
         const currentUser = (0,external_node_os_.userInfo)();
         const isRoot = currentUser.uid === 0;
         const maybeSudo = isRoot ? "" : "sudo";
@@ -98334,7 +98353,7 @@ class NixInstallerAction {
     }
     async reportOverall() {
         try {
-            this.idslib.recordEvent("conclude_workflow", {
+            this.idslib.recordEvent(EVENT_CONCLUDE_WORKFLOW, {
                 conclusion: await this.getWorkflowConclusion(),
             });
         }
