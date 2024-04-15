@@ -107,10 +107,12 @@ class NixInstallerAction {
   }
 
   async detectAndForceDockerShim(): Promise<void> {
+    const runnerOs = process.env["RUNNER_OS"];
+
     // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
     // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
     // and especially GitHub Enterprise Server.
-    if (process.env.RUNNER_OS !== "Linux") {
+    if (runnerOs !== "Linux") {
       if (this.forceDockerShim) {
         actionsCore.warning(
           "Ignoring force-docker-shim which is set to true, as it is only supported on Linux.",
@@ -306,6 +308,7 @@ class NixInstallerAction {
 
   private async executionEnvironment(): Promise<ExecuteEnvironment> {
     const executionEnv: ExecuteEnvironment = {};
+    const runnerOs = process.env["RUNNER_OS"];
 
     executionEnv.NIX_INSTALLER_NO_CONFIRM = "true";
     executionEnv.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(
@@ -361,14 +364,14 @@ class NixInstallerAction {
 
     // TODO: Error if the user uses these on not-MacOS
     if (this.macEncrypt !== null) {
-      if (process.env.RUNNER_OS !== "macOS") {
+      if (runnerOs !== "macOS") {
         throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ENCRYPT = this.macEncrypt;
     }
 
     if (this.macCaseSensitive !== null) {
-      if (process.env.RUNNER_OS !== "macOS") {
+      if (runnerOs !== "macOS") {
         throw new Error(
           "`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`",
         );
@@ -377,7 +380,7 @@ class NixInstallerAction {
     }
 
     if (this.macVolumeLabel !== null) {
-      if (process.env.RUNNER_OS !== "macOS") {
+      if (runnerOs !== "macOS") {
         throw new Error(
           "`mac-volume-label` while `$RUNNER_OS` was not `macOS`",
         );
@@ -386,7 +389,7 @@ class NixInstallerAction {
     }
 
     if (this.macRootDisk !== null) {
-      if (process.env.RUNNER_OS !== "macOS") {
+      if (runnerOs !== "macOS") {
         throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ROOT_DISK = this.macRootDisk;
@@ -402,7 +405,7 @@ class NixInstallerAction {
 
     // TODO: Error if the user uses these on MacOS
     if (this.init !== null) {
-      if (process.env.RUNNER_OS === "macOS") {
+      if (runnerOs === "macOS") {
         throw new Error(
           "`init` is not a valid option when `$RUNNER_OS` is `macOS`",
         );
@@ -443,7 +446,7 @@ class NixInstallerAction {
     }
     executionEnv.NIX_INSTALLER_EXTRA_CONF = extraConf;
 
-    if (process.env.ACT && !process.env.NOT_ACT) {
+    if (process.env["ACT"] && !process.env["NOT_ACT"]) {
       this.idslib.addFact(FACT_IN_GITHUB_ACTIONS, true);
       actionsCore.info(
         "Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`",
@@ -451,7 +454,7 @@ class NixInstallerAction {
       executionEnv.NIX_INSTALLER_INIT = "none";
     }
 
-    if (process.env.NSC_VM_ID && !process.env.NOT_NAMESPACE) {
+    if (process.env["NSC_VM_ID"] && !process.env["NOT_NAMESPACE"]) {
       this.idslib.addFact(FACT_IN_NAMESPACE_SO, true);
       actionsCore.info(
         "Detected Namespace runner, assuming this is a https://namespace.so created container, set `NOT_NAMESPACE=true` to override this. This will change the setting of the `init` to be compatible with Namespace",
@@ -554,10 +557,12 @@ class NixInstallerAction {
       ARM64: path.join(__dirname, "/../docker-shim/arm64.tar.gz"),
     };
 
+    const runnerArch = process.env["RUNNER_ARCH"];
     let arch;
-    if (process.env.RUNNER_ARCH === "X64") {
+
+    if (runnerArch === "X64") {
       arch = "X64";
-    } else if (process.env.RUNNER_ARCH === "ARM64") {
+    } else if (runnerArch === "ARM64") {
       arch = "ARM64";
     } else {
       throw Error("Architecture not supported in Docker shim mode.");
@@ -700,7 +705,7 @@ class NixInstallerAction {
     // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
     try {
       const nixVarNixProfilePath = "/nix/var/nix/profiles/default/bin";
-      const homeNixProfilePath = `${process.env.HOME}/.nix-profile/bin`;
+      const homeNixProfilePath = `${process.env["HOME"]}/.nix-profile/bin`;
       actionsCore.addPath(nixVarNixProfilePath);
       actionsCore.addPath(homeNixProfilePath);
       actionsCore.info(
@@ -965,7 +970,7 @@ type ExecuteEnvironment = {
 };
 
 function getDefaultPlanner(): string {
-  const envOs = process.env.RUNNER_OS;
+  const envOs = process.env["RUNNER_OS"];
 
   if (envOs === "macOS") {
     return "macos";
