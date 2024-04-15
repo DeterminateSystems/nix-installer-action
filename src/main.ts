@@ -1,47 +1,47 @@
-import * as actions_core from "@actions/core";
+import * as actionsCore from "@actions/core";
 import * as github from "@actions/github";
-import * as actions_exec from "@actions/exec";
+import * as actionsExec from "@actions/exec";
 import { access, writeFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import fs from "node:fs";
 import { userInfo } from "node:os";
 import stringArgv from "string-argv";
 import * as path from "path";
-import { IdsToolbox, inputs } from "detsys-ts";
+import { IdsToolbox, inputs, platform } from "detsys-ts";
 import { randomUUID } from "node:crypto";
 
 class NixInstallerAction {
   idslib: IdsToolbox;
   platform: string;
-  nix_package_url: string | null;
+  nixPackageUrl: string | null;
   backtrace: string | null;
-  extra_args: string | null;
-  extra_conf: string[] | null;
+  extraArgs: string | null;
+  extraConf: string[] | null;
   flakehub: boolean;
   kvm: boolean;
-  github_server_url: string | null;
-  github_token: string | null;
-  force_docker_shim: boolean | null;
+  githubServerUrl: string | null;
+  githubToken: string | null;
+  forceDockerShim: boolean | null;
   init: string | null;
-  local_root: string | null;
-  log_directives: string | null;
+  localRoot: string | null;
+  logDirectives: string | null;
   logger: string | null;
-  ssl_cert_file: string | null;
+  sslCertFile: string | null;
   proxy: string | null;
-  mac_case_sensitive: string | null;
-  mac_encrypt: string | null;
-  mac_root_disk: string | null;
-  mac_volume_label: string | null;
-  modify_profile: boolean;
-  nix_build_group_id: number | null;
-  nix_build_group_name: string | null;
-  nix_build_user_base: number | null;
-  nix_build_user_count: number | null;
-  nix_build_user_prefix: string | null;
+  macCaseSensitive: string | null;
+  macEncrypt: string | null;
+  macRootDisk: string | null;
+  macVolumeLabel: string | null;
+  modifyProfile: boolean;
+  nixBuildGroupId: number | null;
+  nixBuildGroupName: string | null;
+  nixBuildUserBase: number | null;
+  nixBuildUserCount: number | null;
+  nixBuildUserPrefix: string | null;
   planner: string | null;
   reinstall: boolean;
-  start_daemon: boolean;
-  trust_runner_user: boolean | null;
+  startDaemon: boolean;
+  trustRunnerUser: boolean | null;
 
   constructor() {
     this.idslib = new IdsToolbox({
@@ -50,38 +50,36 @@ class NixInstallerAction {
       legacySourcePrefix: "nix-installer",
     });
 
-    this.platform = get_nix_platform();
-    this.nix_package_url = inputs.getStringOrNull("nix-package-url");
+    this.platform = platform.getNixPlatform(platform.getArchOs());
+    this.nixPackageUrl = inputs.getStringOrNull("nix-package-url");
     this.backtrace = inputs.getStringOrNull("backtrace");
-    this.extra_args = inputs.getStringOrNull("extra-args");
-    this.extra_conf = inputs.getMultilineStringOrNull("extra-conf");
+    this.extraArgs = inputs.getStringOrNull("extra-args");
+    this.extraConf = inputs.getMultilineStringOrNull("extra-conf");
     this.flakehub = inputs.getBool("flakehub");
     this.kvm = inputs.getBool("kvm");
-    this.force_docker_shim = inputs.getBool("force-docker-shim");
-    this.github_token = inputs.getStringOrNull("github-token");
-    this.github_server_url = inputs.getStringOrNull("github-server-url");
+    this.forceDockerShim = inputs.getBool("force-docker-shim");
+    this.githubToken = inputs.getStringOrNull("github-token");
+    this.githubServerUrl = inputs.getStringOrNull("github-server-url");
     this.init = inputs.getStringOrNull("init");
-    this.local_root = inputs.getStringOrNull("local-root");
-    this.log_directives = inputs.getStringOrNull("log-directives");
+    this.localRoot = inputs.getStringOrNull("local-root");
+    this.logDirectives = inputs.getStringOrNull("log-directives");
     this.logger = inputs.getStringOrNull("logger");
-    this.ssl_cert_file = inputs.getStringOrNull("ssl-cert-file");
+    this.sslCertFile = inputs.getStringOrNull("ssl-cert-file");
     this.proxy = inputs.getStringOrNull("proxy");
-    this.mac_case_sensitive = inputs.getStringOrNull("mac-case-sensitive");
-    this.mac_encrypt = inputs.getStringOrNull("mac-encrypt");
-    this.mac_root_disk = inputs.getStringOrNull("mac-root-disk");
-    this.mac_volume_label = inputs.getStringOrNull("mac-volume-label");
-    this.modify_profile = inputs.getBool("modify-profile");
-    this.nix_build_group_id = inputs.getNumberOrNull("nix-build-group-id");
-    this.nix_build_group_name = inputs.getStringOrNull("nix-build-group-name");
-    this.nix_build_user_base = inputs.getNumberOrNull("nix_build-user-base");
-    this.nix_build_user_count = inputs.getNumberOrNull("nix-build-user-count");
-    this.nix_build_user_prefix = inputs.getStringOrNull(
-      "nix-build-user-prefix",
-    );
+    this.macCaseSensitive = inputs.getStringOrNull("mac-case-sensitive");
+    this.macEncrypt = inputs.getStringOrNull("mac-encrypt");
+    this.macRootDisk = inputs.getStringOrNull("mac-root-disk");
+    this.macVolumeLabel = inputs.getStringOrNull("mac-volume-label");
+    this.modifyProfile = inputs.getBool("modify-profile");
+    this.nixBuildGroupId = inputs.getNumberOrNull("nix-build-group-id");
+    this.nixBuildGroupName = inputs.getStringOrNull("nix-build-group-name");
+    this.nixBuildUserBase = inputs.getNumberOrNull("nix-build-user-base");
+    this.nixBuildUserCount = inputs.getNumberOrNull("nix-build-user-count");
+    this.nixBuildUserPrefix = inputs.getStringOrNull("nix-build-user-prefix");
     this.planner = inputs.getStringOrNull("planner");
     this.reinstall = inputs.getBool("reinstall");
-    this.start_daemon = inputs.getBool("start-daemon");
-    this.trust_runner_user = inputs.getBool("trust-runner-user");
+    this.startDaemon = inputs.getBool("start-daemon");
+    this.trustRunnerUser = inputs.getBool("trust-runner-user");
   }
 
   async detectAndForceDockerShim(): Promise<void> {
@@ -89,11 +87,11 @@ class NixInstallerAction {
     // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
     // and especially GitHub Enterprise Server.
     if (process.env.RUNNER_OS !== "Linux") {
-      if (this.force_docker_shim) {
-        actions_core.warning(
+      if (this.forceDockerShim) {
+        actionsCore.warning(
           "Ignoring force-docker-shim which is set to true, as it is only supported on Linux.",
         );
-        this.force_docker_shim = false;
+        this.forceDockerShim = false;
       }
       return;
     }
@@ -102,8 +100,8 @@ class NixInstallerAction {
       throwIfNoEntry: false,
     });
     if (systemdCheck?.isDirectory()) {
-      if (this.force_docker_shim) {
-        actions_core.warning(
+      if (this.forceDockerShim) {
+        actionsCore.warning(
           "Systemd is detected, but ignoring it since force-docker-shim is enabled.",
         );
       } else {
@@ -113,38 +111,38 @@ class NixInstallerAction {
     }
     this.idslib.addFact("has_systemd", false);
 
-    actions_core.debug(
+    actionsCore.debug(
       "Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor.",
     );
 
     this.idslib.addFact("has_docker", false); // Set to false here, and only in the success case do we set it to true
-    let exit_code;
+    let exitCode;
     try {
-      exit_code = await actions_exec.exec("docker", ["info"], {
+      exitCode = await actionsExec.exec("docker", ["info"], {
         silent: true,
         listeners: {
           stdout: (data: Buffer) => {
             const trimmed = data.toString("utf-8").trimEnd();
             if (trimmed.length >= 0) {
-              actions_core.debug(trimmed);
+              actionsCore.debug(trimmed);
             }
           },
           stderr: (data: Buffer) => {
             const trimmed = data.toString("utf-8").trimEnd();
             if (trimmed.length >= 0) {
-              actions_core.debug(trimmed);
+              actionsCore.debug(trimmed);
             }
           },
         },
       });
     } catch (e) {
-      actions_core.debug("Docker not detected, not enabling docker shim.");
+      actionsCore.debug("Docker not detected, not enabling docker shim.");
       return;
     }
 
-    if (exit_code !== 0) {
-      if (this.force_docker_shim) {
-        actions_core.warning(
+    if (exitCode !== 0) {
+      if (this.forceDockerShim) {
+        actionsCore.warning(
           "docker info check failed, but trying anyway since force-docker-shim is enabled.",
         );
       } else {
@@ -154,31 +152,31 @@ class NixInstallerAction {
     this.idslib.addFact("has_docker", true);
 
     if (
-      !this.force_docker_shim &&
+      !this.forceDockerShim &&
       (await this.detectDockerWithMountedDockerSocket())
     ) {
-      actions_core.debug(
+      actionsCore.debug(
         "Detected a Docker container with a Docker socket mounted, not enabling docker shim.",
       );
       return;
     }
 
-    actions_core.startGroup(
+    actionsCore.startGroup(
       "Enabling the Docker shim for running Nix on Linux in CI without Systemd.",
     );
 
     if (this.init !== "none") {
-      actions_core.info(`Changing init from '${this.init}' to 'none'`);
+      actionsCore.info(`Changing init from '${this.init}' to 'none'`);
       this.init = "none";
     }
     if (this.planner !== "linux") {
-      actions_core.info(`Changing planner from '${this.planner}' to 'linux'`);
+      actionsCore.info(`Changing planner from '${this.planner}' to 'linux'`);
       this.planner = "linux";
     }
 
-    this.force_docker_shim = true;
+    this.forceDockerShim = true;
 
-    actions_core.endGroup();
+    actionsCore.endGroup();
   }
 
   // Detect if we are running under `act` or some other system which is not using docker-in-docker,
@@ -186,74 +184,73 @@ class NixInstallerAction {
   // In the case of the socket mount solution, the shim will cause issues since the given mount paths will
   // equate to mount paths on the host, not mount paths to the docker container in question.
   async detectDockerWithMountedDockerSocket(): Promise<boolean> {
-    let cgroups_buffer;
+    let cgroupsBuffer;
     try {
       // If we are inside a docker container, the last line of `/proc/self/cgroup` should be
       // 0::/docker/$SOME_ID
       //
       // If we are not, the line will likely be `0::/`
-      cgroups_buffer = await readFile("/proc/self/cgroup", {
+      cgroupsBuffer = await readFile("/proc/self/cgroup", {
         encoding: "utf-8",
       });
     } catch (e) {
-      actions_core.debug(
+      actionsCore.debug(
         `Did not detect \`/proc/self/cgroup\` existence, bailing on docker container ID detection:\n${e}`,
       );
       return false;
     }
 
-    const cgroups = cgroups_buffer.trim().split("\n");
-    const last_cgroup = cgroups[cgroups.length - 1];
-    const last_cgroup_parts = last_cgroup.split(":");
-    const last_cgroup_path = last_cgroup_parts[last_cgroup_parts.length - 1];
-    if (!last_cgroup_path.includes("/docker/")) {
-      actions_core.debug(
+    const cgroups = cgroupsBuffer.trim().split("\n");
+    const lastCgroup = cgroups[cgroups.length - 1];
+    const lastCgroupParts = lastCgroup.split(":");
+    const lastCgroupPath = lastCgroupParts[lastCgroupParts.length - 1];
+    if (!lastCgroupPath.includes("/docker/")) {
+      actionsCore.debug(
         "Did not detect a container ID, bailing on docker.sock detection",
       );
       return false;
     }
     // We are in a docker container, now to determine if this container is visible from
     // the `docker` command, and if so, if there is a `docker.socket` mounted.
-    const last_cgroup_path_parts = last_cgroup_path.split("/");
-    const container_id =
-      last_cgroup_path_parts[last_cgroup_path_parts.length - 1];
+    const lastCgroupPathParts = lastCgroupPath.split("/");
+    const containerId = lastCgroupPathParts[lastCgroupPathParts.length - 1];
 
     // If we cannot `docker inspect` this discovered container ID, we'll fall through to the `catch` below.
-    let stdout_buffer = "";
-    let stderr_buffer = "";
-    let exit_code;
+    let stdoutBuffer = "";
+    let stderrBuffer = "";
+    let exitCode;
     try {
-      exit_code = await actions_exec.exec("docker", ["inspect", container_id], {
+      exitCode = await actionsExec.exec("docker", ["inspect", containerId], {
         silent: true,
         listeners: {
           stdout: (data: Buffer) => {
-            stdout_buffer += data.toString("utf-8");
+            stdoutBuffer += data.toString("utf-8");
           },
           stderr: (data: Buffer) => {
-            stderr_buffer += data.toString("utf-8");
+            stderrBuffer += data.toString("utf-8");
           },
         },
       });
     } catch (e) {
-      actions_core.debug(
-        `Could not execute \`docker inspect ${container_id}\`, bailing on docker container inspection:\n${e}`,
+      actionsCore.debug(
+        `Could not execute \`docker inspect ${containerId}\`, bailing on docker container inspection:\n${e}`,
       );
       return false;
     }
 
-    if (exit_code !== 0) {
-      actions_core.debug(
-        `Unable to inspect detected docker container with id \`${container_id}\`, bailing on container inspection (exit ${exit_code}):\n${stderr_buffer}`,
+    if (exitCode !== 0) {
+      actionsCore.debug(
+        `Unable to inspect detected docker container with id \`${containerId}\`, bailing on container inspection (exit ${exitCode}):\n${stderrBuffer}`,
       );
       return false;
     }
 
-    const output = JSON.parse(stdout_buffer);
+    const output = JSON.parse(stdoutBuffer);
     // `docker inspect $ID` prints an array containing objects.
     // In our use case, we should only see 1 item in the array.
     if (output.length !== 1) {
-      actions_core.debug(
-        `Got \`docker inspect ${container_id}\` output which was not one item (was ${output.length}), bailing on docker.sock detection.`,
+      actionsCore.debug(
+        `Got \`docker inspect ${containerId}\` output which was not one item (was ${output.length}), bailing on docker.sock detection.`,
       );
       return false;
     }
@@ -263,121 +260,120 @@ class NixInstallerAction {
     // We are looking for a `Destination` ending with `docker.sock`.
     const mounts = item["Mounts"];
     if (typeof mounts !== "object") {
-      actions_core.debug(
-        `Got non-object in \`Mounts\` field of \`docker inspect ${container_id}\` output, bailing on docker.sock detection.`,
+      actionsCore.debug(
+        `Got non-object in \`Mounts\` field of \`docker inspect ${containerId}\` output, bailing on docker.sock detection.`,
       );
       return false;
     }
 
-    let found_docker_sock_mount = false;
+    let foundDockerSockMount = false;
     for (const mount of mounts) {
       const destination = mount["Destination"];
       if (typeof destination === "string") {
         if (destination.endsWith("docker.sock")) {
-          found_docker_sock_mount = true;
+          foundDockerSockMount = true;
           break;
         }
       }
     }
 
-    return found_docker_sock_mount;
+    return foundDockerSockMount;
   }
 
   private async executionEnvironment(): Promise<ExecuteEnvironment> {
-    const execution_env: ExecuteEnvironment = {};
+    const executionEnv: ExecuteEnvironment = {};
 
-    execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
-    execution_env.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(
+    executionEnv.NIX_INSTALLER_NO_CONFIRM = "true";
+    executionEnv.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(
       this.idslib.getCorrelationHashes(),
     );
 
     if (this.backtrace !== null) {
-      execution_env.RUST_BACKTRACE = this.backtrace;
+      executionEnv.RUST_BACKTRACE = this.backtrace;
     }
-    if (this.modify_profile !== null) {
-      if (this.modify_profile) {
-        execution_env.NIX_INSTALLER_MODIFY_PROFILE = "true";
+    if (this.modifyProfile !== null) {
+      if (this.modifyProfile) {
+        executionEnv.NIX_INSTALLER_MODIFY_PROFILE = "true";
       } else {
-        execution_env.NIX_INSTALLER_MODIFY_PROFILE = "false";
+        executionEnv.NIX_INSTALLER_MODIFY_PROFILE = "false";
       }
     }
 
-    if (this.nix_build_group_id !== null) {
-      execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_ID = `${this.nix_build_group_id}`;
+    if (this.nixBuildGroupId !== null) {
+      executionEnv.NIX_INSTALLER_NIX_BUILD_GROUP_ID = `${this.nixBuildGroupId}`;
     }
 
-    if (this.nix_build_group_name !== null) {
-      execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_NAME =
-        this.nix_build_group_name;
+    if (this.nixBuildGroupName !== null) {
+      executionEnv.NIX_INSTALLER_NIX_BUILD_GROUP_NAME = this.nixBuildGroupName;
     }
 
-    if (this.nix_build_user_prefix !== null) {
-      execution_env.NIX_INSTALLER_NIX_BUILD_USER_PREFIX =
-        this.nix_build_user_prefix;
+    if (this.nixBuildUserPrefix !== null) {
+      executionEnv.NIX_INSTALLER_NIX_BUILD_USER_PREFIX =
+        this.nixBuildUserPrefix;
     }
 
-    if (this.nix_build_user_count !== null) {
-      execution_env.NIX_INSTALLER_NIX_BUILD_USER_COUNT = `${this.nix_build_user_count}`;
+    if (this.nixBuildUserCount !== null) {
+      executionEnv.NIX_INSTALLER_NIX_BUILD_USER_COUNT = `${this.nixBuildUserCount}`;
     }
 
-    if (this.nix_build_user_base !== null) {
-      execution_env.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nix_build_user_count}`;
+    if (this.nixBuildUserBase !== null) {
+      executionEnv.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nixBuildUserCount}`;
     }
 
-    if (this.nix_package_url !== null) {
-      execution_env.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nix_package_url}`;
+    if (this.nixPackageUrl !== null) {
+      executionEnv.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nixPackageUrl}`;
     }
 
     if (this.proxy !== null) {
-      execution_env.NIX_INSTALLER_PROXY = this.proxy;
+      executionEnv.NIX_INSTALLER_PROXY = this.proxy;
     }
 
-    if (this.ssl_cert_file !== null) {
-      execution_env.NIX_INSTALLER_SSL_CERT_FILE = this.ssl_cert_file;
+    if (this.sslCertFile !== null) {
+      executionEnv.NIX_INSTALLER_SSL_CERT_FILE = this.sslCertFile;
     }
 
-    execution_env.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
+    executionEnv.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
       this.idslib.getDiagnosticsUrl()?.toString() || "";
 
     // TODO: Error if the user uses these on not-MacOS
-    if (this.mac_encrypt !== null) {
+    if (this.macEncrypt !== null) {
       if (process.env.RUNNER_OS !== "macOS") {
         throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
       }
-      execution_env.NIX_INSTALLER_ENCRYPT = this.mac_encrypt;
+      executionEnv.NIX_INSTALLER_ENCRYPT = this.macEncrypt;
     }
 
-    if (this.mac_case_sensitive !== null) {
+    if (this.macCaseSensitive !== null) {
       if (process.env.RUNNER_OS !== "macOS") {
         throw new Error(
           "`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`",
         );
       }
-      execution_env.NIX_INSTALLER_CASE_SENSITIVE = this.mac_case_sensitive;
+      executionEnv.NIX_INSTALLER_CASE_SENSITIVE = this.macCaseSensitive;
     }
 
-    if (this.mac_volume_label !== null) {
+    if (this.macVolumeLabel !== null) {
       if (process.env.RUNNER_OS !== "macOS") {
         throw new Error(
           "`mac-volume-label` while `$RUNNER_OS` was not `macOS`",
         );
       }
-      execution_env.NIX_INSTALLER_VOLUME_LABEL = this.mac_volume_label;
+      executionEnv.NIX_INSTALLER_VOLUME_LABEL = this.macVolumeLabel;
     }
 
-    if (this.mac_root_disk !== null) {
+    if (this.macRootDisk !== null) {
       if (process.env.RUNNER_OS !== "macOS") {
         throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
       }
-      execution_env.NIX_INSTALLER_ROOT_DISK = this.mac_root_disk;
+      executionEnv.NIX_INSTALLER_ROOT_DISK = this.macRootDisk;
     }
 
     if (this.logger !== null) {
-      execution_env.NIX_INSTALLER_LOGGER = this.logger;
+      executionEnv.NIX_INSTALLER_LOGGER = this.logger;
     }
 
-    if (this.log_directives !== null) {
-      execution_env.NIX_INSTALLER_LOG_DIRECTIVES = this.log_directives;
+    if (this.logDirectives !== null) {
+      executionEnv.NIX_INSTALLER_LOG_DIRECTIVES = this.logDirectives;
     }
 
     // TODO: Error if the user uses these on MacOS
@@ -387,65 +383,65 @@ class NixInstallerAction {
           "`init` is not a valid option when `$RUNNER_OS` is `macOS`",
         );
       }
-      execution_env.NIX_INSTALLER_INIT = this.init;
+      executionEnv.NIX_INSTALLER_INIT = this.init;
     }
 
-    if (this.start_daemon !== null) {
-      if (this.start_daemon) {
-        execution_env.NIX_INSTALLER_START_DAEMON = "true";
+    if (this.startDaemon !== null) {
+      if (this.startDaemon) {
+        executionEnv.NIX_INSTALLER_START_DAEMON = "true";
       } else {
-        execution_env.NIX_INSTALLER_START_DAEMON = "false";
+        executionEnv.NIX_INSTALLER_START_DAEMON = "false";
       }
     }
 
-    let extra_conf = "";
-    if (this.github_server_url !== null && this.github_token !== null) {
-      const server_url = this.github_server_url.replace("https://", "");
-      extra_conf += `access-tokens = ${server_url}=${this.github_token}`;
-      extra_conf += "\n";
+    let extraConf = "";
+    if (this.githubServerUrl !== null && this.githubToken !== null) {
+      const serverUrl = this.githubServerUrl.replace("https://", "");
+      extraConf += `access-tokens = ${serverUrl}=${this.githubToken}`;
+      extraConf += "\n";
     }
-    if (this.trust_runner_user !== null) {
+    if (this.trustRunnerUser !== null) {
       const user = userInfo().username;
       if (user) {
-        extra_conf += `trusted-users = root ${user}`;
+        extraConf += `trusted-users = root ${user}`;
       } else {
-        extra_conf += `trusted-users = root`;
+        extraConf += `trusted-users = root`;
       }
-      extra_conf += "\n";
+      extraConf += "\n";
     }
     if (this.flakehub) {
-      extra_conf += `netrc-file = ${await this.flakehub_login()}`;
-      extra_conf += "\n";
+      extraConf += `netrc-file = ${await this.flakehubLogin()}`;
+      extraConf += "\n";
     }
-    if (this.extra_conf !== null && this.extra_conf.length !== 0) {
-      extra_conf += this.extra_conf.join("\n");
-      extra_conf += "\n";
+    if (this.extraConf !== null && this.extraConf.length !== 0) {
+      extraConf += this.extraConf.join("\n");
+      extraConf += "\n";
     }
-    execution_env.NIX_INSTALLER_EXTRA_CONF = extra_conf;
+    executionEnv.NIX_INSTALLER_EXTRA_CONF = extraConf;
 
     if (process.env.ACT && !process.env.NOT_ACT) {
       this.idslib.addFact("in_act", true);
-      actions_core.info(
+      actionsCore.info(
         "Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`",
       );
-      execution_env.NIX_INSTALLER_INIT = "none";
+      executionEnv.NIX_INSTALLER_INIT = "none";
     }
 
     if (process.env.NSC_VM_ID && !process.env.NOT_NAMESPACE) {
       this.idslib.addFact("in_namespace_so", true);
-      actions_core.info(
+      actionsCore.info(
         "Detected Namespace runner, assuming this is a https://namespace.so created container, set `NOT_NAMESPACE=true` to override this. This will change the setting of the `init` to be compatible with Namespace",
       );
-      execution_env.NIX_INSTALLER_INIT = "none";
+      executionEnv.NIX_INSTALLER_INIT = "none";
     }
 
-    return execution_env;
+    return executionEnv;
   }
 
-  private async execute_install(binary_path: string): Promise<number> {
-    const execution_env = await this.executionEnvironment();
-    actions_core.debug(
-      `Execution environment: ${JSON.stringify(execution_env, null, 4)}`,
+  private async executeInstall(binaryPath: string): Promise<number> {
+    const executionEnv = await this.executionEnvironment();
+    actionsCore.debug(
+      `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`,
     );
 
     const args = ["install"];
@@ -453,81 +449,79 @@ class NixInstallerAction {
       this.idslib.addFact("nix_installer_planner", this.planner);
       args.push(this.planner);
     } else {
-      this.idslib.addFact("nix_installer_planner", get_default_planner());
-      args.push(get_default_planner());
+      this.idslib.addFact("nix_installer_planner", getDefaultPlanner());
+      args.push(getDefaultPlanner());
     }
 
-    if (this.extra_args) {
-      const extra_args = stringArgv(this.extra_args);
-      args.concat(extra_args);
+    if (this.extraArgs) {
+      const extraArgs = stringArgv(this.extraArgs);
+      args.concat(extraArgs);
     }
 
     this.idslib.recordEvent("install_nix_start");
-    const exit_code = await actions_exec.exec(binary_path, args, {
+    const exitCode = await actionsExec.exec(binaryPath, args, {
       env: {
-        ...execution_env,
+        ...executionEnv,
         ...process.env, // To get $PATH, etc
       },
     });
 
-    if (exit_code !== 0) {
+    if (exitCode !== 0) {
       this.idslib.recordEvent("install_nix_failure", {
-        exit_code,
+        exitCode,
       });
-      throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
+      throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
     }
 
     this.idslib.recordEvent("install_nix_success");
 
-    return exit_code;
+    return exitCode;
   }
 
   async install(): Promise<void> {
-    const existing_install = await this.detect_existing();
-    if (existing_install) {
+    const existingInstall = await this.detectExisting();
+    if (existingInstall) {
       if (this.reinstall) {
         // We need to uninstall, then reinstall
-        actions_core.info(
+        actionsCore.info(
           "Nix was already installed, `reinstall` is set, uninstalling for a reinstall",
         );
-        await this.execute_uninstall();
+        await this.executeUninstall();
       } else {
         // We're already installed, and not reinstalling, just set GITHUB_PATH and finish early
-        await this.set_github_path();
-        actions_core.info("Nix was already installed, using existing install");
+        await this.setGithubPath();
+        actionsCore.info("Nix was already installed, using existing install");
         return;
       }
     }
 
     if (this.kvm) {
-      actions_core.startGroup("Configuring KVM");
-      if (await this.setup_kvm()) {
-        actions_core.endGroup();
-        actions_core.info(
-          "\u001b[32m Accelerated KVM is enabled \u001b[33m⚡️",
-        );
-        actions_core.exportVariable("DETERMINATE_NIX_KVM", "1");
+      actionsCore.startGroup("Configuring KVM");
+      if (await this.setupKvm()) {
+        actionsCore.endGroup();
+        actionsCore.info("\u001b[32m Accelerated KVM is enabled \u001b[33m⚡️");
+        actionsCore.exportVariable("DETERMINATE_NIX_KVM", "1");
       } else {
-        actions_core.endGroup();
-        actions_core.info("KVM is not available.");
-        actions_core.exportVariable("DETERMINATE_NIX_KVM", "0");
+        actionsCore.endGroup();
+        actionsCore.info("KVM is not available.");
+        actionsCore.exportVariable("DETERMINATE_NIX_KVM", "0");
       }
     }
 
     // Normal just doing of the install
-    actions_core.startGroup("Installing Nix");
-    const binary_path = await this.fetch_binary();
-    await this.execute_install(binary_path);
-    actions_core.endGroup();
+    actionsCore.startGroup("Installing Nix");
+    const binaryPath = await this.fetchBinary();
+    await this.executeInstall(binaryPath);
+    actionsCore.endGroup();
 
-    if (this.force_docker_shim) {
+    if (this.forceDockerShim) {
       await this.spawnDockerShim();
     }
-    await this.set_github_path();
+    await this.setGithubPath();
   }
 
   async spawnDockerShim(): Promise<void> {
-    actions_core.startGroup(
+    actionsCore.startGroup(
       "Configuring the Docker shim as the Nix Daemon's process supervisor",
     );
 
@@ -544,9 +538,9 @@ class NixInstallerAction {
     } else {
       throw Error("Architecture not supported in Docker shim mode.");
     }
-    actions_core.debug("Loading image: determinate-nix-shim:latest...");
+    actionsCore.debug("Loading image: determinate-nix-shim:latest...");
     {
-      const exit_code = await actions_exec.exec(
+      const exitCode = await actionsExec.exec(
         "docker",
         ["image", "load", "--input", images[arch]],
         {
@@ -555,30 +549,30 @@ class NixInstallerAction {
             stdout: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
               if (trimmed.length >= 0) {
-                actions_core.debug(trimmed);
+                actionsCore.debug(trimmed);
               }
             },
             stderr: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
               if (trimmed.length >= 0) {
-                actions_core.debug(trimmed);
+                actionsCore.debug(trimmed);
               }
             },
           },
         },
       );
 
-      if (exit_code !== 0) {
+      if (exitCode !== 0) {
         throw new Error(
-          `Failed to build the shim image, exit code: \`${exit_code}\``,
+          `Failed to build the shim image, exit code: \`${exitCode}\``,
         );
       }
     }
 
     {
-      actions_core.debug("Starting the Nix daemon through Docker...");
+      actionsCore.debug("Starting the Nix daemon through Docker...");
       this.idslib.recordEvent("start_docker_shim");
-      const exit_code = await actions_exec.exec(
+      const exitCode = await actionsExec.exec(
         "docker",
         [
           "--log-level=debug",
@@ -611,59 +605,56 @@ class NixInstallerAction {
           silent: true,
           listeners: {
             stdline: (data: string) => {
-              actions_core.saveState(
-                "docker_shim_container_id",
-                data.trimEnd(),
-              );
+              actionsCore.saveState("docker_shim_container_id", data.trimEnd());
             },
             stdout: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
               if (trimmed.length >= 0) {
-                actions_core.debug(trimmed);
+                actionsCore.debug(trimmed);
               }
             },
             stderr: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
               if (trimmed.length >= 0) {
-                actions_core.debug(trimmed);
+                actionsCore.debug(trimmed);
               }
             },
           },
         },
       );
 
-      if (exit_code !== 0) {
+      if (exitCode !== 0) {
         throw new Error(
-          `Failed to start the Nix daemon through Docker, exit code: \`${exit_code}\``,
+          `Failed to start the Nix daemon through Docker, exit code: \`${exitCode}\``,
         );
       }
     }
 
-    actions_core.endGroup();
+    actionsCore.endGroup();
 
     return;
   }
   async cleanupDockerShim(): Promise<void> {
-    const container_id = actions_core.getState("docker_shim_container_id");
+    const containerId = actionsCore.getState("docker_shim_container_id");
 
-    if (container_id !== "") {
-      actions_core.startGroup("Cleaning up the Nix daemon's Docker shim");
+    if (containerId !== "") {
+      actionsCore.startGroup("Cleaning up the Nix daemon's Docker shim");
 
       let cleaned = false;
       try {
-        await actions_exec.exec("docker", ["rm", "--force", container_id]);
+        await actionsExec.exec("docker", ["rm", "--force", containerId]);
         cleaned = true;
       } catch {
-        actions_core.warning("failed to cleanup nix daemon container");
+        actionsCore.warning("failed to cleanup nix daemon container");
       }
 
       if (!cleaned) {
-        actions_core.info("trying to pkill the container's shim process");
+        actionsCore.info("trying to pkill the container's shim process");
         try {
-          await actions_exec.exec("pkill", [container_id]);
+          await actionsExec.exec("pkill", [containerId]);
           cleaned = true;
         } catch {
-          actions_core.warning(
+          actionsCore.warning(
             "failed to forcibly kill the container's shim process",
           );
         }
@@ -672,62 +663,62 @@ class NixInstallerAction {
       if (cleaned) {
         this.idslib.recordEvent("clean_up_docker_shim");
       } else {
-        actions_core.warning(
+        actionsCore.warning(
           "Giving up on cleaning up the nix daemon container",
         );
       }
 
-      actions_core.endGroup();
+      actionsCore.endGroup();
     }
   }
 
-  async set_github_path(): Promise<void> {
+  async setGithubPath(): Promise<void> {
     // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
     try {
-      const nix_var_nix_profile_path = "/nix/var/nix/profiles/default/bin";
-      const home_nix_profile_path = `${process.env.HOME}/.nix-profile/bin`;
-      actions_core.addPath(nix_var_nix_profile_path);
-      actions_core.addPath(home_nix_profile_path);
-      actions_core.info(
-        `Added \`${nix_var_nix_profile_path}\` and \`${home_nix_profile_path}\` to \`$GITHUB_PATH\``,
+      const nixVarNixProfilePath = "/nix/var/nix/profiles/default/bin";
+      const homeNixProfilePath = `${process.env.HOME}/.nix-profile/bin`;
+      actionsCore.addPath(nixVarNixProfilePath);
+      actionsCore.addPath(homeNixProfilePath);
+      actionsCore.info(
+        `Added \`${nixVarNixProfilePath}\` and \`${homeNixProfilePath}\` to \`$GITHUB_PATH\``,
       );
     } catch (error) {
-      actions_core.info(
+      actionsCore.info(
         "Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is done in the action. Prior to 0.11.0, this was only done in the `nix-installer` binary.",
       );
     }
   }
 
-  async flakehub_login(): Promise<string> {
+  async flakehubLogin(): Promise<string> {
     this.idslib.recordEvent("login_to_flakehub");
-    const netrc_path = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
+    const netrcPath = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
 
-    const jwt = await actions_core.getIDToken("api.flakehub.com");
+    const jwt = await actionsCore.getIDToken("api.flakehub.com");
 
     await writeFile(
-      netrc_path,
+      netrcPath,
       [
         `machine api.flakehub.com login flakehub password ${jwt}`,
         `machine flakehub.com login flakehub password ${jwt}`,
       ].join("\n"),
     );
 
-    actions_core.info("Logging in to FlakeHub.");
+    actionsCore.info("Logging in to FlakeHub.");
 
     // the join followed by a match on ^... looks silly, but extra_config
     // could contain multi-line values
-    if (this.extra_conf?.join("\n").match(/^netrc-file/m)) {
-      actions_core.warning(
+    if (this.extraConf?.join("\n").match(/^netrc-file/m)) {
+      actionsCore.warning(
         "Logging in to FlakeHub conflicts with the Nix option `netrc-file`.",
       );
     }
 
-    return netrc_path;
+    return netrcPath;
   }
 
-  async execute_uninstall(): Promise<number> {
+  async executeUninstall(): Promise<number> {
     this.idslib.recordEvent("uninstall");
-    const exit_code = await actions_exec.exec(
+    const exitCode = await actionsExec.exec(
       `/nix/nix-installer`,
       ["uninstall"],
       {
@@ -738,17 +729,17 @@ class NixInstallerAction {
       },
     );
 
-    if (exit_code !== 0) {
-      throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
+    if (exitCode !== 0) {
+      throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
     }
 
-    return exit_code;
+    return exitCode;
   }
 
-  async detect_existing(): Promise<boolean> {
-    const receipt_path = "/nix/receipt.json";
+  async detectExisting(): Promise<boolean> {
+    const receiptPath = "/nix/receipt.json";
     try {
-      await access(receipt_path);
+      await access(receiptPath);
       // There is a /nix/receipt.json
       return true;
     } catch {
@@ -757,20 +748,19 @@ class NixInstallerAction {
     }
   }
 
-  private async setup_kvm(): Promise<boolean> {
+  private async setupKvm(): Promise<boolean> {
     this.idslib.recordEvent("setup_kvm");
-    const current_user = userInfo();
-    const is_root = current_user.uid === 0;
-    const maybe_sudo = is_root ? "" : "sudo";
+    const currentUser = userInfo();
+    const isRoot = currentUser.uid === 0;
+    const maybeSudo = isRoot ? "" : "sudo";
 
-    const kvm_rules =
-      "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
+    const kvmRules = "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
     try {
-      const write_file_exit_code = await actions_exec.exec(
+      const writeFileExitCode = await actionsExec.exec(
         "sh",
         [
           "-c",
-          `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | ${maybe_sudo} tee ${kvm_rules} > /dev/null`,
+          `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | ${maybeSudo} tee ${kvmRules} > /dev/null`,
         ],
         {
           silent: true,
@@ -778,115 +768,112 @@ class NixInstallerAction {
             stdout: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
               if (trimmed.length >= 0) {
-                actions_core.debug(trimmed);
+                actionsCore.debug(trimmed);
               }
             },
             stderr: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
               if (trimmed.length >= 0) {
-                actions_core.debug(trimmed);
+                actionsCore.debug(trimmed);
               }
             },
           },
         },
       );
 
-      if (write_file_exit_code !== 0) {
+      if (writeFileExitCode !== 0) {
         throw new Error(
-          `Non-zero exit code of \`${write_file_exit_code}\` detected while writing '${kvm_rules}'`,
+          `Non-zero exit code of \`${writeFileExitCode}\` detected while writing '${kvmRules}'`,
         );
       }
 
-      const debug_root_run_throw = async (
+      const debugRootRunThrow = async (
         action: string,
         command: string,
         args: string[],
       ): Promise<void> => {
-        if (!is_root) {
+        if (!isRoot) {
           args = [command, ...args];
           command = "sudo";
         }
-        const reload_exit_code = await actions_exec.exec(command, args, {
+        const reloadExitCode = await actionsExec.exec(command, args, {
           silent: true,
           listeners: {
             stdout: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
               if (trimmed.length >= 0) {
-                actions_core.debug(trimmed);
+                actionsCore.debug(trimmed);
               }
             },
             stderr: (data: Buffer) => {
               const trimmed = data.toString("utf-8").trimEnd();
               if (trimmed.length >= 0) {
-                actions_core.debug(trimmed);
+                actionsCore.debug(trimmed);
               }
             },
           },
         });
 
-        if (reload_exit_code !== 0) {
+        if (reloadExitCode !== 0) {
           throw new Error(
-            `Non-zero exit code of \`${reload_exit_code}\` detected while ${action}.`,
+            `Non-zero exit code of \`${reloadExitCode}\` detected while ${action}.`,
           );
         }
       };
 
-      await debug_root_run_throw("reloading udev rules", "udevadm", [
+      await debugRootRunThrow("reloading udev rules", "udevadm", [
         "control",
         "--reload-rules",
       ]);
 
-      await debug_root_run_throw("triggering udev against kvm", "udevadm", [
+      await debugRootRunThrow("triggering udev against kvm", "udevadm", [
         "trigger",
         "--name-match=kvm",
       ]);
 
       return true;
     } catch (error) {
-      if (is_root) {
-        await actions_exec.exec("rm", ["-f", kvm_rules]);
+      if (isRoot) {
+        await actionsExec.exec("rm", ["-f", kvmRules]);
       } else {
-        await actions_exec.exec("sudo", ["rm", "-f", kvm_rules]);
+        await actionsExec.exec("sudo", ["rm", "-f", kvmRules]);
       }
 
       return false;
     }
   }
 
-  private async fetch_binary(): Promise<string> {
-    if (!this.local_root) {
+  private async fetchBinary(): Promise<string> {
+    if (!this.localRoot) {
       return await this.idslib.fetchExecutable();
     } else {
-      const local_path = join(
-        this.local_root,
-        `nix-installer-${this.platform}`,
-      );
-      actions_core.info(`Using binary ${local_path}`);
-      return local_path;
+      const localPath = join(this.localRoot, `nix-installer-${this.platform}`);
+      actionsCore.info(`Using binary ${localPath}`);
+      return localPath;
     }
   }
 
-  async report_overall(): Promise<void> {
+  async reportOverall(): Promise<void> {
     try {
       this.idslib.recordEvent("conclude_workflow", {
-        conclusion: await this.get_workflow_conclusion(),
+        conclusion: await this.getWorkflowConclusion(),
       });
     } catch (error) {
-      actions_core.debug(
+      actionsCore.debug(
         `Error submitting post-run diagnostics report: ${error}`,
       );
     }
   }
 
-  private async get_workflow_conclusion(): Promise<
+  private async getWorkflowConclusion(): Promise<
     undefined | "success" | "failure" | "cancelled" | "unavailable" | "no-jobs"
   > {
-    if (this.github_token == null) {
+    if (this.githubToken == null) {
       return undefined;
     }
 
     try {
-      const octokit = github.getOctokit(this.github_token);
+      const octokit = github.getOctokit(this.githubToken);
       const jobs = await octokit.paginate(
         octokit.rest.actions.listJobsForWorkflowRun,
         {
@@ -896,7 +883,7 @@ class NixInstallerAction {
         },
       );
 
-      actions_core.debug(`awaited jobs: ${jobs}`);
+      actionsCore.debug(`awaited jobs: ${jobs}`);
       const job = jobs
         .filter((candidate) => candidate.name === github.context.job)
         .at(0);
@@ -921,7 +908,7 @@ class NixInstallerAction {
       // Assume success if no jobs failed or were canceled
       return "success";
     } catch (error) {
-      actions_core.debug(`Error determining final disposition: ${error}`);
+      actionsCore.debug(`Error determining final disposition: ${error}`);
       return "unavailable";
     }
   }
@@ -953,34 +940,15 @@ type ExecuteEnvironment = {
   NIX_INSTALLER_LOGGER?: string;
 };
 
-function get_nix_platform(): string {
-  const env_os = process.env.RUNNER_OS;
-  const env_arch = process.env.RUNNER_ARCH;
+function getDefaultPlanner(): string {
+  const envOs = process.env.RUNNER_OS;
 
-  if (env_os === "macOS" && env_arch === "X64") {
-    return "x86_64-darwin";
-  } else if (env_os === "macOS" && env_arch === "ARM64") {
-    return "aarch64-darwin";
-  } else if (env_os === "Linux" && env_arch === "X64") {
-    return "x86_64-linux";
-  } else if (env_os === "Linux" && env_arch === "ARM64") {
-    return "aarch64-linux";
-  } else {
-    throw new Error(
-      `Unsupported \`RUNNER_OS\` (currently \`${env_os}\`) and \`RUNNER_ARCH\` (currently \`${env_arch}\`)  combination`,
-    );
-  }
-}
-
-function get_default_planner(): string {
-  const env_os = process.env.RUNNER_OS;
-
-  if (env_os === "macOS") {
+  if (envOs === "macOS") {
     return "macos";
-  } else if (env_os === "Linux") {
+  } else if (envOs === "Linux") {
     return "linux";
   } else {
-    throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${env_os}\`)`);
+    throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${envOs}\`)`);
   }
 }
 
@@ -994,7 +962,7 @@ function main(): void {
 
   installer.idslib.onPost(async () => {
     await installer.cleanupDockerShim();
-    await installer.report_overall();
+    await installer.reportOverall();
   });
 
   installer.idslib.execute();
