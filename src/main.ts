@@ -7,7 +7,7 @@ import fs from "node:fs";
 import { userInfo } from "node:os";
 import stringArgv from "string-argv";
 import * as path from "path";
-import { IdsToolbox } from "detsys-ts";
+import { IdsToolbox, inputs } from "detsys-ts";
 import { randomUUID } from "node:crypto";
 
 class NixInstallerAction {
@@ -51,43 +51,37 @@ class NixInstallerAction {
     });
 
     this.platform = get_nix_platform();
-    this.nix_package_url = action_input_string_or_null("nix-package-url");
-    this.backtrace = action_input_string_or_null("backtrace");
-    this.extra_args = action_input_string_or_null("extra-args");
-    this.extra_conf = action_input_multiline_string_or_null("extra-conf");
-    this.flakehub = action_input_bool("flakehub");
-    this.kvm = action_input_bool("kvm");
-    this.force_docker_shim = action_input_bool("force-docker-shim");
-    this.github_token = action_input_string_or_null("github-token");
-    this.github_server_url = action_input_string_or_null("github-server-url");
-    this.init = action_input_string_or_null("init");
-    this.local_root = action_input_string_or_null("local-root");
-    this.log_directives = action_input_string_or_null("log-directives");
-    this.logger = action_input_string_or_null("logger");
-    this.ssl_cert_file = action_input_string_or_null("ssl-cert-file");
-    this.proxy = action_input_string_or_null("proxy");
-    this.mac_case_sensitive = action_input_string_or_null("mac-case-sensitive");
-    this.mac_encrypt = action_input_string_or_null("mac-encrypt");
-    this.mac_root_disk = action_input_string_or_null("mac-root-disk");
-    this.mac_volume_label = action_input_string_or_null("mac-volume-label");
-    this.modify_profile = action_input_bool("modify-profile");
-    this.nix_build_group_id = action_input_number_or_null("nix-build-group-id");
-    this.nix_build_group_name = action_input_string_or_null(
-      "nix-build-group-name",
-    );
-    this.nix_build_user_base = action_input_number_or_null(
-      "nix_build-user-base",
-    );
-    this.nix_build_user_count = action_input_number_or_null(
-      "nix-build-user-count",
-    );
-    this.nix_build_user_prefix = action_input_string_or_null(
+    this.nix_package_url = inputs.getStringOrNull("nix-package-url");
+    this.backtrace = inputs.getStringOrNull("backtrace");
+    this.extra_args = inputs.getStringOrNull("extra-args");
+    this.extra_conf = inputs.getMultilineStringOrNull("extra-conf");
+    this.flakehub = inputs.getBool("flakehub");
+    this.kvm = inputs.getBool("kvm");
+    this.force_docker_shim = inputs.getBool("force-docker-shim");
+    this.github_token = inputs.getStringOrNull("github-token");
+    this.github_server_url = inputs.getStringOrNull("github-server-url");
+    this.init = inputs.getStringOrNull("init");
+    this.local_root = inputs.getStringOrNull("local-root");
+    this.log_directives = inputs.getStringOrNull("log-directives");
+    this.logger = inputs.getStringOrNull("logger");
+    this.ssl_cert_file = inputs.getStringOrNull("ssl-cert-file");
+    this.proxy = inputs.getStringOrNull("proxy");
+    this.mac_case_sensitive = inputs.getStringOrNull("mac-case-sensitive");
+    this.mac_encrypt = inputs.getStringOrNull("mac-encrypt");
+    this.mac_root_disk = inputs.getStringOrNull("mac-root-disk");
+    this.mac_volume_label = inputs.getStringOrNull("mac-volume-label");
+    this.modify_profile = inputs.getBool("modify-profile");
+    this.nix_build_group_id = inputs.getNumberOrNull("nix-build-group-id");
+    this.nix_build_group_name = inputs.getStringOrNull("nix-build-group-name");
+    this.nix_build_user_base = inputs.getNumberOrNull("nix_build-user-base");
+    this.nix_build_user_count = inputs.getNumberOrNull("nix-build-user-count");
+    this.nix_build_user_prefix = inputs.getStringOrNull(
       "nix-build-user-prefix",
     );
-    this.planner = action_input_string_or_null("planner");
-    this.reinstall = action_input_bool("reinstall");
-    this.start_daemon = action_input_bool("start-daemon");
-    this.trust_runner_user = action_input_bool("trust-runner-user");
+    this.planner = inputs.getStringOrNull("planner");
+    this.reinstall = inputs.getBool("reinstall");
+    this.start_daemon = inputs.getBool("start-daemon");
+    this.trust_runner_user = inputs.getBool("trust-runner-user");
   }
 
   async detectAndForceDockerShim(): Promise<void> {
@@ -988,37 +982,6 @@ function get_default_planner(): string {
   } else {
     throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${env_os}\`)`);
   }
-}
-
-function action_input_string_or_null(name: string): string | null {
-  const value = actions_core.getInput(name);
-  if (value === "") {
-    return null;
-  } else {
-    return value;
-  }
-}
-
-function action_input_multiline_string_or_null(name: string): string[] | null {
-  const value = actions_core.getMultilineInput(name);
-  if (value.length === 0) {
-    return null;
-  } else {
-    return value;
-  }
-}
-
-function action_input_number_or_null(name: string): number | null {
-  const value = actions_core.getInput(name);
-  if (value === "") {
-    return null;
-  } else {
-    return Number(value);
-  }
-}
-
-function action_input_bool(name: string): boolean {
-  return actions_core.getBooleanInput(name);
 }
 
 function main(): void {

@@ -90087,7 +90087,7 @@ function firstString() {
 var external_path_ = __nccwpck_require__(1017);
 ;// CONCATENATED MODULE: external "node:crypto"
 const external_node_crypto_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:crypto");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/correlation.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@57c3688958a8ea902fa24780111e5c37dc5386a5_5zdsm7qsjhwwxqyje77k44k4nm/node_modules/detsys-ts/dist/correlation.js
 
 
 function identify(projectName) {
@@ -90169,10 +90169,17 @@ function hashEnvironmentVariables(prefix, variables) {
     return `${prefix}-${hash.digest("hex")}`;
 }
 
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/package.json
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@57c3688958a8ea902fa24780111e5c37dc5386a5_5zdsm7qsjhwwxqyje77k44k4nm/node_modules/detsys-ts/dist/package.json
 const package_namespaceObject = {"i8":"1.0.0"};
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/platform.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@57c3688958a8ea902fa24780111e5c37dc5386a5_5zdsm7qsjhwwxqyje77k44k4nm/node_modules/detsys-ts/dist/platform.js
+/**
+ * @packageDocumentation
+ * Helpers for determining system attributes of the current runner.
+ */
 
+/**
+ * Get the current architecture plus OS. Examples include `X64-Linux` and `ARM64-macOS`.
+ */
 function getArchOs() {
     const envArch = process.env.RUNNER_ARCH;
     const envOs = process.env.RUNNER_OS;
@@ -90184,6 +90191,9 @@ function getArchOs() {
         throw new Error("RUNNER_ARCH and/or RUNNER_OS is not defined");
     }
 }
+/**
+ * Get the current Nix system. Examples include `x86_64-linux` and `aarch64-darwin`.
+ */
 function getNixPlatform(archOs) {
     const archOsMap = new Map([
         ["X64-macOS", "x86_64-darwin"],
@@ -90201,17 +90211,86 @@ function getNixPlatform(archOs) {
     }
 }
 
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/sourcedef.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@57c3688958a8ea902fa24780111e5c37dc5386a5_5zdsm7qsjhwwxqyje77k44k4nm/node_modules/detsys-ts/dist/inputs.js
+/**
+ * @packageDocumentation
+ * Helpers for getting values from an Action's configuration.
+ */
+
+/**
+ * Get a Boolean input from the Action's configuration by name.
+ */
+const getBool = (name) => {
+    return core.getBooleanInput(name);
+};
+/**
+ * Get a multi-line string input from the Action's configuration by name or return `null` if not set.
+ */
+const getMultilineStringOrNull = (name) => {
+    const value = core.getMultilineInput(name);
+    if (value.length === 0) {
+        return null;
+    }
+    else {
+        return value;
+    }
+};
+/**
+ * Get a number input from the Action's configuration by name or return `null` if not set.
+ */
+const getNumberOrNull = (name) => {
+    const value = core.getInput(name);
+    if (value === "") {
+        return null;
+    }
+    else {
+        return Number(value);
+    }
+};
+/**
+ * Get a string input from the Action's configuration.
+ */
+const getString = (name) => {
+    return core.getInput(name);
+};
+/**
+ * Get a string input from the Action's configuration by name or return `null` if not set.
+ */
+const getStringOrNull = (name) => {
+    const value = core.getInput(name);
+    if (value === "") {
+        return null;
+    }
+    else {
+        return value;
+    }
+};
+/**
+ * Get a string input from the Action's configuration by name or return `undefined` if not set.
+ */
+const getStringOrUndefined = (name) => {
+    const value = core.getInput(name);
+    if (value === "") {
+        return undefined;
+    }
+    else {
+        return value;
+    }
+};
+
+
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@57c3688958a8ea902fa24780111e5c37dc5386a5_5zdsm7qsjhwwxqyje77k44k4nm/node_modules/detsys-ts/dist/sourcedef.js
+
 
 function constructSourceParameters(legacyPrefix) {
     const noisilyGetInput = (suffix) => {
-        const preferredInput = inputStringOrUndef(`source-${suffix}`);
+        const preferredInput = getStringOrUndefined(`source-${suffix}`);
         if (!legacyPrefix) {
             return preferredInput;
         }
         // Remaining is for handling cases where the legacy prefix
         // should be examined.
-        const legacyInput = inputStringOrUndef(`${legacyPrefix}-${suffix}`);
+        const legacyInput = getStringOrUndefined(`${legacyPrefix}-${suffix}`);
         if (preferredInput && legacyInput) {
             core.warning(`The supported option source-${suffix} and the legacy option ${legacyPrefix}-${suffix} are both set. Preferring source-${suffix}. Please stop setting ${legacyPrefix}-${suffix}.`);
             return preferredInput;
@@ -90232,15 +90311,6 @@ function constructSourceParameters(legacyPrefix) {
         branch: noisilyGetInput("branch"),
         revision: noisilyGetInput("revision"),
     };
-}
-function inputStringOrUndef(name) {
-    const value = core.getInput(name);
-    if (value === "") {
-        return undefined;
-    }
-    else {
-        return value;
-    }
 }
 
 // EXTERNAL MODULE: ./node_modules/.pnpm/@actions+cache@3.2.4/node_modules/@actions/cache/lib/cache.js
@@ -97212,7 +97282,11 @@ const validate = uuid_dist/* validate */.Gu;
 const stringify = uuid_dist/* stringify */.Pz;
 const parse = uuid_dist/* parse */.Qc;
 
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/main.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@57c3688958a8ea902fa24780111e5c37dc5386a5_5zdsm7qsjhwwxqyje77k44k4nm/node_modules/detsys-ts/dist/main.js
+/**
+ * @packageDocumentation
+ * Determinate Systems' TypeScript library for creating GitHub Actions logic.
+ */
 
 // eslint-disable-next-line import/extensions
 
@@ -97583,6 +97657,9 @@ function mungeDiagnosticEndpoint(inputUrl) {
     }
     return inputUrl;
 }
+// Public exports from other files
+
+
 
 ;// CONCATENATED MODULE: ./dist/main.js
 
@@ -97604,35 +97681,35 @@ class NixInstallerAction {
             legacySourcePrefix: "nix-installer",
         });
         this.platform = get_nix_platform();
-        this.nix_package_url = action_input_string_or_null("nix-package-url");
-        this.backtrace = action_input_string_or_null("backtrace");
-        this.extra_args = action_input_string_or_null("extra-args");
-        this.extra_conf = action_input_multiline_string_or_null("extra-conf");
-        this.flakehub = action_input_bool("flakehub");
-        this.kvm = action_input_bool("kvm");
-        this.force_docker_shim = action_input_bool("force-docker-shim");
-        this.github_token = action_input_string_or_null("github-token");
-        this.github_server_url = action_input_string_or_null("github-server-url");
-        this.init = action_input_string_or_null("init");
-        this.local_root = action_input_string_or_null("local-root");
-        this.log_directives = action_input_string_or_null("log-directives");
-        this.logger = action_input_string_or_null("logger");
-        this.ssl_cert_file = action_input_string_or_null("ssl-cert-file");
-        this.proxy = action_input_string_or_null("proxy");
-        this.mac_case_sensitive = action_input_string_or_null("mac-case-sensitive");
-        this.mac_encrypt = action_input_string_or_null("mac-encrypt");
-        this.mac_root_disk = action_input_string_or_null("mac-root-disk");
-        this.mac_volume_label = action_input_string_or_null("mac-volume-label");
-        this.modify_profile = action_input_bool("modify-profile");
-        this.nix_build_group_id = action_input_number_or_null("nix-build-group-id");
-        this.nix_build_group_name = action_input_string_or_null("nix-build-group-name");
-        this.nix_build_user_base = action_input_number_or_null("nix_build-user-base");
-        this.nix_build_user_count = action_input_number_or_null("nix-build-user-count");
-        this.nix_build_user_prefix = action_input_string_or_null("nix-build-user-prefix");
-        this.planner = action_input_string_or_null("planner");
-        this.reinstall = action_input_bool("reinstall");
-        this.start_daemon = action_input_bool("start-daemon");
-        this.trust_runner_user = action_input_bool("trust-runner-user");
+        this.nix_package_url = getStringOrNull("nix-package-url");
+        this.backtrace = getStringOrNull("backtrace");
+        this.extra_args = getStringOrNull("extra-args");
+        this.extra_conf = getMultilineStringOrNull("extra-conf");
+        this.flakehub = getBool("flakehub");
+        this.kvm = getBool("kvm");
+        this.force_docker_shim = getBool("force-docker-shim");
+        this.github_token = getStringOrNull("github-token");
+        this.github_server_url = getStringOrNull("github-server-url");
+        this.init = getStringOrNull("init");
+        this.local_root = getStringOrNull("local-root");
+        this.log_directives = getStringOrNull("log-directives");
+        this.logger = getStringOrNull("logger");
+        this.ssl_cert_file = getStringOrNull("ssl-cert-file");
+        this.proxy = getStringOrNull("proxy");
+        this.mac_case_sensitive = getStringOrNull("mac-case-sensitive");
+        this.mac_encrypt = getStringOrNull("mac-encrypt");
+        this.mac_root_disk = getStringOrNull("mac-root-disk");
+        this.mac_volume_label = getStringOrNull("mac-volume-label");
+        this.modify_profile = getBool("modify-profile");
+        this.nix_build_group_id = getNumberOrNull("nix-build-group-id");
+        this.nix_build_group_name = getStringOrNull("nix-build-group-name");
+        this.nix_build_user_base = getNumberOrNull("nix_build-user-base");
+        this.nix_build_user_count = getNumberOrNull("nix-build-user-count");
+        this.nix_build_user_prefix = getStringOrNull("nix-build-user-prefix");
+        this.planner = getStringOrNull("planner");
+        this.reinstall = getBool("reinstall");
+        this.start_daemon = getBool("start-daemon");
+        this.trust_runner_user = getBool("trust-runner-user");
     }
     async detectAndForceDockerShim() {
         // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
@@ -98334,36 +98411,6 @@ function get_default_planner() {
     else {
         throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${env_os}\`)`);
     }
-}
-function action_input_string_or_null(name) {
-    const value = core.getInput(name);
-    if (value === "") {
-        return null;
-    }
-    else {
-        return value;
-    }
-}
-function action_input_multiline_string_or_null(name) {
-    const value = core.getMultilineInput(name);
-    if (value.length === 0) {
-        return null;
-    }
-    else {
-        return value;
-    }
-}
-function action_input_number_or_null(name) {
-    const value = core.getInput(name);
-    if (value === "") {
-        return null;
-    }
-    else {
-        return Number(value);
-    }
-}
-function action_input_bool(name) {
-    return core.getBooleanInput(name);
 }
 function main() {
     const installer = new NixInstallerAction();
