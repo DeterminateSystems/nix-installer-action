@@ -17,7 +17,7 @@ jobs:
       - run: nix develop --command pnpm install
       - run: nix develop --command pnpm run all
       - run: git status --porcelain=v1
-      - run: test $(git status --porcelain=v1 2>/dev/null | wc -l) -eq 0
+      - run: git diff --exit-code
   run-test-suite:
     name: Run test suite
     strategy:
