@@ -313,8 +313,14 @@ class NixInstallerAction {
             extra_conf += "\n";
         }
         if (this.flakehub) {
-            extra_conf += `netrc-file = ${await this.flakehub_login()}`;
-            extra_conf += "\n";
+            try {
+                const flakehub_netrc_file = await this.flakehub_login();
+                extra_conf += `netrc-file = ${flakehub_netrc_file}`;
+                extra_conf += "\n";
+            }
+            catch (e) {
+                actions_core.warning(`Failed to setup FlakeHub: ${e}`);
+            }
         }
         if (this.extra_conf !== null && this.extra_conf.length !== 0) {
             extra_conf += this.extra_conf.join("\n");
