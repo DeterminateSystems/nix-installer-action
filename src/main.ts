@@ -908,6 +908,7 @@ class NixInstallerAction {
         {
           owner: github.context.repo.owner,
           repo: github.context.repo.repo,
+          /* eslint-disable camelcase */
           run_id: github.context.runId,
         },
       );

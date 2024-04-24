@@ -709,6 +709,7 @@ class NixInstallerAction {
             const jobs = await octokit.paginate(octokit.rest.actions.listJobsForWorkflowRun, {
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
+                /* eslint-disable camelcase */
                 run_id: github.context.runId,
             });
             actionsCore.debug(`awaited jobs: ${jobs}`);
