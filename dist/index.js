@@ -97933,7 +97933,7 @@ class NixInstallerAction {
             executionEnv.NIX_INSTALLER_SSL_CERT_FILE = this.sslCertFile;
         }
         executionEnv.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
-            this.idslib.getDiagnosticsUrl()?.toString() || "";
+            this.idslib.getDiagnosticsUrl()?.toString() ?? "";
         // TODO: Error if the user uses these on not-MacOS
         if (this.macEncrypt !== null) {
             if (runnerOs !== "macOS") {
@@ -98383,7 +98383,7 @@ class NixInstallerAction {
             if (job === undefined) {
                 return "no-jobs";
             }
-            const outcomes = (job.steps || []).map((j) => j.conclusion || "unknown");
+            const outcomes = (job.steps ?? []).map((j) => j.conclusion ?? "unknown");
             // Possible values: success, failure, cancelled, or skipped
             // from: https://docs.github.com/en/actions/learn-github-actions/contexts
             if (outcomes.includes("failure")) {
