@@ -89417,6 +89417,8 @@ function firstString() {
     }
 }
 
+// EXTERNAL MODULE: external "node:process"
+var external_node_process_ = __nccwpck_require__(7742);
 // EXTERNAL MODULE: external "node:util"
 var external_node_util_ = __nccwpck_require__(7261);
 // EXTERNAL MODULE: external "os"
@@ -90997,8 +90999,6 @@ class AbortError extends RequestError {
     }
 }
 
-// EXTERNAL MODULE: external "node:process"
-var external_node_process_ = __nccwpck_require__(7742);
 ;// CONCATENATED MODULE: external "node:buffer"
 const external_node_buffer_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:buffer");
 // EXTERNAL MODULE: external "node:stream"
@@ -97268,6 +97268,7 @@ function mungeDiagnosticEndpoint(inputUrl) {
 
 
 
+
 var EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
 var EVENT_INSTALL_NIX_START = "install_nix_start";
 var EVENT_INSTALL_NIX_SUCCESS = "install_nix_start";
@@ -97698,8 +97699,8 @@ ${stderrBuffer}`
       "Configuring the Docker shim as the Nix Daemon's process supervisor"
     );
     const images = {
-      X64: (0,external_node_path_namespaceObject.join)(__dirname, "/../docker-shim/amd64.tar.gz"),
-      ARM64: (0,external_node_path_namespaceObject.join)(__dirname, "/../docker-shim/arm64.tar.gz")
+      X64: (0,external_node_path_namespaceObject.join)((0,external_node_process_.cwd)(), "/../docker-shim/amd64.tar.gz"),
+      ARM64: (0,external_node_path_namespaceObject.join)((0,external_node_process_.cwd)(), "/../docker-shim/arm64.tar.gz")
     };
     const runnerArch = process.env["RUNNER_ARCH"];
     let arch;
