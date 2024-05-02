@@ -7,7 +7,7 @@ import fs from "node:fs";
 import { userInfo } from "node:os";
 import stringArgv from "string-argv";
 import * as path from "path";
-import { IdsToolbox, inputs, platform } from "detsys-ts";
+import { IdsToolbox, inputs, platform, result } from "detsys-ts";
 import { randomUUID } from "node:crypto";
 
 // Nix installation events
@@ -73,9 +73,22 @@ class NixInstallerAction {
       fetchStyle: "nix-style",
       legacySourcePrefix: "nix-installer",
       requireNix: "ignore",
+      hookMain: async () => {
+        await this.detectAndForceDockerShim();
+        await this.install();
+        return result.SUCCESS;
+      },
+      hookPost: async () => {
+        await this.cleanupDockerShim();
+        await this.reportOverall();
+        return result.SUCCESS;
+      },
     });
 
-    this.platform = platform.getNixPlatform(platform.getArchOs());
+    const archOs = result.handle(platform.getArchOs());
+    const nixPlatform = result.handle(platform.getNixPlatform(archOs));
+
+    this.platform = nixPlatform;
     this.nixPackageUrl = inputs.getStringOrNull("nix-package-url");
     this.backtrace = inputs.getStringOrNull("backtrace");
     this.extraArgs = inputs.getStringOrNull("extra-args");
@@ -988,17 +1001,6 @@ function getDefaultPlanner(): string {
 
 function main(): void {
   const installer = new NixInstallerAction();
-
-  installer.idslib.onMain(async () => {
-    await installer.detectAndForceDockerShim();
-    await installer.install();
-  });
-
-  installer.idslib.onPost(async () => {
-    await installer.cleanupDockerShim();
-    await installer.reportOverall();
-  });
-
   installer.idslib.execute();
 }
 

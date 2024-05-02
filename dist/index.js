@@ -54296,6 +54296,483 @@ module.exports.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
 
 /***/ }),
 
+/***/ 2869:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+(function (factory) {
+    if ( true && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define(["require", "exports", "tslib", "./result", "./option"], factory);
+    }
+})(function () {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", ({ value: true }));
+    var tslib_1 = __nccwpck_require__(3134);
+    tslib_1.__exportStar(__nccwpck_require__(6394), exports);
+    tslib_1.__exportStar(__nccwpck_require__(5790), exports);
+});
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 5790:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+(function (factory) {
+    if ( true && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define(["require", "exports", "./utils", "./result"], factory);
+    }
+})(function () {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", ({ value: true }));
+    exports.Option = exports.Some = exports.None = void 0;
+    var utils_1 = __nccwpck_require__(5715);
+    var result_1 = __nccwpck_require__(6394);
+    /**
+     * Contains the None value
+     */
+    var NoneImpl = /** @class */ (function () {
+        function NoneImpl() {
+            this.some = false;
+            this.none = true;
+        }
+        NoneImpl.prototype[Symbol.iterator] = function () {
+            return {
+                next: function () {
+                    return { done: true, value: undefined };
+                },
+            };
+        };
+        NoneImpl.prototype.unwrapOr = function (val) {
+            return val;
+        };
+        NoneImpl.prototype.expect = function (msg) {
+            throw new Error("" + msg);
+        };
+        NoneImpl.prototype.unwrap = function () {
+            throw new Error("Tried to unwrap None");
+        };
+        NoneImpl.prototype.map = function (_mapper) {
+            return this;
+        };
+        NoneImpl.prototype.andThen = function (op) {
+            return this;
+        };
+        NoneImpl.prototype.toResult = function (error) {
+            return result_1.Err(error);
+        };
+        NoneImpl.prototype.toString = function () {
+            return 'None';
+        };
+        return NoneImpl;
+    }());
+    // Export None as a singleton, then freeze it so it can't be modified
+    exports.None = new NoneImpl();
+    Object.freeze(exports.None);
+    /**
+     * Contains the success value
+     */
+    var SomeImpl = /** @class */ (function () {
+        function SomeImpl(val) {
+            if (!(this instanceof SomeImpl)) {
+                return new SomeImpl(val);
+            }
+            this.some = true;
+            this.none = false;
+            this.val = val;
+        }
+        /**
+         * Helper function if you know you have an Some<T> and T is iterable
+         */
+        SomeImpl.prototype[Symbol.iterator] = function () {
+            var obj = Object(this.val);
+            return Symbol.iterator in obj
+                ? obj[Symbol.iterator]()
+                : {
+                    next: function () {
+                        return { done: true, value: undefined };
+                    },
+                };
+        };
+        SomeImpl.prototype.unwrapOr = function (_val) {
+            return this.val;
+        };
+        SomeImpl.prototype.expect = function (_msg) {
+            return this.val;
+        };
+        SomeImpl.prototype.unwrap = function () {
+            return this.val;
+        };
+        SomeImpl.prototype.map = function (mapper) {
+            return exports.Some(mapper(this.val));
+        };
+        SomeImpl.prototype.andThen = function (mapper) {
+            return mapper(this.val);
+        };
+        SomeImpl.prototype.toResult = function (error) {
+            return result_1.Ok(this.val);
+        };
+        /**
+         * Returns the contained `Some` value, but never throws.
+         * Unlike `unwrap()`, this method doesn't throw and is only callable on an Some<T>
+         *
+         * Therefore, it can be used instead of `unwrap()` as a maintainability safeguard
+         * that will fail to compile if the type of the Option is later changed to a None that can actually occur.
+         *
+         * (this is the `into_Some()` in rust)
+         */
+        SomeImpl.prototype.safeUnwrap = function () {
+            return this.val;
+        };
+        SomeImpl.prototype.toString = function () {
+            return "Some(" + utils_1.toString(this.val) + ")";
+        };
+        SomeImpl.EMPTY = new SomeImpl(undefined);
+        return SomeImpl;
+    }());
+    // This allows Some to be callable - possible because of the es5 compilation target
+    exports.Some = SomeImpl;
+    var Option;
+    (function (Option) {
+        /**
+         * Parse a set of `Option`s, returning an array of all `Some` values.
+         * Short circuits with the first `None` found, if any
+         */
+        function all() {
+            var options = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                options[_i] = arguments[_i];
+            }
+            var someOption = [];
+            for (var _a = 0, options_1 = options; _a < options_1.length; _a++) {
+                var option = options_1[_a];
+                if (option.some) {
+                    someOption.push(option.val);
+                }
+                else {
+                    return option;
+                }
+            }
+            return exports.Some(someOption);
+        }
+        Option.all = all;
+        /**
+         * Parse a set of `Option`s, short-circuits when an input value is `Some`.
+         * If no `Some` is found, returns `None`.
+         */
+        function any() {
+            var options = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                options[_i] = arguments[_i];
+            }
+            // short-circuits
+            for (var _a = 0, options_2 = options; _a < options_2.length; _a++) {
+                var option = options_2[_a];
+                if (option.some) {
+                    return option;
+                }
+                else {
+                    return option;
+                }
+            }
+            // it must be None
+            return exports.None;
+        }
+        Option.any = any;
+        function isOption(value) {
+            return value instanceof exports.Some || value === exports.None;
+        }
+        Option.isOption = isOption;
+    })(Option = exports.Option || (exports.Option = {}));
+});
+//# sourceMappingURL=option.js.map
+
+/***/ }),
+
+/***/ 6394:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+(function (factory) {
+    if ( true && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define(["require", "exports", "./utils", "./option"], factory);
+    }
+})(function () {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", ({ value: true }));
+    exports.Result = exports.Ok = exports.OkImpl = exports.Err = exports.ErrImpl = void 0;
+    var utils_1 = __nccwpck_require__(5715);
+    var option_1 = __nccwpck_require__(5790);
+    /**
+     * Contains the error value
+     */
+    var ErrImpl = /** @class */ (function () {
+        function ErrImpl(val) {
+            if (!(this instanceof ErrImpl)) {
+                return new ErrImpl(val);
+            }
+            this.ok = false;
+            this.err = true;
+            this.val = val;
+            var stackLines = new Error().stack.split('\n').slice(2);
+            if (stackLines && stackLines.length > 0 && stackLines[0].includes('ErrImpl')) {
+                stackLines.shift();
+            }
+            this._stack = stackLines.join('\n');
+        }
+        ErrImpl.prototype[Symbol.iterator] = function () {
+            return {
+                next: function () {
+                    return { done: true, value: undefined };
+                },
+            };
+        };
+        /**
+         * @deprecated in favor of unwrapOr
+         * @see unwrapOr
+         */
+        ErrImpl.prototype.else = function (val) {
+            return val;
+        };
+        ErrImpl.prototype.unwrapOr = function (val) {
+            return val;
+        };
+        ErrImpl.prototype.expect = function (msg) {
+            throw new Error(msg + " - Error: " + utils_1.toString(this.val) + "\n" + this._stack);
+        };
+        ErrImpl.prototype.unwrap = function () {
+            throw new Error("Tried to unwrap Error: " + utils_1.toString(this.val) + "\n" + this._stack);
+        };
+        ErrImpl.prototype.map = function (_mapper) {
+            return this;
+        };
+        ErrImpl.prototype.andThen = function (op) {
+            return this;
+        };
+        ErrImpl.prototype.mapErr = function (mapper) {
+            return new exports.Err(mapper(this.val));
+        };
+        ErrImpl.prototype.toOption = function () {
+            return option_1.None;
+        };
+        ErrImpl.prototype.toString = function () {
+            return "Err(" + utils_1.toString(this.val) + ")";
+        };
+        Object.defineProperty(ErrImpl.prototype, "stack", {
+            get: function () {
+                return this + "\n" + this._stack;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        /** An empty Err */
+        ErrImpl.EMPTY = new ErrImpl(undefined);
+        return ErrImpl;
+    }());
+    exports.ErrImpl = ErrImpl;
+    // This allows Err to be callable - possible because of the es5 compilation target
+    exports.Err = ErrImpl;
+    /**
+     * Contains the success value
+     */
+    var OkImpl = /** @class */ (function () {
+        function OkImpl(val) {
+            if (!(this instanceof OkImpl)) {
+                return new OkImpl(val);
+            }
+            this.ok = true;
+            this.err = false;
+            this.val = val;
+        }
+        /**
+         * Helper function if you know you have an Ok<T> and T is iterable
+         */
+        OkImpl.prototype[Symbol.iterator] = function () {
+            var obj = Object(this.val);
+            return Symbol.iterator in obj
+                ? obj[Symbol.iterator]()
+                : {
+                    next: function () {
+                        return { done: true, value: undefined };
+                    },
+                };
+        };
+        /**
+         * @see unwrapOr
+         * @deprecated in favor of unwrapOr
+         */
+        OkImpl.prototype.else = function (_val) {
+            return this.val;
+        };
+        OkImpl.prototype.unwrapOr = function (_val) {
+            return this.val;
+        };
+        OkImpl.prototype.expect = function (_msg) {
+            return this.val;
+        };
+        OkImpl.prototype.unwrap = function () {
+            return this.val;
+        };
+        OkImpl.prototype.map = function (mapper) {
+            return new exports.Ok(mapper(this.val));
+        };
+        OkImpl.prototype.andThen = function (mapper) {
+            return mapper(this.val);
+        };
+        OkImpl.prototype.mapErr = function (_mapper) {
+            return this;
+        };
+        OkImpl.prototype.toOption = function () {
+            return option_1.Some(this.val);
+        };
+        /**
+         * Returns the contained `Ok` value, but never throws.
+         * Unlike `unwrap()`, this method doesn't throw and is only callable on an Ok<T>
+         *
+         * Therefore, it can be used instead of `unwrap()` as a maintainability safeguard
+         * that will fail to compile if the error type of the Result is later changed to an error that can actually occur.
+         *
+         * (this is the `into_ok()` in rust)
+         */
+        OkImpl.prototype.safeUnwrap = function () {
+            return this.val;
+        };
+        OkImpl.prototype.toString = function () {
+            return "Ok(" + utils_1.toString(this.val) + ")";
+        };
+        OkImpl.EMPTY = new OkImpl(undefined);
+        return OkImpl;
+    }());
+    exports.OkImpl = OkImpl;
+    // This allows Ok to be callable - possible because of the es5 compilation target
+    exports.Ok = OkImpl;
+    var Result;
+    (function (Result) {
+        /**
+         * Parse a set of `Result`s, returning an array of all `Ok` values.
+         * Short circuits with the first `Err` found, if any
+         */
+        function all() {
+            var results = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                results[_i] = arguments[_i];
+            }
+            var okResult = [];
+            for (var _a = 0, results_1 = results; _a < results_1.length; _a++) {
+                var result = results_1[_a];
+                if (result.ok) {
+                    okResult.push(result.val);
+                }
+                else {
+                    return result;
+                }
+            }
+            return new exports.Ok(okResult);
+        }
+        Result.all = all;
+        /**
+         * Parse a set of `Result`s, short-circuits when an input value is `Ok`.
+         * If no `Ok` is found, returns an `Err` containing the collected error values
+         */
+        function any() {
+            var results = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                results[_i] = arguments[_i];
+            }
+            var errResult = [];
+            // short-circuits
+            for (var _a = 0, results_2 = results; _a < results_2.length; _a++) {
+                var result = results_2[_a];
+                if (result.ok) {
+                    return result;
+                }
+                else {
+                    errResult.push(result.val);
+                }
+            }
+            // it must be a Err
+            return new exports.Err(errResult);
+        }
+        Result.any = any;
+        /**
+         * Wrap an operation that may throw an Error (`try-catch` style) into checked exception style
+         * @param op The operation function
+         */
+        function wrap(op) {
+            try {
+                return new exports.Ok(op());
+            }
+            catch (e) {
+                return new exports.Err(e);
+            }
+        }
+        Result.wrap = wrap;
+        /**
+         * Wrap an async operation that may throw an Error (`try-catch` style) into checked exception style
+         * @param op The operation function
+         */
+        function wrapAsync(op) {
+            try {
+                return op()
+                    .then(function (val) { return new exports.Ok(val); })
+                    .catch(function (e) { return new exports.Err(e); });
+            }
+            catch (e) {
+                return Promise.resolve(new exports.Err(e));
+            }
+        }
+        Result.wrapAsync = wrapAsync;
+        function isResult(val) {
+            return val instanceof exports.Err || val instanceof exports.Ok;
+        }
+        Result.isResult = isResult;
+    })(Result = exports.Result || (exports.Result = {}));
+});
+//# sourceMappingURL=result.js.map
+
+/***/ }),
+
+/***/ 5715:
+/***/ ((module, exports) => {
+
+(function (factory) {
+    if ( true && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define(["require", "exports"], factory);
+    }
+})(function () {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", ({ value: true }));
+    exports.toString = void 0;
+    function toString(val) {
+        var value = String(val);
+        if (value === '[object Object]') {
+            try {
+                value = JSON.stringify(val);
+            }
+            catch (_a) { }
+        }
+        return value;
+    }
+    exports.toString = toString;
+});
+//# sourceMappingURL=utils.js.map
+
+/***/ }),
+
 /***/ 3134:
 /***/ ((module) => {
 
@@ -89419,6 +89896,8 @@ function firstString() {
 
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(1017);
+// EXTERNAL MODULE: ./node_modules/.pnpm/ts-results@3.3.0/node_modules/ts-results/index.js
+var ts_results = __nccwpck_require__(2869);
 // EXTERNAL MODULE: external "node:util"
 var external_node_util_ = __nccwpck_require__(7261);
 // EXTERNAL MODULE: external "os"
@@ -96378,7 +96857,7 @@ const got = source_create(defaults);
 
 ;// CONCATENATED MODULE: external "node:stream/promises"
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@cd38b227c4d6faca10aed591b1f8863ef7b93dce_nckxvs7jbq6qb4vr5xhgyxcrgy/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@a5791d496d35928a7b09ad0be96ab9c913389a6b_fmjtwylt722vct6fw4zyo6h3ti/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -96388,7 +96867,45 @@ var __export = (target, all) => {
 // package.json
 var version = "1.0.0";
 
+// src/result.ts
+var result_exports = {};
+__export(result_exports, {
+  Err: () => ts_results.Err,
+  Ok: () => ts_results.Ok,
+  SUCCESS: () => SUCCESS,
+  coerceErrorToString: () => coerceErrorToString,
+  handle: () => handle,
+  handleHook: () => handleHook
+});
+
+
+
+function handle(res) {
+  if (res.ok) {
+    return res.val;
+  } else {
+    throw new Error(res.val);
+  }
+}
+function coerceErrorToString(e) {
+  if (e instanceof Error) {
+    return e.message;
+  } else if (typeof e === "string") {
+    return e;
+  } else {
+    return `unknown error: ${e}`;
+  }
+}
+async function handleHook(callback) {
+  const res = await callback;
+  if (res.err) {
+    core.error(res.val);
+  }
+}
+var SUCCESS = (0,ts_results.Ok)(void 0);
+
 // src/linux-release-info.ts
+
 
 
 
@@ -96455,56 +96972,54 @@ async function readAsyncOsReleaseFile(fileList, options) {
   let fileData = null;
   for (const osReleaseFile of fileList) {
     try {
-      if (options.debug) {
-        console.log(`Trying to read '${osReleaseFile}'...`);
-      }
+      if (options.debug)
+        core.debug(`Trying to read '${osReleaseFile}'...`);
       fileData = await readFileAsync(osReleaseFile, "binary");
-      if (options.debug) {
-        console.log(`Read data:
+      if (options.debug)
+        core.debug(`Read data:
 ${fileData}`);
-      }
       break;
-    } catch (error2) {
-      if (options.debug) {
-        console.error(error2);
-      }
+    } catch (e) {
+      const msg = coerceErrorToString(e);
+      if (options.debug)
+        core.debug(msg);
+      return (0,ts_results.Err)(msg);
     }
   }
   if (fileData === null) {
-    throw new Error("Cannot read os-release file!");
+    return (0,ts_results.Err)("Cannot read os-release file!");
   }
-  return formatFileData(getOsInfo(), fileData);
+  return (0,ts_results.Ok)(formatFileData(getOsInfo(), fileData));
 }
 function readSyncOsreleaseFile(releaseFileList, options) {
   let fileData = null;
   for (const osReleaseFile of releaseFileList) {
     try {
-      if (options.debug) {
-        console.log(`Trying to read '${osReleaseFile}'...`);
-      }
+      if (options.debug)
+        core.debug(`Trying to read '${osReleaseFile}'...`);
       fileData = external_node_fs_namespaceObject.readFileSync(osReleaseFile, "binary");
-      if (options.debug) {
-        console.log(`Read data:
+      if (options.debug)
+        core.debug(`Read data:
 ${fileData}`);
-      }
       break;
-    } catch (error2) {
-      if (options.debug) {
-        console.error(error2);
-      }
+    } catch (e) {
+      const msg = coerceErrorToString(e);
+      if (options.debug)
+        core.error(msg);
+      return (0,ts_results.Err)(msg);
     }
   }
   if (fileData === null) {
-    throw new Error("Cannot read os-release file!");
+    return (0,ts_results.Err)("Cannot read os-release file!");
   }
-  return formatFileData(getOsInfo(), fileData);
+  return (0,ts_results.Ok)(formatFileData(getOsInfo(), fileData));
 }
 
 // src/actions-core-platform.ts
 
 
 
-var getWindowsInfo = async () => {
+async function getWindowsInfo() {
   const { stdout: version2 } = await exec.getExecOutput(
     'powershell -command "(Get-CimInstance -ClassName Win32_OperatingSystem).Version"',
     void 0,
@@ -96523,8 +97038,8 @@ var getWindowsInfo = async () => {
     name: name.trim(),
     version: version2.trim()
   };
-};
-var getMacOsInfo = async () => {
+}
+async function getMacOsInfo() {
   const { stdout } = await exec.getExecOutput("sw_vers", void 0, {
     silent: true
   });
@@ -96534,8 +97049,8 @@ var getMacOsInfo = async () => {
     name,
     version: version2
   };
-};
-var getLinuxInfo = async () => {
+}
+async function getLinuxInfo() {
   let data = {};
   try {
     data = releaseInfo({ mode: "sync" });
@@ -96555,7 +97070,7 @@ var getLinuxInfo = async () => {
       "unknown"
     )
   };
-};
+}
 function getPropertyViaWithDefault(data, names, defaultValue) {
   for (const name of names) {
     const ret = getPropertyWithDefault(data, name, defaultValue);
@@ -96576,18 +97091,11 @@ function getPropertyWithDefault(data, name, defaultValue) {
   return value;
 }
 var platform2 = external_os_.platform();
-var arch2 = external_os_.arch();
 var isWindows = platform2 === "win32";
 var isMacOS = platform2 === "darwin";
-var isLinux = platform2 === "linux";
 async function getDetails() {
   return {
-    ...await (isWindows ? getWindowsInfo() : isMacOS ? getMacOsInfo() : getLinuxInfo()),
-    platform: platform2,
-    arch: arch2,
-    isWindows,
-    isMacOS,
-    isLinux
+    ...await (isWindows ? getWindowsInfo() : isMacOS ? getMacOsInfo() : getLinuxInfo())
   };
 }
 
@@ -96688,17 +97196,15 @@ __export(platform_exports, {
   getArchOs: () => getArchOs,
   getNixPlatform: () => getNixPlatform
 });
-
 function getArchOs() {
   const envArch = process.env.RUNNER_ARCH;
   const envOs = process.env.RUNNER_OS;
   if (envArch && envOs) {
-    return `${envArch}-${envOs}`;
+    return (0,ts_results.Ok)(`${envArch}-${envOs}`);
   } else {
-    core.error(
+    return (0,ts_results.Err)(
       `Can't identify the platform: RUNNER_ARCH or RUNNER_OS undefined (${envArch}-${envOs})`
     );
-    throw new Error("RUNNER_ARCH and/or RUNNER_OS is not defined");
   }
 }
 function getNixPlatform(archOs) {
@@ -96710,14 +97216,9 @@ function getNixPlatform(archOs) {
   ]);
   const mappedTo = archOsMap.get(archOs);
   if (mappedTo) {
-    return mappedTo;
+    return (0,ts_results.Ok)(mappedTo);
   } else {
-    core.error(
-      `ArchOs (${archOs}) doesn't map to a supported Nix platform.`
-    );
-    throw new Error(
-      `Cannot convert ArchOs (${archOs}) to a supported Nix platform.`
-    );
+    return (0,ts_results.Err)(`ArchOs (${archOs}) doesn't map to a supported Nix platform.`);
   }
 }
 
@@ -96825,13 +97326,28 @@ var IDS_HOST = process.env["IDS_HOST"] ?? DEFAULT_IDS_HOST;
 var EVENT_EXCEPTION = "exception";
 var EVENT_ARTIFACT_CACHE_HIT = "artifact_cache_hit";
 var EVENT_ARTIFACT_CACHE_MISS = "artifact_cache_miss";
+var EVENT_PREFLIGHT_REQUIRE_NIX_DENIED = "preflight-require-nix-denied";
 var FACT_ENDED_WITH_EXCEPTION = "ended_with_exception";
 var FACT_FINAL_EXCEPTION = "final_exception";
-var IdsToolbox = class {
+var IdsToolbox = class _IdsToolbox {
+  /**
+   * The preferred instantiator for `IdsToolbox`. Unless using standard
+   * `new IdsToolbox(...)`, this instantiator returns a `Result` rather than
+   * throwing an `Error`.
+   */
+  static create(actionOptions) {
+    try {
+      const action = new _IdsToolbox(actionOptions);
+      return (0,ts_results.Ok)(action);
+    } catch (e) {
+      return (0,ts_results.Err)(coerceErrorToString(e));
+    }
+  }
+  /**
+   * The standard constructor for `IdsToolbox`. Use `create` instead.
+   */
   constructor(actionOptions) {
     this.actionOptions = makeOptionsConfident(actionOptions);
-    this.hookMain = void 0;
-    this.hookPost = void 0;
     this.events = [];
     this.client = got_dist_source.extend({
       retry: {
@@ -96840,9 +97356,9 @@ var IdsToolbox = class {
       },
       hooks: {
         beforeRetry: [
-          (error2, retryCount) => {
+          (error3, retryCount) => {
             core.info(
-              `Retrying after error ${error2.code}, retry #: ${retryCount}`
+              `Retrying after error ${error3.code}, retry #: ${retryCount}`
             );
           }
         ]
@@ -96868,22 +97384,25 @@ var IdsToolbox = class {
       }
     }
     this.identity = identify(this.actionOptions.name);
-    this.archOs = getArchOs();
-    this.nixSystem = getNixPlatform(this.archOs);
+    this.archOs = handle(getArchOs());
+    this.nixSystem = handle(getNixPlatform(this.archOs));
     this.facts.arch_os = this.archOs;
     this.facts.nix_system = this.nixSystem;
-    {
-      getDetails().then((details) => {
+    async () => {
+      try {
+        const details = await getDetails();
         if (details.name !== "unknown") {
           this.addFact("$os", details.name);
         }
         if (details.version !== "unknown") {
           this.addFact("$os_version", details.version);
         }
-      }).catch((e) => {
-        core.debug(`Failure getting platform details: ${e}`);
-      });
-    }
+      } catch (e) {
+        core.debug(
+          `Failure getting platform details: ${coerceErrorToString(e)}`
+        );
+      }
+    };
     {
       const phase = core.getState("idstoolbox_execution_phase");
       if (phase === "") {
@@ -96910,15 +97429,9 @@ var IdsToolbox = class {
     );
     this.recordEvent(`begin_${this.executionPhase}`);
   }
-  onMain(callback) {
-    this.hookMain = callback;
-  }
-  onPost(callback) {
-    this.hookPost = callback;
-  }
   execute() {
-    this.executeAsync().catch((error2) => {
-      console.log(error2);
+    this.executeAsync().catch((error3) => {
+      console.log(error3);
       process.exitCode = 1;
     });
   }
@@ -96928,23 +97441,23 @@ var IdsToolbox = class {
         this.getCorrelationHashes()
       );
       if (!await this.preflightRequireNix()) {
-        this.recordEvent("preflight-require-nix-denied");
+        this.recordEvent(EVENT_PREFLIGHT_REQUIRE_NIX_DENIED);
         return;
       }
-      if (this.executionPhase === "main" && this.hookMain) {
-        await this.hookMain();
-      } else if (this.executionPhase === "post" && this.hookPost) {
-        await this.hookPost();
+      if (this.executionPhase === "main") {
+        await handleHook(this.actionOptions.hookMain());
+      } else if (this.executionPhase === "post" && this.actionOptions.hookPost) {
+        await handleHook(this.actionOptions.hookPost());
       }
       this.addFact(FACT_ENDED_WITH_EXCEPTION, false);
-    } catch (error2) {
+    } catch (e) {
       this.addFact(FACT_ENDED_WITH_EXCEPTION, true);
-      const reportable = error2 instanceof Error || typeof error2 == "string" ? error2.toString() : JSON.stringify(error2);
-      this.addFact(FACT_FINAL_EXCEPTION, reportable);
+      const msg = coerceErrorToString(e);
+      this.addFact(FACT_FINAL_EXCEPTION, msg);
       if (this.executionPhase === "post") {
-        core.warning(reportable);
+        core.warning(msg);
       } else {
-        core.setFailed(reportable);
+        core.setFailed(msg);
       }
       this.recordEvent(EVENT_EXCEPTION);
     } finally {
@@ -97164,8 +97677,8 @@ var IdsToolbox = class {
       await this.client.post(this.actionOptions.diagnosticsUrl, {
         json: batch
       });
-    } catch (error2) {
-      core.debug(`Error submitting diagnostics event: ${error2}`);
+    } catch (e) {
+      core.debug(`Error submitting diagnostics event: ${e}`);
     }
     this.events = [];
   }
@@ -97186,7 +97699,9 @@ function makeOptionsConfident(actionOptions) {
     diagnosticsUrl: determineDiagnosticsUrl(
       idsProjectName,
       actionOptions.diagnosticsUrl
-    )
+    ),
+    hookMain: actionOptions.hookMain,
+    hookPost: actionOptions.hookPost
   };
   core.debug("idslib options:");
   core.debug(JSON.stringify(finalOpts, void 0, 2));
@@ -97296,8 +97811,20 @@ class NixInstallerAction {
             fetchStyle: "nix-style",
             legacySourcePrefix: "nix-installer",
             requireNix: "ignore",
+            hookMain: async () => {
+                await this.detectAndForceDockerShim();
+                await this.install();
+                return result_exports.SUCCESS;
+            },
+            hookPost: async () => {
+                await this.cleanupDockerShim();
+                await this.reportOverall();
+                return result_exports.SUCCESS;
+            },
         });
-        this.platform = platform_exports.getNixPlatform(platform_exports.getArchOs());
+        const archOs = result_exports.handle(platform_exports.getArchOs());
+        const nixPlatform = result_exports.handle(platform_exports.getNixPlatform(archOs));
+        this.platform = nixPlatform;
         this.nixPackageUrl = inputs_exports.getStringOrNull("nix-package-url");
         this.backtrace = inputs_exports.getStringOrNull("backtrace");
         this.extraArgs = inputs_exports.getStringOrNull("extra-args");
@@ -98021,14 +98548,6 @@ function getDefaultPlanner() {
 }
 function main() {
     const installer = new NixInstallerAction();
-    installer.idslib.onMain(async () => {
-        await installer.detectAndForceDockerShim();
-        await installer.install();
-    });
-    installer.idslib.onPost(async () => {
-        await installer.cleanupDockerShim();
-        await installer.reportOverall();
-    });
     installer.idslib.execute();
 }
 main();
