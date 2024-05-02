@@ -27,7 +27,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - run: nix build .
 ```
@@ -50,7 +50,7 @@ jobs:
       id-token: "write"
       contents: "read"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
         with:
           flakehub: true
