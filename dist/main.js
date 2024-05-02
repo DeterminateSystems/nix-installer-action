@@ -114,7 +114,7 @@ class NixInstallerAction {
                 },
             });
         }
-        catch (e) {
+        catch {
             actionsCore.debug("Docker not detected, not enabling docker shim.");
             return;
         }
@@ -334,8 +334,14 @@ class NixInstallerAction {
             extraConf += "\n";
         }
         if (this.flakehub) {
-            extraConf += `netrc-file = ${await this.flakehubLogin()}`;
-            extraConf += "\n";
+            try {
+                const flakeHubNetrcFile = await this.flakehubLogin();
+                extraConf += `netrc-file = ${flakeHubNetrcFile}`;
+                extraConf += "\n";
+            }
+            catch (e) {
+                actionsCore.warning(`Failed to set up FlakeHub: ${e}`);
+            }
         }
         if (this.extraConf !== null && this.extraConf.length !== 0) {
             extraConf += this.extraConf.join("\n");
@@ -560,7 +566,7 @@ class NixInstallerAction {
             actionsCore.addPath(homeNixProfilePath);
             actionsCore.info(`Added \`${nixVarNixProfilePath}\` and \`${homeNixProfilePath}\` to \`$GITHUB_PATH\``);
         }
-        catch (error) {
+        catch {
             actionsCore.info("Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is done in the action. Prior to 0.11.0, this was only done in the `nix-installer` binary.");
         }
     }
@@ -671,7 +677,7 @@ class NixInstallerAction {
             ]);
             return true;
         }
-        catch (error) {
+        catch {
             if (isRoot) {
                 await actionsExec.exec("rm", ["-f", kvmRules]);
             }
@@ -697,8 +703,8 @@ class NixInstallerAction {
                 conclusion: await this.getWorkflowConclusion(),
             });
         }
-        catch (error) {
-            actionsCore.debug(`Error submitting post-run diagnostics report: ${error}`);
+        catch (e) {
+            actionsCore.debug(`Error submitting post-run diagnostics report: ${e}`);
         }
     }
     async getWorkflowConclusion() {
@@ -734,8 +740,8 @@ class NixInstallerAction {
             // Assume success if no jobs failed or were canceled
             return "success";
         }
-        catch (error) {
-            actionsCore.debug(`Error determining final disposition: ${error}`);
+        catch (e) {
+            actionsCore.debug(`Error determining final disposition: ${e}`);
             return "unavailable";
         }
     }
