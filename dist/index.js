@@ -77962,6 +77962,672 @@ exports["default"] = _default;
 
 /***/ }),
 
+/***/ 711:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+var __webpack_unused_export__;
+
+
+__webpack_unused_export__ = ({
+  value: true
+});
+Object.defineProperty(exports, "zR", ({
+  enumerable: true,
+  get: function () {
+    return _nil.default;
+  }
+}));
+Object.defineProperty(exports, "Qc", ({
+  enumerable: true,
+  get: function () {
+    return _parse.default;
+  }
+}));
+Object.defineProperty(exports, "Pz", ({
+  enumerable: true,
+  get: function () {
+    return _stringify.default;
+  }
+}));
+Object.defineProperty(exports, "v1", ({
+  enumerable: true,
+  get: function () {
+    return _v.default;
+  }
+}));
+Object.defineProperty(exports, "v3", ({
+  enumerable: true,
+  get: function () {
+    return _v2.default;
+  }
+}));
+Object.defineProperty(exports, "v4", ({
+  enumerable: true,
+  get: function () {
+    return _v3.default;
+  }
+}));
+Object.defineProperty(exports, "v5", ({
+  enumerable: true,
+  get: function () {
+    return _v4.default;
+  }
+}));
+Object.defineProperty(exports, "Gu", ({
+  enumerable: true,
+  get: function () {
+    return _validate.default;
+  }
+}));
+Object.defineProperty(exports, "i8", ({
+  enumerable: true,
+  get: function () {
+    return _version.default;
+  }
+}));
+
+var _v = _interopRequireDefault(__nccwpck_require__(2426));
+
+var _v2 = _interopRequireDefault(__nccwpck_require__(5198));
+
+var _v3 = _interopRequireDefault(__nccwpck_require__(8452));
+
+var _v4 = _interopRequireDefault(__nccwpck_require__(7279));
+
+var _nil = _interopRequireDefault(__nccwpck_require__(6904));
+
+var _version = _interopRequireDefault(__nccwpck_require__(7018));
+
+var _validate = _interopRequireDefault(__nccwpck_require__(3497));
+
+var _stringify = _interopRequireDefault(__nccwpck_require__(1682));
+
+var _parse = _interopRequireDefault(__nccwpck_require__(8721));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/***/ }),
+
+/***/ 9434:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+
+var _crypto = _interopRequireDefault(__nccwpck_require__(6113));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function md5(bytes) {
+  if (Array.isArray(bytes)) {
+    bytes = Buffer.from(bytes);
+  } else if (typeof bytes === 'string') {
+    bytes = Buffer.from(bytes, 'utf8');
+  }
+
+  return _crypto.default.createHash('md5').update(bytes).digest();
+}
+
+var _default = md5;
+exports["default"] = _default;
+
+/***/ }),
+
+/***/ 6626:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+
+var _crypto = _interopRequireDefault(__nccwpck_require__(6113));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = {
+  randomUUID: _crypto.default.randomUUID
+};
+exports["default"] = _default;
+
+/***/ }),
+
+/***/ 6904:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+var _default = '00000000-0000-0000-0000-000000000000';
+exports["default"] = _default;
+
+/***/ }),
+
+/***/ 8721:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+
+var _validate = _interopRequireDefault(__nccwpck_require__(3497));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function parse(uuid) {
+  if (!(0, _validate.default)(uuid)) {
+    throw TypeError('Invalid UUID');
+  }
+
+  let v;
+  const arr = new Uint8Array(16); // Parse ########-....-....-....-............
+
+  arr[0] = (v = parseInt(uuid.slice(0, 8), 16)) >>> 24;
+  arr[1] = v >>> 16 & 0xff;
+  arr[2] = v >>> 8 & 0xff;
+  arr[3] = v & 0xff; // Parse ........-####-....-....-............
+
+  arr[4] = (v = parseInt(uuid.slice(9, 13), 16)) >>> 8;
+  arr[5] = v & 0xff; // Parse ........-....-####-....-............
+
+  arr[6] = (v = parseInt(uuid.slice(14, 18), 16)) >>> 8;
+  arr[7] = v & 0xff; // Parse ........-....-....-####-............
+
+  arr[8] = (v = parseInt(uuid.slice(19, 23), 16)) >>> 8;
+  arr[9] = v & 0xff; // Parse ........-....-....-....-############
+  // (Use "/" to avoid 32-bit truncation when bit-shifting high-order bytes)
+
+  arr[10] = (v = parseInt(uuid.slice(24, 36), 16)) / 0x10000000000 & 0xff;
+  arr[11] = v / 0x100000000 & 0xff;
+  arr[12] = v >>> 24 & 0xff;
+  arr[13] = v >>> 16 & 0xff;
+  arr[14] = v >>> 8 & 0xff;
+  arr[15] = v & 0xff;
+  return arr;
+}
+
+var _default = parse;
+exports["default"] = _default;
+
+/***/ }),
+
+/***/ 7096:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+var _default = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i;
+exports["default"] = _default;
+
+/***/ }),
+
+/***/ 1996:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = rng;
+
+var _crypto = _interopRequireDefault(__nccwpck_require__(6113));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const rnds8Pool = new Uint8Array(256); // # of random values to pre-allocate
+
+let poolPtr = rnds8Pool.length;
+
+function rng() {
+  if (poolPtr > rnds8Pool.length - 16) {
+    _crypto.default.randomFillSync(rnds8Pool);
+
+    poolPtr = 0;
+  }
+
+  return rnds8Pool.slice(poolPtr, poolPtr += 16);
+}
+
+/***/ }),
+
+/***/ 5259:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+
+var _crypto = _interopRequireDefault(__nccwpck_require__(6113));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function sha1(bytes) {
+  if (Array.isArray(bytes)) {
+    bytes = Buffer.from(bytes);
+  } else if (typeof bytes === 'string') {
+    bytes = Buffer.from(bytes, 'utf8');
+  }
+
+  return _crypto.default.createHash('sha1').update(bytes).digest();
+}
+
+var _default = sha1;
+exports["default"] = _default;
+
+/***/ }),
+
+/***/ 1682:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+exports.unsafeStringify = unsafeStringify;
+
+var _validate = _interopRequireDefault(__nccwpck_require__(3497));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Convert array of 16 byte values to UUID string format of the form:
+ * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+ */
+const byteToHex = [];
+
+for (let i = 0; i < 256; ++i) {
+  byteToHex.push((i + 0x100).toString(16).slice(1));
+}
+
+function unsafeStringify(arr, offset = 0) {
+  // Note: Be careful editing this code!  It's been tuned for performance
+  // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
+  return byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]];
+}
+
+function stringify(arr, offset = 0) {
+  const uuid = unsafeStringify(arr, offset); // Consistency check for valid UUID.  If this throws, it's likely due to one
+  // of the following:
+  // - One or more input array values don't map to a hex octet (leading to
+  // "undefined" in the uuid)
+  // - Invalid input values for the RFC `version` or `variant` fields
+
+  if (!(0, _validate.default)(uuid)) {
+    throw TypeError('Stringified UUID is invalid');
+  }
+
+  return uuid;
+}
+
+var _default = stringify;
+exports["default"] = _default;
+
+/***/ }),
+
+/***/ 2426:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+
+var _rng = _interopRequireDefault(__nccwpck_require__(1996));
+
+var _stringify = __nccwpck_require__(1682);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// **`v1()` - Generate time-based UUID**
+//
+// Inspired by https://github.com/LiosK/UUID.js
+// and http://docs.python.org/library/uuid.html
+let _nodeId;
+
+let _clockseq; // Previous uuid creation time
+
+
+let _lastMSecs = 0;
+let _lastNSecs = 0; // See https://github.com/uuidjs/uuid for API details
+
+function v1(options, buf, offset) {
+  let i = buf && offset || 0;
+  const b = buf || new Array(16);
+  options = options || {};
+  let node = options.node || _nodeId;
+  let clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq; // node and clockseq need to be initialized to random values if they're not
+  // specified.  We do this lazily to minimize issues related to insufficient
+  // system entropy.  See #189
+
+  if (node == null || clockseq == null) {
+    const seedBytes = options.random || (options.rng || _rng.default)();
+
+    if (node == null) {
+      // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
+      node = _nodeId = [seedBytes[0] | 0x01, seedBytes[1], seedBytes[2], seedBytes[3], seedBytes[4], seedBytes[5]];
+    }
+
+    if (clockseq == null) {
+      // Per 4.2.2, randomize (14 bit) clockseq
+      clockseq = _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 0x3fff;
+    }
+  } // UUID timestamps are 100 nano-second units since the Gregorian epoch,
+  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
+  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
+  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
+
+
+  let msecs = options.msecs !== undefined ? options.msecs : Date.now(); // Per 4.2.1.2, use count of uuid's generated during the current clock
+  // cycle to simulate higher resolution clock
+
+  let nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1; // Time since last uuid creation (in msecs)
+
+  const dt = msecs - _lastMSecs + (nsecs - _lastNSecs) / 10000; // Per 4.2.1.2, Bump clockseq on clock regression
+
+  if (dt < 0 && options.clockseq === undefined) {
+    clockseq = clockseq + 1 & 0x3fff;
+  } // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
+  // time interval
+
+
+  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
+    nsecs = 0;
+  } // Per 4.2.1.2 Throw error if too many uuids are requested
+
+
+  if (nsecs >= 10000) {
+    throw new Error("uuid.v1(): Can't create more than 10M uuids/sec");
+  }
+
+  _lastMSecs = msecs;
+  _lastNSecs = nsecs;
+  _clockseq = clockseq; // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
+
+  msecs += 12219292800000; // `time_low`
+
+  const tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
+  b[i++] = tl >>> 24 & 0xff;
+  b[i++] = tl >>> 16 & 0xff;
+  b[i++] = tl >>> 8 & 0xff;
+  b[i++] = tl & 0xff; // `time_mid`
+
+  const tmh = msecs / 0x100000000 * 10000 & 0xfffffff;
+  b[i++] = tmh >>> 8 & 0xff;
+  b[i++] = tmh & 0xff; // `time_high_and_version`
+
+  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
+
+  b[i++] = tmh >>> 16 & 0xff; // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
+
+  b[i++] = clockseq >>> 8 | 0x80; // `clock_seq_low`
+
+  b[i++] = clockseq & 0xff; // `node`
+
+  for (let n = 0; n < 6; ++n) {
+    b[i + n] = node[n];
+  }
+
+  return buf || (0, _stringify.unsafeStringify)(b);
+}
+
+var _default = v1;
+exports["default"] = _default;
+
+/***/ }),
+
+/***/ 5198:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+
+var _v = _interopRequireDefault(__nccwpck_require__(5192));
+
+var _md = _interopRequireDefault(__nccwpck_require__(9434));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const v3 = (0, _v.default)('v3', 0x30, _md.default);
+var _default = v3;
+exports["default"] = _default;
+
+/***/ }),
+
+/***/ 5192:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.URL = exports.DNS = void 0;
+exports["default"] = v35;
+
+var _stringify = __nccwpck_require__(1682);
+
+var _parse = _interopRequireDefault(__nccwpck_require__(8721));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function stringToBytes(str) {
+  str = unescape(encodeURIComponent(str)); // UTF8 escape
+
+  const bytes = [];
+
+  for (let i = 0; i < str.length; ++i) {
+    bytes.push(str.charCodeAt(i));
+  }
+
+  return bytes;
+}
+
+const DNS = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+exports.DNS = DNS;
+const URL = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+exports.URL = URL;
+
+function v35(name, version, hashfunc) {
+  function generateUUID(value, namespace, buf, offset) {
+    var _namespace;
+
+    if (typeof value === 'string') {
+      value = stringToBytes(value);
+    }
+
+    if (typeof namespace === 'string') {
+      namespace = (0, _parse.default)(namespace);
+    }
+
+    if (((_namespace = namespace) === null || _namespace === void 0 ? void 0 : _namespace.length) !== 16) {
+      throw TypeError('Namespace must be array-like (16 iterable integer values, 0-255)');
+    } // Compute hash of namespace and value, Per 4.3
+    // Future: Use spread syntax when supported on all platforms, e.g. `bytes =
+    // hashfunc([...namespace, ... value])`
+
+
+    let bytes = new Uint8Array(16 + value.length);
+    bytes.set(namespace);
+    bytes.set(value, namespace.length);
+    bytes = hashfunc(bytes);
+    bytes[6] = bytes[6] & 0x0f | version;
+    bytes[8] = bytes[8] & 0x3f | 0x80;
+
+    if (buf) {
+      offset = offset || 0;
+
+      for (let i = 0; i < 16; ++i) {
+        buf[offset + i] = bytes[i];
+      }
+
+      return buf;
+    }
+
+    return (0, _stringify.unsafeStringify)(bytes);
+  } // Function#name is not settable on some platforms (#270)
+
+
+  try {
+    generateUUID.name = name; // eslint-disable-next-line no-empty
+  } catch (err) {} // For CommonJS default export support
+
+
+  generateUUID.DNS = DNS;
+  generateUUID.URL = URL;
+  return generateUUID;
+}
+
+/***/ }),
+
+/***/ 8452:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+
+var _native = _interopRequireDefault(__nccwpck_require__(6626));
+
+var _rng = _interopRequireDefault(__nccwpck_require__(1996));
+
+var _stringify = __nccwpck_require__(1682);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function v4(options, buf, offset) {
+  if (_native.default.randomUUID && !buf && !options) {
+    return _native.default.randomUUID();
+  }
+
+  options = options || {};
+
+  const rnds = options.random || (options.rng || _rng.default)(); // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+
+
+  rnds[6] = rnds[6] & 0x0f | 0x40;
+  rnds[8] = rnds[8] & 0x3f | 0x80; // Copy bytes to buffer, if provided
+
+  if (buf) {
+    offset = offset || 0;
+
+    for (let i = 0; i < 16; ++i) {
+      buf[offset + i] = rnds[i];
+    }
+
+    return buf;
+  }
+
+  return (0, _stringify.unsafeStringify)(rnds);
+}
+
+var _default = v4;
+exports["default"] = _default;
+
+/***/ }),
+
+/***/ 7279:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+
+var _v = _interopRequireDefault(__nccwpck_require__(5192));
+
+var _sha = _interopRequireDefault(__nccwpck_require__(5259));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const v5 = (0, _v.default)('v5', 0x50, _sha.default);
+var _default = v5;
+exports["default"] = _default;
+
+/***/ }),
+
+/***/ 3497:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+
+var _regex = _interopRequireDefault(__nccwpck_require__(7096));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function validate(uuid) {
+  return typeof uuid === 'string' && _regex.default.test(uuid);
+}
+
+var _default = validate;
+exports["default"] = _default;
+
+/***/ }),
+
+/***/ 7018:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+
+var _validate = _interopRequireDefault(__nccwpck_require__(3497));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function version(uuid) {
+  if (!(0, _validate.default)(uuid)) {
+    throw TypeError('Invalid UUID');
+  }
+
+  return parseInt(uuid.slice(14, 15), 16);
+}
+
+var _default = version;
+exports["default"] = _default;
+
+/***/ }),
+
 /***/ 369:
 /***/ ((module) => {
 
@@ -89419,15 +90085,167 @@ function firstString() {
 
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(1017);
-// EXTERNAL MODULE: external "node:util"
-var external_node_util_ = __nccwpck_require__(7261);
-// EXTERNAL MODULE: external "os"
-var external_os_ = __nccwpck_require__(2037);
 ;// CONCATENATED MODULE: external "node:crypto"
 const external_node_crypto_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:crypto");
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/correlation.js
+
+
+function identify(projectName) {
+    const ident = {
+        correlation_source: "github-actions",
+        repository: hashEnvironmentVariables("GHR", [
+            "GITHUB_SERVER_URL",
+            "GITHUB_REPOSITORY_OWNER",
+            "GITHUB_REPOSITORY_OWNER_ID",
+            "GITHUB_REPOSITORY",
+            "GITHUB_REPOSITORY_ID",
+        ]),
+        workflow: hashEnvironmentVariables("GHW", [
+            "GITHUB_SERVER_URL",
+            "GITHUB_REPOSITORY_OWNER",
+            "GITHUB_REPOSITORY_OWNER_ID",
+            "GITHUB_REPOSITORY",
+            "GITHUB_REPOSITORY_ID",
+            "GITHUB_WORKFLOW",
+        ]),
+        job: hashEnvironmentVariables("GHWJ", [
+            "GITHUB_SERVER_URL",
+            "GITHUB_REPOSITORY_OWNER",
+            "GITHUB_REPOSITORY_OWNER_ID",
+            "GITHUB_REPOSITORY",
+            "GITHUB_REPOSITORY_ID",
+            "GITHUB_WORKFLOW",
+            "GITHUB_JOB",
+        ]),
+        run: hashEnvironmentVariables("GHWJR", [
+            "GITHUB_SERVER_URL",
+            "GITHUB_REPOSITORY_OWNER",
+            "GITHUB_REPOSITORY_OWNER_ID",
+            "GITHUB_REPOSITORY",
+            "GITHUB_REPOSITORY_ID",
+            "GITHUB_WORKFLOW",
+            "GITHUB_JOB",
+            "GITHUB_RUN_ID",
+        ]),
+        run_differentiator: hashEnvironmentVariables("GHWJA", [
+            "GITHUB_SERVER_URL",
+            "GITHUB_REPOSITORY_OWNER",
+            "GITHUB_REPOSITORY_OWNER_ID",
+            "GITHUB_REPOSITORY",
+            "GITHUB_REPOSITORY_ID",
+            "GITHUB_WORKFLOW",
+            "GITHUB_JOB",
+            "GITHUB_RUN_ID",
+            "GITHUB_RUN_NUMBER",
+            "GITHUB_RUN_ATTEMPT",
+        ]),
+        groups: {
+            ci: "github-actions",
+            project: projectName,
+            github_organization: hashEnvironmentVariables("GHO", [
+                "GITHUB_SERVER_URL",
+                "GITHUB_REPOSITORY_OWNER",
+                "GITHUB_REPOSITORY_OWNER_ID",
+            ]),
+        },
+    };
+    core.debug("Correlation data:");
+    core.debug(JSON.stringify(ident, null, 2));
+    return ident;
+}
+function hashEnvironmentVariables(prefix, variables) {
+    const hash = (0,external_node_crypto_namespaceObject.createHash)("sha256");
+    for (const varName of variables) {
+        const value = process.env[varName];
+        if (value === undefined) {
+            core.debug(`Environment variable not set: ${varName} -- can't generate the requested identity`);
+            return undefined;
+        }
+        else {
+            hash.update(value);
+            hash.update("\0");
+        }
+    }
+    return `${prefix}-${hash.digest("hex")}`;
+}
+
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/package.json
+const package_namespaceObject = {"i8":"1.0.0"};
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/platform.js
+
+function getArchOs() {
+    const envArch = process.env.RUNNER_ARCH;
+    const envOs = process.env.RUNNER_OS;
+    if (envArch && envOs) {
+        return `${envArch}-${envOs}`;
+    }
+    else {
+        core.error(`Can't identify the platform: RUNNER_ARCH or RUNNER_OS undefined (${envArch}-${envOs})`);
+        throw new Error("RUNNER_ARCH and/or RUNNER_OS is not defined");
+    }
+}
+function getNixPlatform(archOs) {
+    const archOsMap = new Map([
+        ["X64-macOS", "x86_64-darwin"],
+        ["ARM64-macOS", "aarch64-darwin"],
+        ["X64-Linux", "x86_64-linux"],
+        ["ARM64-Linux", "aarch64-linux"],
+    ]);
+    const mappedTo = archOsMap.get(archOs);
+    if (mappedTo) {
+        return mappedTo;
+    }
+    else {
+        core.error(`ArchOs (${archOs}) doesn't map to a supported Nix platform.`);
+        throw new Error(`Cannot convert ArchOs (${archOs}) to a supported Nix platform.`);
+    }
+}
+
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/sourcedef.js
+
+function constructSourceParameters(legacyPrefix) {
+    const noisilyGetInput = (suffix) => {
+        const preferredInput = inputStringOrUndef(`source-${suffix}`);
+        if (!legacyPrefix) {
+            return preferredInput;
+        }
+        // Remaining is for handling cases where the legacy prefix
+        // should be examined.
+        const legacyInput = inputStringOrUndef(`${legacyPrefix}-${suffix}`);
+        if (preferredInput && legacyInput) {
+            core.warning(`The supported option source-${suffix} and the legacy option ${legacyPrefix}-${suffix} are both set. Preferring source-${suffix}. Please stop setting ${legacyPrefix}-${suffix}.`);
+            return preferredInput;
+        }
+        else if (legacyInput) {
+            core.warning(`The legacy option ${legacyPrefix}-${suffix} is set. Please migrate to source-${suffix}.`);
+            return legacyInput;
+        }
+        else {
+            return preferredInput;
+        }
+    };
+    return {
+        path: noisilyGetInput("path"),
+        url: noisilyGetInput("url"),
+        tag: noisilyGetInput("tag"),
+        pr: noisilyGetInput("pr"),
+        branch: noisilyGetInput("branch"),
+        revision: noisilyGetInput("revision"),
+    };
+}
+function inputStringOrUndef(name) {
+    const value = core.getInput(name);
+    if (value === "") {
+        return undefined;
+    }
+    else {
+        return value;
+    }
+}
+
 // EXTERNAL MODULE: ./node_modules/.pnpm/@actions+cache@3.2.4/node_modules/@actions/cache/lib/cache.js
 var cache = __nccwpck_require__(6878);
-;// CONCATENATED MODULE: ./node_modules/.pnpm/@sindresorhus+is@6.3.0/node_modules/@sindresorhus/is/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/@sindresorhus+is@6.2.0/node_modules/@sindresorhus/is/dist/index.js
 const typedArrayTypeNames = [
     'Int8Array',
     'Uint8Array',
@@ -90279,458 +91097,458 @@ function assertAny(predicate, ...values) {
         throw new TypeError(typeErrorMessageMultipleValues(expectedTypes, values));
     }
 }
-function assertArray(value, assertion, message) {
+function assertArray(value, assertion) {
     if (!isArray(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Array', value));
+        throw new TypeError(typeErrorMessage('Array', value));
     }
     if (assertion) {
         // eslint-disable-next-line unicorn/no-array-for-each, unicorn/no-array-callback-reference
         value.forEach(assertion);
     }
 }
-function assertArrayBuffer(value, message) {
+function assertArrayBuffer(value) {
     if (!isArrayBuffer(value)) {
-        throw new TypeError(message ?? typeErrorMessage('ArrayBuffer', value));
+        throw new TypeError(typeErrorMessage('ArrayBuffer', value));
     }
 }
-function assertArrayLike(value, message) {
+function assertArrayLike(value) {
     if (!isArrayLike(value)) {
-        throw new TypeError(message ?? typeErrorMessage('array-like', value));
+        throw new TypeError(typeErrorMessage('array-like', value));
     }
 }
 // eslint-disable-next-line @typescript-eslint/ban-types
-function assertAsyncFunction(value, message) {
+function assertAsyncFunction(value) {
     if (!isAsyncFunction(value)) {
-        throw new TypeError(message ?? typeErrorMessage('AsyncFunction', value));
+        throw new TypeError(typeErrorMessage('AsyncFunction', value));
     }
 }
-function assertAsyncGenerator(value, message) {
+function assertAsyncGenerator(value) {
     if (!isAsyncGenerator(value)) {
-        throw new TypeError(message ?? typeErrorMessage('AsyncGenerator', value));
+        throw new TypeError(typeErrorMessage('AsyncGenerator', value));
     }
 }
-function assertAsyncGeneratorFunction(value, message) {
+function assertAsyncGeneratorFunction(value) {
     if (!isAsyncGeneratorFunction(value)) {
-        throw new TypeError(message ?? typeErrorMessage('AsyncGeneratorFunction', value));
+        throw new TypeError(typeErrorMessage('AsyncGeneratorFunction', value));
     }
 }
-function assertAsyncIterable(value, message) {
+function assertAsyncIterable(value) {
     if (!isAsyncIterable(value)) {
-        throw new TypeError(message ?? typeErrorMessage('AsyncIterable', value));
+        throw new TypeError(typeErrorMessage('AsyncIterable', value));
     }
 }
-function assertBigint(value, message) {
+function assertBigint(value) {
     if (!isBigint(value)) {
-        throw new TypeError(message ?? typeErrorMessage('bigint', value));
+        throw new TypeError(typeErrorMessage('bigint', value));
     }
 }
-function assertBigInt64Array(value, message) {
+function assertBigInt64Array(value) {
     if (!isBigInt64Array(value)) {
-        throw new TypeError(message ?? typeErrorMessage('BigInt64Array', value));
+        throw new TypeError(typeErrorMessage('BigInt64Array', value));
     }
 }
-function assertBigUint64Array(value, message) {
+function assertBigUint64Array(value) {
     if (!isBigUint64Array(value)) {
-        throw new TypeError(message ?? typeErrorMessage('BigUint64Array', value));
+        throw new TypeError(typeErrorMessage('BigUint64Array', value));
     }
 }
-function assertBlob(value, message) {
+function assertBlob(value) {
     if (!isBlob(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Blob', value));
+        throw new TypeError(typeErrorMessage('Blob', value));
     }
 }
-function assertBoolean(value, message) {
+function assertBoolean(value) {
     if (!isBoolean(value)) {
-        throw new TypeError(message ?? typeErrorMessage('boolean', value));
+        throw new TypeError(typeErrorMessage('boolean', value));
     }
 }
 // eslint-disable-next-line @typescript-eslint/ban-types
-function assertBoundFunction(value, message) {
+function assertBoundFunction(value) {
     if (!isBoundFunction(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Function', value));
+        throw new TypeError(typeErrorMessage('Function', value));
     }
 }
-function assertBuffer(value, message) {
+function assertBuffer(value) {
     if (!isBuffer(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Buffer', value));
+        throw new TypeError(typeErrorMessage('Buffer', value));
     }
 }
-function assertClass(value, message) {
+function assertClass(value) {
     if (!isClass(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Class', value));
+        throw new TypeError(typeErrorMessage('Class', value));
     }
 }
-function assertDataView(value, message) {
+function assertDataView(value) {
     if (!isDataView(value)) {
-        throw new TypeError(message ?? typeErrorMessage('DataView', value));
+        throw new TypeError(typeErrorMessage('DataView', value));
     }
 }
-function assertDate(value, message) {
+function assertDate(value) {
     if (!isDate(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Date', value));
+        throw new TypeError(typeErrorMessage('Date', value));
     }
 }
-function assertDirectInstanceOf(instance, class_, message) {
+function assertDirectInstanceOf(instance, class_) {
     if (!isDirectInstanceOf(instance, class_)) {
-        throw new TypeError(message ?? typeErrorMessage('T', instance));
+        throw new TypeError(typeErrorMessage('T', instance));
     }
 }
-function assertEmptyArray(value, message) {
+function assertEmptyArray(value) {
     if (!isEmptyArray(value)) {
-        throw new TypeError(message ?? typeErrorMessage('empty array', value));
+        throw new TypeError(typeErrorMessage('empty array', value));
     }
 }
-function assertEmptyMap(value, message) {
+function assertEmptyMap(value) {
     if (!isEmptyMap(value)) {
-        throw new TypeError(message ?? typeErrorMessage('empty map', value));
+        throw new TypeError(typeErrorMessage('empty map', value));
     }
 }
-function assertEmptyObject(value, message) {
+function assertEmptyObject(value) {
     if (!isEmptyObject(value)) {
-        throw new TypeError(message ?? typeErrorMessage('empty object', value));
+        throw new TypeError(typeErrorMessage('empty object', value));
     }
 }
-function assertEmptySet(value, message) {
+function assertEmptySet(value) {
     if (!isEmptySet(value)) {
-        throw new TypeError(message ?? typeErrorMessage('empty set', value));
+        throw new TypeError(typeErrorMessage('empty set', value));
     }
 }
-function assertEmptyString(value, message) {
+function assertEmptyString(value) {
     if (!isEmptyString(value)) {
-        throw new TypeError(message ?? typeErrorMessage('empty string', value));
+        throw new TypeError(typeErrorMessage('empty string', value));
     }
 }
-function assertEmptyStringOrWhitespace(value, message) {
+function assertEmptyStringOrWhitespace(value) {
     if (!isEmptyStringOrWhitespace(value)) {
-        throw new TypeError(message ?? typeErrorMessage('empty string or whitespace', value));
+        throw new TypeError(typeErrorMessage('empty string or whitespace', value));
     }
 }
-function assertEnumCase(value, targetEnum, message) {
+function assertEnumCase(value, targetEnum) {
     if (!isEnumCase(value, targetEnum)) {
-        throw new TypeError(message ?? typeErrorMessage('EnumCase', value));
+        throw new TypeError(typeErrorMessage('EnumCase', value));
     }
 }
-function assertError(value, message) {
+function assertError(value) {
     if (!isError(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Error', value));
+        throw new TypeError(typeErrorMessage('Error', value));
     }
 }
-function assertEvenInteger(value, message) {
+function assertEvenInteger(value) {
     if (!isEvenInteger(value)) {
-        throw new TypeError(message ?? typeErrorMessage('even integer', value));
+        throw new TypeError(typeErrorMessage('even integer', value));
     }
 }
-function assertFalsy(value, message) {
+function assertFalsy(value) {
     if (!isFalsy(value)) {
-        throw new TypeError(message ?? typeErrorMessage('falsy', value));
+        throw new TypeError(typeErrorMessage('falsy', value));
     }
 }
-function assertFloat32Array(value, message) {
+function assertFloat32Array(value) {
     if (!isFloat32Array(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Float32Array', value));
+        throw new TypeError(typeErrorMessage('Float32Array', value));
     }
 }
-function assertFloat64Array(value, message) {
+function assertFloat64Array(value) {
     if (!isFloat64Array(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Float64Array', value));
+        throw new TypeError(typeErrorMessage('Float64Array', value));
     }
 }
-function assertFormData(value, message) {
+function assertFormData(value) {
     if (!isFormData(value)) {
-        throw new TypeError(message ?? typeErrorMessage('FormData', value));
+        throw new TypeError(typeErrorMessage('FormData', value));
     }
 }
 // eslint-disable-next-line @typescript-eslint/ban-types
-function assertFunction(value, message) {
+function assertFunction(value) {
     if (!isFunction(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Function', value));
+        throw new TypeError(typeErrorMessage('Function', value));
     }
 }
-function assertGenerator(value, message) {
+function assertGenerator(value) {
     if (!isGenerator(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Generator', value));
+        throw new TypeError(typeErrorMessage('Generator', value));
     }
 }
-function assertGeneratorFunction(value, message) {
+function assertGeneratorFunction(value) {
     if (!isGeneratorFunction(value)) {
-        throw new TypeError(message ?? typeErrorMessage('GeneratorFunction', value));
+        throw new TypeError(typeErrorMessage('GeneratorFunction', value));
     }
 }
-function assertHtmlElement(value, message) {
+function assertHtmlElement(value) {
     if (!isHtmlElement(value)) {
-        throw new TypeError(message ?? typeErrorMessage('HTMLElement', value));
+        throw new TypeError(typeErrorMessage('HTMLElement', value));
     }
 }
-function assertInfinite(value, message) {
+function assertInfinite(value) {
     if (!isInfinite(value)) {
-        throw new TypeError(message ?? typeErrorMessage('infinite number', value));
+        throw new TypeError(typeErrorMessage('infinite number', value));
     }
 }
-function assertInRange(value, range, message) {
+function assertInRange(value, range) {
     if (!isInRange(value, range)) {
-        throw new TypeError(message ?? typeErrorMessage('in range', value));
+        throw new TypeError(typeErrorMessage('in range', value));
     }
 }
-function assertInt16Array(value, message) {
+function assertInt16Array(value) {
     if (!isInt16Array(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Int16Array', value));
+        throw new TypeError(typeErrorMessage('Int16Array', value));
     }
 }
-function assertInt32Array(value, message) {
+function assertInt32Array(value) {
     if (!isInt32Array(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Int32Array', value));
+        throw new TypeError(typeErrorMessage('Int32Array', value));
     }
 }
-function assertInt8Array(value, message) {
+function assertInt8Array(value) {
     if (!isInt8Array(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Int8Array', value));
+        throw new TypeError(typeErrorMessage('Int8Array', value));
     }
 }
-function assertInteger(value, message) {
+function assertInteger(value) {
     if (!isInteger(value)) {
-        throw new TypeError(message ?? typeErrorMessage('integer', value));
+        throw new TypeError(typeErrorMessage('integer', value));
     }
 }
-function assertIterable(value, message) {
+function assertIterable(value) {
     if (!isIterable(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Iterable', value));
+        throw new TypeError(typeErrorMessage('Iterable', value));
     }
 }
-function assertMap(value, message) {
+function assertMap(value) {
     if (!isMap(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Map', value));
+        throw new TypeError(typeErrorMessage('Map', value));
     }
 }
-function assertNan(value, message) {
+function assertNan(value) {
     if (!isNan(value)) {
-        throw new TypeError(message ?? typeErrorMessage('NaN', value));
+        throw new TypeError(typeErrorMessage('NaN', value));
     }
 }
-function assertNativePromise(value, message) {
+function assertNativePromise(value) {
     if (!isNativePromise(value)) {
-        throw new TypeError(message ?? typeErrorMessage('native Promise', value));
+        throw new TypeError(typeErrorMessage('native Promise', value));
     }
 }
-function assertNegativeNumber(value, message) {
+function assertNegativeNumber(value) {
     if (!isNegativeNumber(value)) {
-        throw new TypeError(message ?? typeErrorMessage('negative number', value));
+        throw new TypeError(typeErrorMessage('negative number', value));
     }
 }
-function assertNodeStream(value, message) {
+function assertNodeStream(value) {
     if (!isNodeStream(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Node.js Stream', value));
+        throw new TypeError(typeErrorMessage('Node.js Stream', value));
     }
 }
-function assertNonEmptyArray(value, message) {
+function assertNonEmptyArray(value) {
     if (!isNonEmptyArray(value)) {
-        throw new TypeError(message ?? typeErrorMessage('non-empty array', value));
+        throw new TypeError(typeErrorMessage('non-empty array', value));
     }
 }
-function assertNonEmptyMap(value, message) {
+function assertNonEmptyMap(value) {
     if (!isNonEmptyMap(value)) {
-        throw new TypeError(message ?? typeErrorMessage('non-empty map', value));
+        throw new TypeError(typeErrorMessage('non-empty map', value));
     }
 }
-function assertNonEmptyObject(value, message) {
+function assertNonEmptyObject(value) {
     if (!isNonEmptyObject(value)) {
-        throw new TypeError(message ?? typeErrorMessage('non-empty object', value));
+        throw new TypeError(typeErrorMessage('non-empty object', value));
     }
 }
-function assertNonEmptySet(value, message) {
+function assertNonEmptySet(value) {
     if (!isNonEmptySet(value)) {
-        throw new TypeError(message ?? typeErrorMessage('non-empty set', value));
+        throw new TypeError(typeErrorMessage('non-empty set', value));
     }
 }
-function assertNonEmptyString(value, message) {
+function assertNonEmptyString(value) {
     if (!isNonEmptyString(value)) {
-        throw new TypeError(message ?? typeErrorMessage('non-empty string', value));
+        throw new TypeError(typeErrorMessage('non-empty string', value));
     }
 }
-function assertNonEmptyStringAndNotWhitespace(value, message) {
+function assertNonEmptyStringAndNotWhitespace(value) {
     if (!isNonEmptyStringAndNotWhitespace(value)) {
-        throw new TypeError(message ?? typeErrorMessage('non-empty string and not whitespace', value));
+        throw new TypeError(typeErrorMessage('non-empty string and not whitespace', value));
     }
 }
 // eslint-disable-next-line @typescript-eslint/ban-types
-function assertNull(value, message) {
+function assertNull(value) {
     if (!isNull(value)) {
-        throw new TypeError(message ?? typeErrorMessage('null', value));
+        throw new TypeError(typeErrorMessage('null', value));
     }
 }
 // eslint-disable-next-line @typescript-eslint/ban-types
-function assertNullOrUndefined(value, message) {
+function assertNullOrUndefined(value) {
     if (!isNullOrUndefined(value)) {
-        throw new TypeError(message ?? typeErrorMessage('null or undefined', value));
+        throw new TypeError(typeErrorMessage('null or undefined', value));
     }
 }
-function assertNumber(value, message) {
+function assertNumber(value) {
     if (!isNumber(value)) {
-        throw new TypeError(message ?? typeErrorMessage('number', value));
+        throw new TypeError(typeErrorMessage('number', value));
     }
 }
-function assertNumericString(value, message) {
+function assertNumericString(value) {
     if (!isNumericString(value)) {
-        throw new TypeError(message ?? typeErrorMessage('string with a number', value));
+        throw new TypeError(typeErrorMessage('string with a number', value));
     }
 }
 // eslint-disable-next-line @typescript-eslint/ban-types
-function assertObject(value, message) {
+function assertObject(value) {
     if (!isObject(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Object', value));
+        throw new TypeError(typeErrorMessage('Object', value));
     }
 }
-function assertObservable(value, message) {
+function assertObservable(value) {
     if (!isObservable(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Observable', value));
+        throw new TypeError(typeErrorMessage('Observable', value));
     }
 }
-function assertOddInteger(value, message) {
+function assertOddInteger(value) {
     if (!isOddInteger(value)) {
-        throw new TypeError(message ?? typeErrorMessage('odd integer', value));
+        throw new TypeError(typeErrorMessage('odd integer', value));
     }
 }
-function assertPlainObject(value, message) {
+function assertPlainObject(value) {
     if (!isPlainObject(value)) {
-        throw new TypeError(message ?? typeErrorMessage('plain object', value));
+        throw new TypeError(typeErrorMessage('plain object', value));
     }
 }
-function assertPositiveNumber(value, message) {
+function assertPositiveNumber(value) {
     if (!isPositiveNumber(value)) {
-        throw new TypeError(message ?? typeErrorMessage('positive number', value));
+        throw new TypeError(typeErrorMessage('positive number', value));
     }
 }
-function assertPrimitive(value, message) {
+function assertPrimitive(value) {
     if (!isPrimitive(value)) {
-        throw new TypeError(message ?? typeErrorMessage('primitive', value));
+        throw new TypeError(typeErrorMessage('primitive', value));
     }
 }
-function assertPromise(value, message) {
+function assertPromise(value) {
     if (!isPromise(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Promise', value));
+        throw new TypeError(typeErrorMessage('Promise', value));
     }
 }
-function assertPropertyKey(value, message) {
+function assertPropertyKey(value) {
     if (!isPropertyKey(value)) {
-        throw new TypeError(message ?? typeErrorMessage('PropertyKey', value));
+        throw new TypeError(typeErrorMessage('PropertyKey', value));
     }
 }
-function assertRegExp(value, message) {
+function assertRegExp(value) {
     if (!isRegExp(value)) {
-        throw new TypeError(message ?? typeErrorMessage('RegExp', value));
+        throw new TypeError(typeErrorMessage('RegExp', value));
     }
 }
-function assertSafeInteger(value, message) {
+function assertSafeInteger(value) {
     if (!isSafeInteger(value)) {
-        throw new TypeError(message ?? typeErrorMessage('integer', value));
+        throw new TypeError(typeErrorMessage('integer', value));
     }
 }
-function assertSet(value, message) {
+function assertSet(value) {
     if (!isSet(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Set', value));
+        throw new TypeError(typeErrorMessage('Set', value));
     }
 }
-function assertSharedArrayBuffer(value, message) {
+function assertSharedArrayBuffer(value) {
     if (!isSharedArrayBuffer(value)) {
-        throw new TypeError(message ?? typeErrorMessage('SharedArrayBuffer', value));
+        throw new TypeError(typeErrorMessage('SharedArrayBuffer', value));
     }
 }
-function assertString(value, message) {
+function assertString(value) {
     if (!isString(value)) {
-        throw new TypeError(message ?? typeErrorMessage('string', value));
+        throw new TypeError(typeErrorMessage('string', value));
     }
 }
-function assertSymbol(value, message) {
+function assertSymbol(value) {
     if (!isSymbol(value)) {
-        throw new TypeError(message ?? typeErrorMessage('symbol', value));
+        throw new TypeError(typeErrorMessage('symbol', value));
     }
 }
-function assertTruthy(value, message) {
+function assertTruthy(value) {
     if (!isTruthy(value)) {
-        throw new TypeError(message ?? typeErrorMessage('truthy', value));
+        throw new TypeError(typeErrorMessage('truthy', value));
     }
 }
-function assertTupleLike(value, guards, message) {
+function assertTupleLike(value, guards) {
     if (!isTupleLike(value, guards)) {
-        throw new TypeError(message ?? typeErrorMessage('tuple-like', value));
+        throw new TypeError(typeErrorMessage('tuple-like', value));
     }
 }
-function assertTypedArray(value, message) {
+function assertTypedArray(value) {
     if (!isTypedArray(value)) {
-        throw new TypeError(message ?? typeErrorMessage('TypedArray', value));
+        throw new TypeError(typeErrorMessage('TypedArray', value));
     }
 }
-function assertUint16Array(value, message) {
+function assertUint16Array(value) {
     if (!isUint16Array(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Uint16Array', value));
+        throw new TypeError(typeErrorMessage('Uint16Array', value));
     }
 }
-function assertUint32Array(value, message) {
+function assertUint32Array(value) {
     if (!isUint32Array(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Uint32Array', value));
+        throw new TypeError(typeErrorMessage('Uint32Array', value));
     }
 }
-function assertUint8Array(value, message) {
+function assertUint8Array(value) {
     if (!isUint8Array(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Uint8Array', value));
+        throw new TypeError(typeErrorMessage('Uint8Array', value));
     }
 }
-function assertUint8ClampedArray(value, message) {
+function assertUint8ClampedArray(value) {
     if (!isUint8ClampedArray(value)) {
-        throw new TypeError(message ?? typeErrorMessage('Uint8ClampedArray', value));
+        throw new TypeError(typeErrorMessage('Uint8ClampedArray', value));
     }
 }
-function assertUndefined(value, message) {
+function assertUndefined(value) {
     if (!isUndefined(value)) {
-        throw new TypeError(message ?? typeErrorMessage('undefined', value));
+        throw new TypeError(typeErrorMessage('undefined', value));
     }
 }
-function assertUrlInstance(value, message) {
+function assertUrlInstance(value) {
     if (!isUrlInstance(value)) {
-        throw new TypeError(message ?? typeErrorMessage('URL', value));
+        throw new TypeError(typeErrorMessage('URL', value));
     }
 }
 // eslint-disable-next-line unicorn/prevent-abbreviations
-function assertUrlSearchParams(value, message) {
+function assertUrlSearchParams(value) {
     if (!isUrlSearchParams(value)) {
-        throw new TypeError(message ?? typeErrorMessage('URLSearchParams', value));
+        throw new TypeError(typeErrorMessage('URLSearchParams', value));
     }
 }
-function assertUrlString(value, message) {
+function assertUrlString(value) {
     if (!isUrlString(value)) {
-        throw new TypeError(message ?? typeErrorMessage('string with a URL', value));
+        throw new TypeError(typeErrorMessage('string with a URL', value));
     }
 }
-function assertValidDate(value, message) {
+function assertValidDate(value) {
     if (!isValidDate(value)) {
-        throw new TypeError(message ?? typeErrorMessage('valid Date', value));
+        throw new TypeError(typeErrorMessage('valid Date', value));
     }
 }
-function assertValidLength(value, message) {
+function assertValidLength(value) {
     if (!isValidLength(value)) {
-        throw new TypeError(message ?? typeErrorMessage('valid length', value));
+        throw new TypeError(typeErrorMessage('valid length', value));
     }
 }
 // eslint-disable-next-line @typescript-eslint/ban-types
-function assertWeakMap(value, message) {
+function assertWeakMap(value) {
     if (!isWeakMap(value)) {
-        throw new TypeError(message ?? typeErrorMessage('WeakMap', value));
+        throw new TypeError(typeErrorMessage('WeakMap', value));
     }
 }
 // eslint-disable-next-line @typescript-eslint/ban-types
-function assertWeakRef(value, message) {
+function assertWeakRef(value) {
     if (!isWeakRef(value)) {
-        throw new TypeError(message ?? typeErrorMessage('WeakRef', value));
+        throw new TypeError(typeErrorMessage('WeakRef', value));
     }
 }
 // eslint-disable-next-line @typescript-eslint/ban-types
-function assertWeakSet(value, message) {
+function assertWeakSet(value) {
     if (!isWeakSet(value)) {
-        throw new TypeError(message ?? typeErrorMessage('WeakSet', value));
+        throw new TypeError(typeErrorMessage('WeakSet', value));
     }
 }
-function assertWhitespaceString(value, message) {
+function assertWhitespaceString(value) {
     if (!isWhitespaceString(value)) {
-        throw new TypeError(message ?? typeErrorMessage('whitespace string', value));
+        throw new TypeError(typeErrorMessage('whitespace string', value));
     }
 }
 /* harmony default export */ const dist = (is);
@@ -92503,6 +93321,8 @@ getContentLength_fn = function() {
 };
 
 
+// EXTERNAL MODULE: external "node:util"
+var external_node_util_ = __nccwpck_require__(7261);
 ;// CONCATENATED MODULE: ./node_modules/.pnpm/got@14.2.1/node_modules/got/dist/source/core/utils/is-form-data.js
 
 function is_form_data_isFormData(body) {
@@ -96378,439 +97198,23 @@ const got = source_create(defaults);
 
 ;// CONCATENATED MODULE: external "node:stream/promises"
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@cd38b227c4d6faca10aed591b1f8863ef7b93dce_nckxvs7jbq6qb4vr5xhgyxcrgy/node_modules/detsys-ts/dist/index.js
-var __defProp = Object.defineProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
+// EXTERNAL MODULE: ./node_modules/.pnpm/uuid@9.0.1/node_modules/uuid/dist/index.js
+var uuid_dist = __nccwpck_require__(711);
+;// CONCATENATED MODULE: ./node_modules/.pnpm/uuid@9.0.1/node_modules/uuid/wrapper.mjs
 
-// package.json
-var version = "1.0.0";
+const v1 = uuid_dist.v1;
+const v3 = uuid_dist.v3;
+const v4 = uuid_dist.v4;
+const v5 = uuid_dist.v5;
+const NIL = uuid_dist/* NIL */.zR;
+const version = uuid_dist/* version */.i8;
+const validate = uuid_dist/* validate */.Gu;
+const stringify = uuid_dist/* stringify */.Pz;
+const parse = uuid_dist/* parse */.Qc;
 
-// src/linux-release-info.ts
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@3a315cdffd83d4b229d4fb16548d22a3756baf28_lprtsns3vmnabnzqpk64lag6gi/node_modules/detsys-ts/dist/main.js
 
-
-
-var readFileAsync = (0,external_node_util_.promisify)(external_node_fs_namespaceObject.readFile);
-var linuxReleaseInfoOptionsDefaults = {
-  mode: "async",
-  customFile: null,
-  debug: false
-};
-function releaseInfo(infoOptions) {
-  const options = { ...linuxReleaseInfoOptionsDefaults, ...infoOptions };
-  const searchOsReleaseFileList = osReleaseFileList(
-    options.customFile
-  );
-  if (external_node_os_.type() !== "Linux") {
-    if (options.mode === "sync") {
-      return getOsInfo();
-    } else {
-      return Promise.resolve(getOsInfo());
-    }
-  }
-  if (options.mode === "sync") {
-    return readSyncOsreleaseFile(searchOsReleaseFileList, options);
-  } else {
-    return Promise.resolve(
-      readAsyncOsReleaseFile(searchOsReleaseFileList, options)
-    );
-  }
-}
-function formatFileData(sourceData, srcParseData) {
-  const lines = srcParseData.split("\n");
-  for (const line of lines) {
-    const lineData = line.split("=");
-    if (lineData.length === 2) {
-      lineData[1] = lineData[1].replace(/["'\r]/gi, "");
-      Object.defineProperty(sourceData, lineData[0].toLowerCase(), {
-        value: lineData[1],
-        writable: true,
-        enumerable: true,
-        configurable: true
-      });
-    }
-  }
-  return sourceData;
-}
-function osReleaseFileList(customFile) {
-  const DEFAULT_OS_RELEASE_FILES = ["/etc/os-release", "/usr/lib/os-release"];
-  if (!customFile) {
-    return DEFAULT_OS_RELEASE_FILES;
-  } else {
-    return Array(customFile);
-  }
-}
-function getOsInfo() {
-  return {
-    type: external_node_os_.type(),
-    platform: external_node_os_.platform(),
-    hostname: external_node_os_.hostname(),
-    arch: external_node_os_.arch(),
-    release: external_node_os_.release()
-  };
-}
-async function readAsyncOsReleaseFile(fileList, options) {
-  let fileData = null;
-  for (const osReleaseFile of fileList) {
-    try {
-      if (options.debug) {
-        console.log(`Trying to read '${osReleaseFile}'...`);
-      }
-      fileData = await readFileAsync(osReleaseFile, "binary");
-      if (options.debug) {
-        console.log(`Read data:
-${fileData}`);
-      }
-      break;
-    } catch (error2) {
-      if (options.debug) {
-        console.error(error2);
-      }
-    }
-  }
-  if (fileData === null) {
-    throw new Error("Cannot read os-release file!");
-  }
-  return formatFileData(getOsInfo(), fileData);
-}
-function readSyncOsreleaseFile(releaseFileList, options) {
-  let fileData = null;
-  for (const osReleaseFile of releaseFileList) {
-    try {
-      if (options.debug) {
-        console.log(`Trying to read '${osReleaseFile}'...`);
-      }
-      fileData = external_node_fs_namespaceObject.readFileSync(osReleaseFile, "binary");
-      if (options.debug) {
-        console.log(`Read data:
-${fileData}`);
-      }
-      break;
-    } catch (error2) {
-      if (options.debug) {
-        console.error(error2);
-      }
-    }
-  }
-  if (fileData === null) {
-    throw new Error("Cannot read os-release file!");
-  }
-  return formatFileData(getOsInfo(), fileData);
-}
-
-// src/actions-core-platform.ts
-
-
-
-var getWindowsInfo = async () => {
-  const { stdout: version2 } = await exec.getExecOutput(
-    'powershell -command "(Get-CimInstance -ClassName Win32_OperatingSystem).Version"',
-    void 0,
-    {
-      silent: true
-    }
-  );
-  const { stdout: name } = await exec.getExecOutput(
-    'powershell -command "(Get-CimInstance -ClassName Win32_OperatingSystem).Caption"',
-    void 0,
-    {
-      silent: true
-    }
-  );
-  return {
-    name: name.trim(),
-    version: version2.trim()
-  };
-};
-var getMacOsInfo = async () => {
-  const { stdout } = await exec.getExecOutput("sw_vers", void 0, {
-    silent: true
-  });
-  const version2 = stdout.match(/ProductVersion:\s*(.+)/)?.[1] ?? "";
-  const name = stdout.match(/ProductName:\s*(.+)/)?.[1] ?? "";
-  return {
-    name,
-    version: version2
-  };
-};
-var getLinuxInfo = async () => {
-  let data = {};
-  try {
-    data = releaseInfo({ mode: "sync" });
-    core.debug(`Identified release info: ${JSON.stringify(data)}`);
-  } catch (e) {
-    core.debug(`Error collecting release info: ${e}`);
-  }
-  return {
-    name: getPropertyViaWithDefault(
-      data,
-      ["id", "name", "pretty_name", "id_like"],
-      "unknown"
-    ),
-    version: getPropertyViaWithDefault(
-      data,
-      ["version_id", "version", "version_codename"],
-      "unknown"
-    )
-  };
-};
-function getPropertyViaWithDefault(data, names, defaultValue) {
-  for (const name of names) {
-    const ret = getPropertyWithDefault(data, name, defaultValue);
-    if (ret !== defaultValue) {
-      return ret;
-    }
-  }
-  return defaultValue;
-}
-function getPropertyWithDefault(data, name, defaultValue) {
-  if (!data.hasOwnProperty(name)) {
-    return defaultValue;
-  }
-  const value = data[name];
-  if (typeof value !== typeof defaultValue) {
-    return defaultValue;
-  }
-  return value;
-}
-var platform2 = external_os_.platform();
-var arch2 = external_os_.arch();
-var isWindows = platform2 === "win32";
-var isMacOS = platform2 === "darwin";
-var isLinux = platform2 === "linux";
-async function getDetails() {
-  return {
-    ...await (isWindows ? getWindowsInfo() : isMacOS ? getMacOsInfo() : getLinuxInfo()),
-    platform: platform2,
-    arch: arch2,
-    isWindows,
-    isMacOS,
-    isLinux
-  };
-}
-
-// src/correlation.ts
-
-
-var OPTIONAL_VARIABLES = ["INVOCATION_ID"];
-function identify(projectName) {
-  const ident = {
-    correlation_source: "github-actions",
-    repository: hashEnvironmentVariables("GHR", [
-      "GITHUB_SERVER_URL",
-      "GITHUB_REPOSITORY_OWNER",
-      "GITHUB_REPOSITORY_OWNER_ID",
-      "GITHUB_REPOSITORY",
-      "GITHUB_REPOSITORY_ID"
-    ]),
-    workflow: hashEnvironmentVariables("GHW", [
-      "GITHUB_SERVER_URL",
-      "GITHUB_REPOSITORY_OWNER",
-      "GITHUB_REPOSITORY_OWNER_ID",
-      "GITHUB_REPOSITORY",
-      "GITHUB_REPOSITORY_ID",
-      "GITHUB_WORKFLOW"
-    ]),
-    job: hashEnvironmentVariables("GHWJ", [
-      "GITHUB_SERVER_URL",
-      "GITHUB_REPOSITORY_OWNER",
-      "GITHUB_REPOSITORY_OWNER_ID",
-      "GITHUB_REPOSITORY",
-      "GITHUB_REPOSITORY_ID",
-      "GITHUB_WORKFLOW",
-      "GITHUB_JOB"
-    ]),
-    run: hashEnvironmentVariables("GHWJR", [
-      "GITHUB_SERVER_URL",
-      "GITHUB_REPOSITORY_OWNER",
-      "GITHUB_REPOSITORY_OWNER_ID",
-      "GITHUB_REPOSITORY",
-      "GITHUB_REPOSITORY_ID",
-      "GITHUB_WORKFLOW",
-      "GITHUB_JOB",
-      "GITHUB_RUN_ID"
-    ]),
-    run_differentiator: hashEnvironmentVariables("GHWJA", [
-      "GITHUB_SERVER_URL",
-      "GITHUB_REPOSITORY_OWNER",
-      "GITHUB_REPOSITORY_OWNER_ID",
-      "GITHUB_REPOSITORY",
-      "GITHUB_REPOSITORY_ID",
-      "GITHUB_WORKFLOW",
-      "GITHUB_JOB",
-      "GITHUB_RUN_ID",
-      "GITHUB_RUN_NUMBER",
-      "GITHUB_RUN_ATTEMPT",
-      "INVOCATION_ID"
-    ]),
-    groups: {
-      ci: "github-actions",
-      project: projectName,
-      github_organization: hashEnvironmentVariables("GHO", [
-        "GITHUB_SERVER_URL",
-        "GITHUB_REPOSITORY_OWNER",
-        "GITHUB_REPOSITORY_OWNER_ID"
-      ])
-    }
-  };
-  core.debug("Correlation data:");
-  core.debug(JSON.stringify(ident, null, 2));
-  return ident;
-}
-function hashEnvironmentVariables(prefix, variables) {
-  const hash = (0,external_node_crypto_namespaceObject.createHash)("sha256");
-  for (const varName of variables) {
-    let value = process.env[varName];
-    if (value === void 0) {
-      if (OPTIONAL_VARIABLES.includes(varName)) {
-        core.debug(
-          `Optional environment variable not set: ${varName} -- substituting with the variable name`
-        );
-        value = varName;
-      } else {
-        core.debug(
-          `Environment variable not set: ${varName} -- can't generate the requested identity`
-        );
-        return void 0;
-      }
-    }
-    hash.update(value);
-    hash.update("\0");
-  }
-  return `${prefix}-${hash.digest("hex")}`;
-}
-
-// src/platform.ts
-var platform_exports = {};
-__export(platform_exports, {
-  getArchOs: () => getArchOs,
-  getNixPlatform: () => getNixPlatform
-});
-
-function getArchOs() {
-  const envArch = process.env.RUNNER_ARCH;
-  const envOs = process.env.RUNNER_OS;
-  if (envArch && envOs) {
-    return `${envArch}-${envOs}`;
-  } else {
-    core.error(
-      `Can't identify the platform: RUNNER_ARCH or RUNNER_OS undefined (${envArch}-${envOs})`
-    );
-    throw new Error("RUNNER_ARCH and/or RUNNER_OS is not defined");
-  }
-}
-function getNixPlatform(archOs) {
-  const archOsMap = /* @__PURE__ */ new Map([
-    ["X64-macOS", "x86_64-darwin"],
-    ["ARM64-macOS", "aarch64-darwin"],
-    ["X64-Linux", "x86_64-linux"],
-    ["ARM64-Linux", "aarch64-linux"]
-  ]);
-  const mappedTo = archOsMap.get(archOs);
-  if (mappedTo) {
-    return mappedTo;
-  } else {
-    core.error(
-      `ArchOs (${archOs}) doesn't map to a supported Nix platform.`
-    );
-    throw new Error(
-      `Cannot convert ArchOs (${archOs}) to a supported Nix platform.`
-    );
-  }
-}
-
-// src/inputs.ts
-var inputs_exports = {};
-__export(inputs_exports, {
-  getBool: () => getBool,
-  getCommaSeparatedArrayOfStrings: () => getCommaSeparatedArrayOfStrings,
-  getMultilineStringOrNull: () => getMultilineStringOrNull,
-  getNumberOrNull: () => getNumberOrNull,
-  getString: () => getString,
-  getStringOrNull: () => getStringOrNull,
-  getStringOrUndefined: () => getStringOrUndefined
-});
-
-var getBool = (name) => {
-  return core.getBooleanInput(name);
-};
-var getCommaSeparatedArrayOfStrings = (name, stripWhitespace) => {
-  const strip = stripWhitespace ?? false;
-  const original = getString(name);
-  return (strip ? original.replace(/\s+/g, "") : original).split(",");
-};
-var getMultilineStringOrNull = (name) => {
-  const value = core.getMultilineInput(name);
-  if (value.length === 0) {
-    return null;
-  } else {
-    return value;
-  }
-};
-var getNumberOrNull = (name) => {
-  const value = core.getInput(name);
-  if (value === "") {
-    return null;
-  } else {
-    return Number(value);
-  }
-};
-var getString = (name) => {
-  return core.getInput(name);
-};
-var getStringOrNull = (name) => {
-  const value = core.getInput(name);
-  if (value === "") {
-    return null;
-  } else {
-    return value;
-  }
-};
-var getStringOrUndefined = (name) => {
-  const value = core.getInput(name);
-  if (value === "") {
-    return void 0;
-  } else {
-    return value;
-  }
-};
-
-// src/sourcedef.ts
-
-function constructSourceParameters(legacyPrefix) {
-  const noisilyGetInput = (suffix) => {
-    const preferredInput = getStringOrUndefined(`source-${suffix}`);
-    if (!legacyPrefix) {
-      return preferredInput;
-    }
-    const legacyInput = getStringOrUndefined(`${legacyPrefix}-${suffix}`);
-    if (preferredInput && legacyInput) {
-      core.warning(
-        `The supported option source-${suffix} and the legacy option ${legacyPrefix}-${suffix} are both set. Preferring source-${suffix}. Please stop setting ${legacyPrefix}-${suffix}.`
-      );
-      return preferredInput;
-    } else if (legacyInput) {
-      core.warning(
-        `The legacy option ${legacyPrefix}-${suffix} is set. Please migrate to source-${suffix}.`
-      );
-      return legacyInput;
-    } else {
-      return preferredInput;
-    }
-  };
-  return {
-    path: noisilyGetInput("path"),
-    url: noisilyGetInput("url"),
-    tag: noisilyGetInput("tag"),
-    pr: noisilyGetInput("pr"),
-    branch: noisilyGetInput("branch"),
-    revision: noisilyGetInput("revision")
-  };
-}
-
-// src/index.ts
+// eslint-disable-next-line import/extensions
 
 
 
@@ -96820,444 +97224,366 @@ function constructSourceParameters(legacyPrefix) {
 
 
 
-var DEFAULT_IDS_HOST = "https://install.determinate.systems";
-var IDS_HOST = process.env["IDS_HOST"] ?? DEFAULT_IDS_HOST;
-var EVENT_EXCEPTION = "exception";
-var EVENT_ARTIFACT_CACHE_HIT = "artifact_cache_hit";
-var EVENT_ARTIFACT_CACHE_MISS = "artifact_cache_miss";
-var FACT_ENDED_WITH_EXCEPTION = "ended_with_exception";
-var FACT_FINAL_EXCEPTION = "final_exception";
-var IdsToolbox = class {
-  constructor(actionOptions) {
-    this.actionOptions = makeOptionsConfident(actionOptions);
-    this.hookMain = void 0;
-    this.hookPost = void 0;
-    this.events = [];
-    this.client = got_dist_source.extend({
-      retry: {
-        limit: 3,
-        methods: ["GET", "HEAD"]
-      },
-      hooks: {
-        beforeRetry: [
-          (error2, retryCount) => {
-            core.info(
-              `Retrying after error ${error2.code}, retry #: ${retryCount}`
-            );
-          }
-        ]
-      }
-    });
-    this.facts = {
-      $lib: "idslib",
-      $lib_version: version,
-      project: this.actionOptions.name,
-      ids_project: this.actionOptions.idsProjectName
-    };
-    const params = [
-      ["github_action_ref", "GITHUB_ACTION_REF"],
-      ["github_action_repository", "GITHUB_ACTION_REPOSITORY"],
-      ["github_event_name", "GITHUB_EVENT_NAME"],
-      ["$os", "RUNNER_OS"],
-      ["arch", "RUNNER_ARCH"]
-    ];
-    for (const [target, env] of params) {
-      const value = process.env[env];
-      if (value) {
-        this.facts[target] = value;
-      }
-    }
-    this.identity = identify(this.actionOptions.name);
-    this.archOs = getArchOs();
-    this.nixSystem = getNixPlatform(this.archOs);
-    this.facts.arch_os = this.archOs;
-    this.facts.nix_system = this.nixSystem;
-    {
-      getDetails().then((details) => {
-        if (details.name !== "unknown") {
-          this.addFact("$os", details.name);
+
+
+
+
+const DEFAULT_IDS_HOST = "https://install.determinate.systems";
+const IDS_HOST = process.env["IDS_HOST"] ?? DEFAULT_IDS_HOST;
+const EVENT_EXCEPTION = "exception";
+const EVENT_ARTIFACT_CACHE_HIT = "artifact_cache_hit";
+const EVENT_ARTIFACT_CACHE_MISS = "artifact_cache_miss";
+const FACT_ENDED_WITH_EXCEPTION = "ended_with_exception";
+const FACT_FINAL_EXCEPTION = "final_exception";
+class IdsToolbox {
+    constructor(actionOptions) {
+        this.actionOptions = makeOptionsConfident(actionOptions);
+        this.hookMain = undefined;
+        this.hookPost = undefined;
+        this.events = [];
+        this.client = got_dist_source.extend({
+            retry: {
+                limit: 3,
+                methods: ["GET", "HEAD"],
+            },
+            hooks: {
+                beforeRetry: [
+                    (error, retryCount) => {
+                        core.info(`Retrying after error ${error.code}, retry #: ${retryCount}`);
+                    },
+                ],
+            },
+        });
+        this.facts = {
+            $lib: "idslib",
+            $lib_version: package_namespaceObject.i8,
+            project: this.actionOptions.name,
+            ids_project: this.actionOptions.idsProjectName,
+        };
+        const params = [
+            ["github_action_ref", "GITHUB_ACTION_REF"],
+            ["github_action_repository", "GITHUB_ACTION_REPOSITORY"],
+            ["github_event_name", "GITHUB_EVENT_NAME"],
+            ["$os", "RUNNER_OS"],
+            ["arch", "RUNNER_ARCH"],
+        ];
+        for (const [target, env] of params) {
+            const value = process.env[env];
+            if (value) {
+                this.facts[target] = value;
+            }
         }
-        if (details.version !== "unknown") {
-          this.addFact("$os_version", details.version);
+        this.identity = identify(this.actionOptions.name);
+        this.archOs = getArchOs();
+        this.nixSystem = getNixPlatform(this.archOs);
+        this.facts.arch_os = this.archOs;
+        this.facts.nix_system = this.nixSystem;
+        {
+            const phase = core.getState("idstoolbox_execution_phase");
+            if (phase === "") {
+                core.saveState("idstoolbox_execution_phase", "post");
+                this.executionPhase = "main";
+            }
+            else {
+                this.executionPhase = "post";
+            }
+            this.facts.execution_phase = this.executionPhase;
         }
-      }).catch((e) => {
-        core.debug(`Failure getting platform details: ${e}`);
-      });
-    }
-    {
-      const phase = core.getState("idstoolbox_execution_phase");
-      if (phase === "") {
-        core.saveState("idstoolbox_execution_phase", "post");
-        this.executionPhase = "main";
-      } else {
-        this.executionPhase = "post";
-      }
-      this.facts.execution_phase = this.executionPhase;
-    }
-    if (this.actionOptions.fetchStyle === "gh-env-style") {
-      this.architectureFetchSuffix = this.archOs;
-    } else if (this.actionOptions.fetchStyle === "nix-style") {
-      this.architectureFetchSuffix = this.nixSystem;
-    } else if (this.actionOptions.fetchStyle === "universal") {
-      this.architectureFetchSuffix = "universal";
-    } else {
-      throw new Error(
-        `fetchStyle ${this.actionOptions.fetchStyle} is not a valid style`
-      );
-    }
-    this.sourceParameters = constructSourceParameters(
-      this.actionOptions.legacySourcePrefix
-    );
-    this.recordEvent(`begin_${this.executionPhase}`);
-  }
-  onMain(callback) {
-    this.hookMain = callback;
-  }
-  onPost(callback) {
-    this.hookPost = callback;
-  }
-  execute() {
-    this.executeAsync().catch((error2) => {
-      console.log(error2);
-      process.exitCode = 1;
-    });
-  }
-  async executeAsync() {
-    try {
-      process.env.DETSYS_CORRELATION = JSON.stringify(
-        this.getCorrelationHashes()
-      );
-      if (!await this.preflightRequireNix()) {
-        this.recordEvent("preflight-require-nix-denied");
-        return;
-      }
-      if (this.executionPhase === "main" && this.hookMain) {
-        await this.hookMain();
-      } else if (this.executionPhase === "post" && this.hookPost) {
-        await this.hookPost();
-      }
-      this.addFact(FACT_ENDED_WITH_EXCEPTION, false);
-    } catch (error2) {
-      this.addFact(FACT_ENDED_WITH_EXCEPTION, true);
-      const reportable = error2 instanceof Error || typeof error2 == "string" ? error2.toString() : JSON.stringify(error2);
-      this.addFact(FACT_FINAL_EXCEPTION, reportable);
-      if (this.executionPhase === "post") {
-        core.warning(reportable);
-      } else {
-        core.setFailed(reportable);
-      }
-      this.recordEvent(EVENT_EXCEPTION);
-    } finally {
-      await this.complete();
-    }
-  }
-  addFact(key, value) {
-    this.facts[key] = value;
-  }
-  getDiagnosticsUrl() {
-    return this.actionOptions.diagnosticsUrl;
-  }
-  getUniqueId() {
-    return this.identity.run_differentiator || process.env.RUNNER_TRACKING_ID || (0,external_node_crypto_namespaceObject.randomUUID)();
-  }
-  getCorrelationHashes() {
-    return this.identity;
-  }
-  recordEvent(eventName, context = {}) {
-    this.events.push({
-      event_name: `${this.actionOptions.eventPrefix}${eventName}`,
-      context,
-      correlation: this.identity,
-      facts: this.facts,
-      timestamp: /* @__PURE__ */ new Date(),
-      uuid: (0,external_node_crypto_namespaceObject.randomUUID)()
-    });
-  }
-  async fetch() {
-    core.startGroup(
-      `Downloading ${this.actionOptions.name} for ${this.architectureFetchSuffix}`
-    );
-    try {
-      core.info(`Fetching from ${this.getUrl()}`);
-      const correlatedUrl = this.getUrl();
-      correlatedUrl.searchParams.set("ci", "github");
-      correlatedUrl.searchParams.set(
-        "correlation",
-        JSON.stringify(this.identity)
-      );
-      const versionCheckup = await this.client.head(correlatedUrl);
-      if (versionCheckup.headers.etag) {
-        const v = versionCheckup.headers.etag;
-        core.debug(
-          `Checking the tool cache for ${this.getUrl()} at ${v}`
-        );
-        const cached = await this.getCachedVersion(v);
-        if (cached) {
-          this.facts["artifact_fetched_from_cache"] = true;
-          core.debug(`Tool cache hit.`);
-          return cached;
+        if (this.actionOptions.fetchStyle === "gh-env-style") {
+            this.architectureFetchSuffix = this.archOs;
         }
-      }
-      this.facts["artifact_fetched_from_cache"] = false;
-      core.debug(
-        `No match from the cache, re-fetching from the redirect: ${versionCheckup.url}`
-      );
-      const destFile = this.getTemporaryName();
-      const fetchStream = this.client.stream(versionCheckup.url);
-      await (0,external_node_stream_promises_namespaceObject.pipeline)(
-        fetchStream,
-        (0,external_node_fs_namespaceObject.createWriteStream)(destFile, {
-          encoding: "binary",
-          mode: 493
-        })
-      );
-      if (fetchStream.response?.headers.etag) {
-        const v = fetchStream.response.headers.etag;
+        else if (this.actionOptions.fetchStyle === "nix-style") {
+            this.architectureFetchSuffix = this.nixSystem;
+        }
+        else if (this.actionOptions.fetchStyle === "universal") {
+            this.architectureFetchSuffix = "universal";
+        }
+        else {
+            throw new Error(`fetchStyle ${this.actionOptions.fetchStyle} is not a valid style`);
+        }
+        this.sourceParameters = constructSourceParameters(this.actionOptions.legacySourcePrefix);
+        this.recordEvent(`begin_${this.executionPhase}`);
+    }
+    onMain(callback) {
+        this.hookMain = callback;
+    }
+    onPost(callback) {
+        this.hookPost = callback;
+    }
+    execute() {
+        // eslint-disable-next-line github/no-then
+        this.executeAsync().catch((error) => {
+            // eslint-disable-next-line no-console
+            console.log(error);
+            process.exitCode = 1;
+        });
+    }
+    async executeAsync() {
         try {
-          await this.saveCachedVersion(v, destFile);
-        } catch (e) {
-          core.debug(`Error caching the artifact: ${e}`);
+            process.env.DETSYS_CORRELATION = JSON.stringify(this.getCorrelationHashes());
+            if (this.executionPhase === "main" && this.hookMain) {
+                await this.hookMain();
+            }
+            else if (this.executionPhase === "post" && this.hookPost) {
+                await this.hookPost();
+            }
+            this.addFact(FACT_ENDED_WITH_EXCEPTION, false);
         }
-      }
-      return destFile;
-    } finally {
-      core.endGroup();
+        catch (error) {
+            this.addFact(FACT_ENDED_WITH_EXCEPTION, true);
+            const reportable = error instanceof Error || typeof error == "string"
+                ? error.toString()
+                : JSON.stringify(error);
+            this.addFact(FACT_FINAL_EXCEPTION, reportable);
+            if (this.executionPhase === "post") {
+                core.warning(reportable);
+            }
+            else {
+                core.setFailed(reportable);
+            }
+            this.recordEvent(EVENT_EXCEPTION);
+        }
+        finally {
+            await this.complete();
+        }
     }
-  }
-  async fetchExecutable() {
-    const binaryPath = await this.fetch();
-    await (0,promises_namespaceObject.chmod)(binaryPath, promises_namespaceObject.constants.S_IXUSR | promises_namespaceObject.constants.S_IXGRP);
-    return binaryPath;
-  }
-  async complete() {
-    this.recordEvent(`complete_${this.executionPhase}`);
-    await this.submitEvents();
-  }
-  getUrl() {
-    const p = this.sourceParameters;
-    if (p.url) {
-      return new URL(p.url);
+    addFact(key, value) {
+        this.facts[key] = value;
     }
-    const fetchUrl = new URL(IDS_HOST);
-    fetchUrl.pathname += this.actionOptions.idsProjectName;
-    if (p.tag) {
-      fetchUrl.pathname += `/tag/${p.tag}`;
-    } else if (p.pr) {
-      fetchUrl.pathname += `/pr/${p.pr}`;
-    } else if (p.branch) {
-      fetchUrl.pathname += `/branch/${p.branch}`;
-    } else if (p.revision) {
-      fetchUrl.pathname += `/rev/${p.revision}`;
-    } else {
-      fetchUrl.pathname += `/stable`;
+    getDiagnosticsUrl() {
+        return this.actionOptions.diagnosticsUrl;
     }
-    fetchUrl.pathname += `/${this.architectureFetchSuffix}`;
-    return fetchUrl;
-  }
-  cacheKey(version2) {
-    const cleanedVersion = version2.replace(/[^a-zA-Z0-9-+.]/g, "");
-    return `determinatesystem-${this.actionOptions.name}-${this.architectureFetchSuffix}-${cleanedVersion}`;
-  }
-  async getCachedVersion(version2) {
-    const startCwd = process.cwd();
-    try {
-      const tempDir = this.getTemporaryName();
-      await (0,promises_namespaceObject.mkdir)(tempDir);
-      process.chdir(tempDir);
-      process.env.GITHUB_WORKSPACE_BACKUP = process.env.GITHUB_WORKSPACE;
-      delete process.env.GITHUB_WORKSPACE;
-      if (await cache.restoreCache(
-        [this.actionOptions.name],
-        this.cacheKey(version2),
-        [],
-        void 0,
-        true
-      )) {
-        this.recordEvent(EVENT_ARTIFACT_CACHE_HIT);
-        return `${tempDir}/${this.actionOptions.name}`;
-      }
-      this.recordEvent(EVENT_ARTIFACT_CACHE_MISS);
-      return void 0;
-    } finally {
-      process.env.GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE_BACKUP;
-      delete process.env.GITHUB_WORKSPACE_BACKUP;
-      process.chdir(startCwd);
+    getUniqueId() {
+        return (this.identity.run_differentiator ||
+            process.env.RUNNER_TRACKING_ID ||
+            (0,external_node_crypto_namespaceObject.randomUUID)());
     }
-  }
-  async saveCachedVersion(version2, toolPath) {
-    const startCwd = process.cwd();
-    try {
-      const tempDir = this.getTemporaryName();
-      await (0,promises_namespaceObject.mkdir)(tempDir);
-      process.chdir(tempDir);
-      await (0,promises_namespaceObject.copyFile)(toolPath, `${tempDir}/${this.actionOptions.name}`);
-      process.env.GITHUB_WORKSPACE_BACKUP = process.env.GITHUB_WORKSPACE;
-      delete process.env.GITHUB_WORKSPACE;
-      await cache.saveCache(
-        [this.actionOptions.name],
-        this.cacheKey(version2),
-        void 0,
-        true
-      );
-      this.recordEvent(EVENT_ARTIFACT_CACHE_HIT);
-    } finally {
-      process.env.GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE_BACKUP;
-      delete process.env.GITHUB_WORKSPACE_BACKUP;
-      process.chdir(startCwd);
+    getCorrelationHashes() {
+        return this.identity;
     }
-  }
-  async preflightRequireNix() {
-    let nixLocation;
-    const pathParts = (process.env["PATH"] || "").split(":");
-    for (const location of pathParts) {
-      const candidateNix = external_node_path_namespaceObject.join(location, "nix");
-      try {
-        await promises_namespaceObject.access(candidateNix, promises_namespaceObject.constants.X_OK);
-        core.debug(`Found Nix at ${candidateNix}`);
-        nixLocation = candidateNix;
-      } catch {
-        core.debug(`Nix not at ${candidateNix}`);
-      }
+    recordEvent(eventName, context = {}) {
+        this.events.push({
+            event_name: `${this.actionOptions.eventPrefix}${eventName}`,
+            context,
+            correlation: this.identity,
+            facts: this.facts,
+            timestamp: new Date(),
+        });
     }
-    this.addFact("nix_location", nixLocation || "");
-    if (this.actionOptions.requireNix === "ignore") {
-      return true;
+    async fetch() {
+        core.info(`Fetching from ${this.getUrl()}`);
+        const correlatedUrl = this.getUrl();
+        correlatedUrl.searchParams.set("ci", "github");
+        correlatedUrl.searchParams.set("correlation", JSON.stringify(this.identity));
+        const versionCheckup = await this.client.head(correlatedUrl);
+        if (versionCheckup.headers.etag) {
+            const v = versionCheckup.headers.etag;
+            core.debug(`Checking the tool cache for ${this.getUrl()} at ${v}`);
+            const cached = await this.getCachedVersion(v);
+            if (cached) {
+                this.facts["artifact_fetched_from_cache"] = true;
+                core.debug(`Tool cache hit.`);
+                return cached;
+            }
+        }
+        this.facts["artifact_fetched_from_cache"] = false;
+        core.debug(`No match from the cache, re-fetching from the redirect: ${versionCheckup.url}`);
+        const destFile = this.getTemporaryName();
+        const fetchStream = this.client.stream(versionCheckup.url);
+        await (0,external_node_stream_promises_namespaceObject.pipeline)(fetchStream, (0,external_node_fs_namespaceObject.createWriteStream)(destFile, {
+            encoding: "binary",
+            mode: 0o755,
+        }));
+        if (fetchStream.response?.headers.etag) {
+            const v = fetchStream.response.headers.etag;
+            try {
+                await this.saveCachedVersion(v, destFile);
+            }
+            catch (e) {
+                core.debug(`Error caching the artifact: ${e}`);
+            }
+        }
+        return destFile;
     }
-    const currentNotFoundState = core.getState(
-      "idstoolbox_nix_not_found"
-    );
-    if (currentNotFoundState === "not-found") {
-      return false;
+    async fetchExecutable() {
+        const binaryPath = await this.fetch();
+        await (0,promises_namespaceObject.chmod)(binaryPath, promises_namespaceObject.constants.S_IXUSR | promises_namespaceObject.constants.S_IXGRP);
+        return binaryPath;
     }
-    if (nixLocation !== void 0) {
-      return true;
+    async complete() {
+        this.recordEvent(`complete_${this.executionPhase}`);
+        await this.submitEvents();
     }
-    core.saveState("idstoolbox_nix_not_found", "not-found");
-    switch (this.actionOptions.requireNix) {
-      case "fail":
-        core.setFailed(
-          "This action can only be used when Nix is installed. Add `- uses: DeterminateSystems/nix-installer-action@main` earlier in your workflow."
-        );
-        break;
-      case "warn":
-        core.warning(
-          "This action is in no-op mode because Nix is not installed. Add `- uses: DeterminateSystems/nix-installer-action@main` earlier in your workflow."
-        );
-        break;
+    getUrl() {
+        const p = this.sourceParameters;
+        if (p.url) {
+            return new URL(p.url);
+        }
+        const fetchUrl = new URL(IDS_HOST);
+        fetchUrl.pathname += this.actionOptions.idsProjectName;
+        if (p.tag) {
+            fetchUrl.pathname += `/tag/${p.tag}`;
+        }
+        else if (p.pr) {
+            fetchUrl.pathname += `/pr/${p.pr}`;
+        }
+        else if (p.branch) {
+            fetchUrl.pathname += `/branch/${p.branch}`;
+        }
+        else if (p.revision) {
+            fetchUrl.pathname += `/rev/${p.revision}`;
+        }
+        else {
+            fetchUrl.pathname += `/stable`;
+        }
+        fetchUrl.pathname += `/${this.architectureFetchSuffix}`;
+        return fetchUrl;
     }
-    return false;
-  }
-  async submitEvents() {
-    if (!this.actionOptions.diagnosticsUrl) {
-      core.debug(
-        "Diagnostics are disabled. Not sending the following events:"
-      );
-      core.debug(JSON.stringify(this.events, void 0, 2));
-      return;
+    cacheKey(version) {
+        const cleanedVersion = version.replace(/[^a-zA-Z0-9-+.]/g, "");
+        return `determinatesystem-${this.actionOptions.name}-${this.architectureFetchSuffix}-${cleanedVersion}`;
     }
-    const batch = {
-      type: "eventlog",
-      sent_at: /* @__PURE__ */ new Date(),
-      events: this.events
-    };
-    try {
-      await this.client.post(this.actionOptions.diagnosticsUrl, {
-        json: batch
-      });
-    } catch (error2) {
-      core.debug(`Error submitting diagnostics event: ${error2}`);
+    async getCachedVersion(version) {
+        const startCwd = process.cwd();
+        try {
+            const tempDir = this.getTemporaryName();
+            await (0,promises_namespaceObject.mkdir)(tempDir);
+            process.chdir(tempDir);
+            // extremely evil shit right here:
+            process.env.GITHUB_WORKSPACE_BACKUP = process.env.GITHUB_WORKSPACE;
+            delete process.env.GITHUB_WORKSPACE;
+            if (await cache.restoreCache([this.actionOptions.name], this.cacheKey(version), [], undefined, true)) {
+                this.recordEvent(EVENT_ARTIFACT_CACHE_HIT);
+                return `${tempDir}/${this.actionOptions.name}`;
+            }
+            this.recordEvent(EVENT_ARTIFACT_CACHE_MISS);
+            return undefined;
+        }
+        finally {
+            process.env.GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE_BACKUP;
+            delete process.env.GITHUB_WORKSPACE_BACKUP;
+            process.chdir(startCwd);
+        }
     }
-    this.events = [];
-  }
-  getTemporaryName() {
-    const _tmpdir = process.env["RUNNER_TEMP"] || (0,external_node_os_.tmpdir)();
-    return external_node_path_namespaceObject.join(_tmpdir, `${this.actionOptions.name}-${(0,external_node_crypto_namespaceObject.randomUUID)()}`);
-  }
-};
+    async saveCachedVersion(version, toolPath) {
+        const startCwd = process.cwd();
+        try {
+            const tempDir = this.getTemporaryName();
+            await (0,promises_namespaceObject.mkdir)(tempDir);
+            process.chdir(tempDir);
+            await (0,promises_namespaceObject.copyFile)(toolPath, `${tempDir}/${this.actionOptions.name}`);
+            // extremely evil shit right here:
+            process.env.GITHUB_WORKSPACE_BACKUP = process.env.GITHUB_WORKSPACE;
+            delete process.env.GITHUB_WORKSPACE;
+            await cache.saveCache([this.actionOptions.name], this.cacheKey(version), undefined, true);
+            this.recordEvent(EVENT_ARTIFACT_CACHE_HIT);
+        }
+        finally {
+            process.env.GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE_BACKUP;
+            delete process.env.GITHUB_WORKSPACE_BACKUP;
+            process.chdir(startCwd);
+        }
+    }
+    async submitEvents() {
+        if (!this.actionOptions.diagnosticsUrl) {
+            core.debug("Diagnostics are disabled. Not sending the following events:");
+            core.debug(JSON.stringify(this.events, undefined, 2));
+            return;
+        }
+        const batch = {
+            type: "eventlog",
+            sent_at: new Date(),
+            events: this.events,
+        };
+        try {
+            await this.client.post(this.actionOptions.diagnosticsUrl, {
+                json: batch,
+            });
+        }
+        catch (error) {
+            core.debug(`Error submitting diagnostics event: ${error}`);
+        }
+        this.events = [];
+    }
+    getTemporaryName() {
+        const _tmpdir = process.env["RUNNER_TEMP"] || (0,external_node_os_.tmpdir)();
+        return external_node_path_namespaceObject.join(_tmpdir, `${this.actionOptions.name}-${v4()}`);
+    }
+}
 function makeOptionsConfident(actionOptions) {
-  const idsProjectName = actionOptions.idsProjectName ?? actionOptions.name;
-  const finalOpts = {
-    name: actionOptions.name,
-    idsProjectName,
-    eventPrefix: actionOptions.eventPrefix || "action:",
-    fetchStyle: actionOptions.fetchStyle,
-    legacySourcePrefix: actionOptions.legacySourcePrefix,
-    requireNix: actionOptions.requireNix,
-    diagnosticsUrl: determineDiagnosticsUrl(
-      idsProjectName,
-      actionOptions.diagnosticsUrl
-    )
-  };
-  core.debug("idslib options:");
-  core.debug(JSON.stringify(finalOpts, void 0, 2));
-  return finalOpts;
+    const idsProjectName = actionOptions.idsProjectName ?? actionOptions.name;
+    const finalOpts = {
+        name: actionOptions.name,
+        idsProjectName,
+        eventPrefix: actionOptions.eventPrefix || "action:",
+        fetchStyle: actionOptions.fetchStyle,
+        legacySourcePrefix: actionOptions.legacySourcePrefix,
+        diagnosticsUrl: determineDiagnosticsUrl(idsProjectName, actionOptions.diagnosticsUrl),
+    };
+    core.debug("idslib options:");
+    core.debug(JSON.stringify(finalOpts, undefined, 2));
+    return finalOpts;
 }
 function determineDiagnosticsUrl(idsProjectName, urlOption) {
-  if (urlOption === null) {
-    return void 0;
-  }
-  if (urlOption !== void 0) {
-    return urlOption;
-  }
-  {
-    const providedDiagnosticEndpoint = process.env["INPUT_DIAGNOSTIC-ENDPOINT"];
-    if (providedDiagnosticEndpoint === "") {
-      return void 0;
+    if (urlOption === null) {
+        // Disable diagnostict events
+        return undefined;
     }
-    if (providedDiagnosticEndpoint !== void 0) {
-      try {
-        return mungeDiagnosticEndpoint(new URL(providedDiagnosticEndpoint));
-      } catch (e) {
-        core.info(
-          `User-provided diagnostic endpoint ignored: not a valid URL: ${e}`
-        );
-      }
+    if (urlOption !== undefined) {
+        // Caller specified a specific diagnostics URL
+        return urlOption;
     }
-  }
-  try {
-    const diagnosticUrl = new URL(IDS_HOST);
-    diagnosticUrl.pathname += idsProjectName;
-    diagnosticUrl.pathname += "/diagnostics";
-    return diagnosticUrl;
-  } catch (e) {
-    core.info(
-      `Generated diagnostic endpoint ignored: not a valid URL: ${e}`
-    );
-  }
-  return void 0;
+    {
+        // Attempt to use the action input's diagnostic-endpoint option.
+        // Note: we don't use actionsCore.getInput('diagnostic-endpoint') on purpose:
+        // getInput silently converts absent data to an empty string.
+        const providedDiagnosticEndpoint = process.env["INPUT_DIAGNOSTIC-ENDPOINT"];
+        if (providedDiagnosticEndpoint === "") {
+            // User probably explicitly turned it off
+            return undefined;
+        }
+        if (providedDiagnosticEndpoint !== undefined) {
+            try {
+                return mungeDiagnosticEndpoint(new URL(providedDiagnosticEndpoint));
+            }
+            catch (e) {
+                core.info(`User-provided diagnostic endpoint ignored: not a valid URL: ${e}`);
+            }
+        }
+    }
+    try {
+        const diagnosticUrl = new URL(IDS_HOST);
+        diagnosticUrl.pathname += idsProjectName;
+        diagnosticUrl.pathname += "/diagnostics";
+        return diagnosticUrl;
+    }
+    catch (e) {
+        core.info(`Generated diagnostic endpoint ignored: not a valid URL: ${e}`);
+    }
+    return undefined;
 }
 function mungeDiagnosticEndpoint(inputUrl) {
-  if (DEFAULT_IDS_HOST === IDS_HOST) {
-    return inputUrl;
-  }
-  try {
-    const defaultIdsHost = new URL(DEFAULT_IDS_HOST);
-    const currentIdsHost = new URL(IDS_HOST);
-    if (inputUrl.origin !== defaultIdsHost.origin) {
-      return inputUrl;
+    if (DEFAULT_IDS_HOST === IDS_HOST) {
+        return inputUrl;
     }
-    inputUrl.protocol = currentIdsHost.protocol;
-    inputUrl.host = currentIdsHost.host;
-    inputUrl.username = currentIdsHost.username;
-    inputUrl.password = currentIdsHost.password;
+    try {
+        const defaultIdsHost = new URL(DEFAULT_IDS_HOST);
+        const currentIdsHost = new URL(IDS_HOST);
+        if (inputUrl.origin !== defaultIdsHost.origin) {
+            return inputUrl;
+        }
+        inputUrl.protocol = currentIdsHost.protocol;
+        inputUrl.host = currentIdsHost.host;
+        inputUrl.username = currentIdsHost.username;
+        inputUrl.password = currentIdsHost.password;
+        return inputUrl;
+    }
+    catch (e) {
+        core.info(`Default or overridden IDS host isn't a valid URL: ${e}`);
+    }
     return inputUrl;
-  } catch (e) {
-    core.info(`Default or overridden IDS host isn't a valid URL: ${e}`);
-  }
-  return inputUrl;
 }
 
-/*!
- * linux-release-info
- * Get Linux release info (distribution name, version, arch, release, etc.)
- * from '/etc/os-release' or '/usr/lib/os-release' files and from native os
- * module. On Windows and Darwin platforms it only returns common node os module
- * info (platform, hostname, release, and arch)
- *
- * Licensed under MIT
- * Copyright (c) 2018-2020 [Samuel Carreira]
- */
-//# sourceMappingURL=index.js.map
 ;// CONCATENATED MODULE: ./dist/main.js
 
 
@@ -97270,73 +97596,52 @@ function mungeDiagnosticEndpoint(inputUrl) {
 
 
 
-// Nix installation events
-const EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
-const EVENT_INSTALL_NIX_START = "install_nix_start";
-const EVENT_INSTALL_NIX_SUCCESS = "install_nix_start";
-const EVENT_SETUP_KVM = "setup_kvm";
-const EVENT_UNINSTALL_NIX = "uninstall";
-// Docker events
-const EVENT_CLEAN_UP_DOCKER_SHIM = "clean_up_docker_shim";
-const EVENT_START_DOCKER_SHIM = "start_docker_shim";
-// FlakeHub events
-const EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
-// Other events
-const EVENT_CONCLUDE_WORKFLOW = "conclude_workflow";
-// Facts
-const FACT_HAS_DOCKER = "has_docker";
-const FACT_HAS_SYSTEMD = "has_systemd";
-const FACT_IN_GITHUB_ACTIONS = "in_act";
-const FACT_IN_NAMESPACE_SO = "in_namespace_so";
-const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 class NixInstallerAction {
     constructor() {
         this.idslib = new IdsToolbox({
             name: "nix-installer",
             fetchStyle: "nix-style",
             legacySourcePrefix: "nix-installer",
-            requireNix: "ignore",
         });
-        this.platform = platform_exports.getNixPlatform(platform_exports.getArchOs());
-        this.nixPackageUrl = inputs_exports.getStringOrNull("nix-package-url");
-        this.backtrace = inputs_exports.getStringOrNull("backtrace");
-        this.extraArgs = inputs_exports.getStringOrNull("extra-args");
-        this.extraConf = inputs_exports.getMultilineStringOrNull("extra-conf");
-        this.flakehub = inputs_exports.getBool("flakehub");
-        this.kvm = inputs_exports.getBool("kvm");
-        this.forceDockerShim = inputs_exports.getBool("force-docker-shim");
-        this.githubToken = inputs_exports.getStringOrNull("github-token");
-        this.githubServerUrl = inputs_exports.getStringOrNull("github-server-url");
-        this.init = inputs_exports.getStringOrNull("init");
-        this.localRoot = inputs_exports.getStringOrNull("local-root");
-        this.logDirectives = inputs_exports.getStringOrNull("log-directives");
-        this.logger = inputs_exports.getStringOrNull("logger");
-        this.sslCertFile = inputs_exports.getStringOrNull("ssl-cert-file");
-        this.proxy = inputs_exports.getStringOrNull("proxy");
-        this.macCaseSensitive = inputs_exports.getStringOrNull("mac-case-sensitive");
-        this.macEncrypt = inputs_exports.getStringOrNull("mac-encrypt");
-        this.macRootDisk = inputs_exports.getStringOrNull("mac-root-disk");
-        this.macVolumeLabel = inputs_exports.getStringOrNull("mac-volume-label");
-        this.modifyProfile = inputs_exports.getBool("modify-profile");
-        this.nixBuildGroupId = inputs_exports.getNumberOrNull("nix-build-group-id");
-        this.nixBuildGroupName = inputs_exports.getStringOrNull("nix-build-group-name");
-        this.nixBuildUserBase = inputs_exports.getNumberOrNull("nix-build-user-base");
-        this.nixBuildUserCount = inputs_exports.getNumberOrNull("nix-build-user-count");
-        this.nixBuildUserPrefix = inputs_exports.getStringOrNull("nix-build-user-prefix");
-        this.planner = inputs_exports.getStringOrNull("planner");
-        this.reinstall = inputs_exports.getBool("reinstall");
-        this.startDaemon = inputs_exports.getBool("start-daemon");
-        this.trustRunnerUser = inputs_exports.getBool("trust-runner-user");
+        this.platform = get_nix_platform();
+        this.nix_package_url = action_input_string_or_null("nix-package-url");
+        this.backtrace = action_input_string_or_null("backtrace");
+        this.extra_args = action_input_string_or_null("extra-args");
+        this.extra_conf = action_input_multiline_string_or_null("extra-conf");
+        this.flakehub = action_input_bool("flakehub");
+        this.kvm = action_input_bool("kvm");
+        this.force_docker_shim = action_input_bool("force-docker-shim");
+        this.github_token = action_input_string_or_null("github-token");
+        this.github_server_url = action_input_string_or_null("github-server-url");
+        this.init = action_input_string_or_null("init");
+        this.local_root = action_input_string_or_null("local-root");
+        this.log_directives = action_input_string_or_null("log-directives");
+        this.logger = action_input_string_or_null("logger");
+        this.ssl_cert_file = action_input_string_or_null("ssl-cert-file");
+        this.proxy = action_input_string_or_null("proxy");
+        this.mac_case_sensitive = action_input_string_or_null("mac-case-sensitive");
+        this.mac_encrypt = action_input_string_or_null("mac-encrypt");
+        this.mac_root_disk = action_input_string_or_null("mac-root-disk");
+        this.mac_volume_label = action_input_string_or_null("mac-volume-label");
+        this.modify_profile = action_input_bool("modify-profile");
+        this.nix_build_group_id = action_input_number_or_null("nix-build-group-id");
+        this.nix_build_group_name = action_input_string_or_null("nix-build-group-name");
+        this.nix_build_user_base = action_input_number_or_null("nix_build-user-base");
+        this.nix_build_user_count = action_input_number_or_null("nix-build-user-count");
+        this.nix_build_user_prefix = action_input_string_or_null("nix-build-user-prefix");
+        this.planner = action_input_string_or_null("planner");
+        this.reinstall = action_input_bool("reinstall");
+        this.start_daemon = action_input_bool("start-daemon");
+        this.trust_runner_user = action_input_bool("trust-runner-user");
     }
     async detectAndForceDockerShim() {
-        const runnerOs = process.env["RUNNER_OS"];
         // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
         // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
         // and especially GitHub Enterprise Server.
-        if (runnerOs !== "Linux") {
-            if (this.forceDockerShim) {
+        if (process.env.RUNNER_OS !== "Linux") {
+            if (this.force_docker_shim) {
                 core.warning("Ignoring force-docker-shim which is set to true, as it is only supported on Linux.");
-                this.forceDockerShim = false;
+                this.force_docker_shim = false;
             }
             return;
         }
@@ -97344,20 +97649,20 @@ class NixInstallerAction {
             throwIfNoEntry: false,
         });
         if (systemdCheck?.isDirectory()) {
-            if (this.forceDockerShim) {
+            if (this.force_docker_shim) {
                 core.warning("Systemd is detected, but ignoring it since force-docker-shim is enabled.");
             }
             else {
-                this.idslib.addFact(FACT_HAS_SYSTEMD, true);
+                this.idslib.addFact("has_systemd", true);
                 return;
             }
         }
-        this.idslib.addFact(FACT_HAS_SYSTEMD, false);
+        this.idslib.addFact("has_systemd", false);
         core.debug("Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor.");
-        this.idslib.addFact(FACT_HAS_DOCKER, false); // Set to false here, and only in the success case do we set it to true
-        let exitCode;
+        this.idslib.addFact("has_docker", false); // Set to false here, and only in the success case do we set it to true
+        let exit_code;
         try {
-            exitCode = await exec.exec("docker", ["info"], {
+            exit_code = await exec.exec("docker", ["info"], {
                 silent: true,
                 listeners: {
                     stdout: (data) => {
@@ -97375,20 +97680,20 @@ class NixInstallerAction {
                 },
             });
         }
-        catch {
+        catch (e) {
             core.debug("Docker not detected, not enabling docker shim.");
             return;
         }
-        if (exitCode !== 0) {
-            if (this.forceDockerShim) {
+        if (exit_code !== 0) {
+            if (this.force_docker_shim) {
                 core.warning("docker info check failed, but trying anyway since force-docker-shim is enabled.");
             }
             else {
                 return;
             }
         }
-        this.idslib.addFact(FACT_HAS_DOCKER, true);
-        if (!this.forceDockerShim &&
+        this.idslib.addFact("has_docker", true);
+        if (!this.force_docker_shim &&
             (await this.detectDockerWithMountedDockerSocket())) {
             core.debug("Detected a Docker container with a Docker socket mounted, not enabling docker shim.");
             return;
@@ -97402,7 +97707,7 @@ class NixInstallerAction {
             core.info(`Changing planner from '${this.planner}' to 'linux'`);
             this.planner = "linux";
         }
-        this.forceDockerShim = true;
+        this.force_docker_shim = true;
         core.endGroup();
     }
     // Detect if we are running under `act` or some other system which is not using docker-in-docker,
@@ -97410,13 +97715,13 @@ class NixInstallerAction {
     // In the case of the socket mount solution, the shim will cause issues since the given mount paths will
     // equate to mount paths on the host, not mount paths to the docker container in question.
     async detectDockerWithMountedDockerSocket() {
-        let cgroupsBuffer;
+        let cgroups_buffer;
         try {
             // If we are inside a docker container, the last line of `/proc/self/cgroup` should be
             // 0::/docker/$SOME_ID
             //
             // If we are not, the line will likely be `0::/`
-            cgroupsBuffer = await (0,promises_namespaceObject.readFile)("/proc/self/cgroup", {
+            cgroups_buffer = await (0,promises_namespaceObject.readFile)("/proc/self/cgroup", {
                 encoding: "utf-8",
             });
         }
@@ -97424,48 +97729,48 @@ class NixInstallerAction {
             core.debug(`Did not detect \`/proc/self/cgroup\` existence, bailing on docker container ID detection:\n${e}`);
             return false;
         }
-        const cgroups = cgroupsBuffer.trim().split("\n");
-        const lastCgroup = cgroups[cgroups.length - 1];
-        const lastCgroupParts = lastCgroup.split(":");
-        const lastCgroupPath = lastCgroupParts[lastCgroupParts.length - 1];
-        if (!lastCgroupPath.includes("/docker/")) {
+        const cgroups = cgroups_buffer.trim().split("\n");
+        const last_cgroup = cgroups[cgroups.length - 1];
+        const last_cgroup_parts = last_cgroup.split(":");
+        const last_cgroup_path = last_cgroup_parts[last_cgroup_parts.length - 1];
+        if (!last_cgroup_path.includes("/docker/")) {
             core.debug("Did not detect a container ID, bailing on docker.sock detection");
             return false;
         }
         // We are in a docker container, now to determine if this container is visible from
         // the `docker` command, and if so, if there is a `docker.socket` mounted.
-        const lastCgroupPathParts = lastCgroupPath.split("/");
-        const containerId = lastCgroupPathParts[lastCgroupPathParts.length - 1];
+        const last_cgroup_path_parts = last_cgroup_path.split("/");
+        const container_id = last_cgroup_path_parts[last_cgroup_path_parts.length - 1];
         // If we cannot `docker inspect` this discovered container ID, we'll fall through to the `catch` below.
-        let stdoutBuffer = "";
-        let stderrBuffer = "";
-        let exitCode;
+        let stdout_buffer = "";
+        let stderr_buffer = "";
+        let exit_code;
         try {
-            exitCode = await exec.exec("docker", ["inspect", containerId], {
+            exit_code = await exec.exec("docker", ["inspect", container_id], {
                 silent: true,
                 listeners: {
                     stdout: (data) => {
-                        stdoutBuffer += data.toString("utf-8");
+                        stdout_buffer += data.toString("utf-8");
                     },
                     stderr: (data) => {
-                        stderrBuffer += data.toString("utf-8");
+                        stderr_buffer += data.toString("utf-8");
                     },
                 },
             });
         }
         catch (e) {
-            core.debug(`Could not execute \`docker inspect ${containerId}\`, bailing on docker container inspection:\n${e}`);
+            core.debug(`Could not execute \`docker inspect ${container_id}\`, bailing on docker container inspection:\n${e}`);
             return false;
         }
-        if (exitCode !== 0) {
-            core.debug(`Unable to inspect detected docker container with id \`${containerId}\`, bailing on container inspection (exit ${exitCode}):\n${stderrBuffer}`);
+        if (exit_code !== 0) {
+            core.debug(`Unable to inspect detected docker container with id \`${container_id}\`, bailing on container inspection (exit ${exit_code}):\n${stderr_buffer}`);
             return false;
         }
-        const output = JSON.parse(stdoutBuffer);
+        const output = JSON.parse(stdout_buffer);
         // `docker inspect $ID` prints an array containing objects.
         // In our use case, we should only see 1 item in the array.
         if (output.length !== 1) {
-            core.debug(`Got \`docker inspect ${containerId}\` output which was not one item (was ${output.length}), bailing on docker.sock detection.`);
+            core.debug(`Got \`docker inspect ${container_id}\` output which was not one item (was ${output.length}), bailing on docker.sock detection.`);
             return false;
         }
         const item = output[0];
@@ -97474,203 +97779,203 @@ class NixInstallerAction {
         // We are looking for a `Destination` ending with `docker.sock`.
         const mounts = item["Mounts"];
         if (typeof mounts !== "object") {
-            core.debug(`Got non-object in \`Mounts\` field of \`docker inspect ${containerId}\` output, bailing on docker.sock detection.`);
+            core.debug(`Got non-object in \`Mounts\` field of \`docker inspect ${container_id}\` output, bailing on docker.sock detection.`);
             return false;
         }
-        let foundDockerSockMount = false;
+        let found_docker_sock_mount = false;
         for (const mount of mounts) {
             const destination = mount["Destination"];
             if (typeof destination === "string") {
                 if (destination.endsWith("docker.sock")) {
-                    foundDockerSockMount = true;
+                    found_docker_sock_mount = true;
                     break;
                 }
             }
         }
-        return foundDockerSockMount;
+        return found_docker_sock_mount;
     }
     async executionEnvironment() {
-        const executionEnv = {};
-        const runnerOs = process.env["RUNNER_OS"];
-        executionEnv.NIX_INSTALLER_NO_CONFIRM = "true";
-        executionEnv.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(this.idslib.getCorrelationHashes());
+        const execution_env = {};
+        execution_env.NIX_INSTALLER_NO_CONFIRM = "true";
+        execution_env.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(this.idslib.getCorrelationHashes());
         if (this.backtrace !== null) {
-            executionEnv.RUST_BACKTRACE = this.backtrace;
+            execution_env.RUST_BACKTRACE = this.backtrace;
         }
-        if (this.modifyProfile !== null) {
-            if (this.modifyProfile) {
-                executionEnv.NIX_INSTALLER_MODIFY_PROFILE = "true";
+        if (this.modify_profile !== null) {
+            if (this.modify_profile) {
+                execution_env.NIX_INSTALLER_MODIFY_PROFILE = "true";
             }
             else {
-                executionEnv.NIX_INSTALLER_MODIFY_PROFILE = "false";
+                execution_env.NIX_INSTALLER_MODIFY_PROFILE = "false";
             }
         }
-        if (this.nixBuildGroupId !== null) {
-            executionEnv.NIX_INSTALLER_NIX_BUILD_GROUP_ID = `${this.nixBuildGroupId}`;
+        if (this.nix_build_group_id !== null) {
+            execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_ID = `${this.nix_build_group_id}`;
         }
-        if (this.nixBuildGroupName !== null) {
-            executionEnv.NIX_INSTALLER_NIX_BUILD_GROUP_NAME = this.nixBuildGroupName;
+        if (this.nix_build_group_name !== null) {
+            execution_env.NIX_INSTALLER_NIX_BUILD_GROUP_NAME =
+                this.nix_build_group_name;
         }
-        if (this.nixBuildUserPrefix !== null) {
-            executionEnv.NIX_INSTALLER_NIX_BUILD_USER_PREFIX =
-                this.nixBuildUserPrefix;
+        if (this.nix_build_user_prefix !== null) {
+            execution_env.NIX_INSTALLER_NIX_BUILD_USER_PREFIX =
+                this.nix_build_user_prefix;
         }
-        if (this.nixBuildUserCount !== null) {
-            executionEnv.NIX_INSTALLER_NIX_BUILD_USER_COUNT = `${this.nixBuildUserCount}`;
+        if (this.nix_build_user_count !== null) {
+            execution_env.NIX_INSTALLER_NIX_BUILD_USER_COUNT = `${this.nix_build_user_count}`;
         }
-        if (this.nixBuildUserBase !== null) {
-            executionEnv.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nixBuildUserCount}`;
+        if (this.nix_build_user_base !== null) {
+            execution_env.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nix_build_user_count}`;
         }
-        if (this.nixPackageUrl !== null) {
-            executionEnv.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nixPackageUrl}`;
+        if (this.nix_package_url !== null) {
+            execution_env.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nix_package_url}`;
         }
         if (this.proxy !== null) {
-            executionEnv.NIX_INSTALLER_PROXY = this.proxy;
+            execution_env.NIX_INSTALLER_PROXY = this.proxy;
         }
-        if (this.sslCertFile !== null) {
-            executionEnv.NIX_INSTALLER_SSL_CERT_FILE = this.sslCertFile;
+        if (this.ssl_cert_file !== null) {
+            execution_env.NIX_INSTALLER_SSL_CERT_FILE = this.ssl_cert_file;
         }
-        executionEnv.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
-            this.idslib.getDiagnosticsUrl()?.toString() ?? "";
+        execution_env.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
+            this.idslib.getDiagnosticsUrl()?.toString() || "";
         // TODO: Error if the user uses these on not-MacOS
-        if (this.macEncrypt !== null) {
-            if (runnerOs !== "macOS") {
+        if (this.mac_encrypt !== null) {
+            if (process.env.RUNNER_OS !== "macOS") {
                 throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
             }
-            executionEnv.NIX_INSTALLER_ENCRYPT = this.macEncrypt;
+            execution_env.NIX_INSTALLER_ENCRYPT = this.mac_encrypt;
         }
-        if (this.macCaseSensitive !== null) {
-            if (runnerOs !== "macOS") {
+        if (this.mac_case_sensitive !== null) {
+            if (process.env.RUNNER_OS !== "macOS") {
                 throw new Error("`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`");
             }
-            executionEnv.NIX_INSTALLER_CASE_SENSITIVE = this.macCaseSensitive;
+            execution_env.NIX_INSTALLER_CASE_SENSITIVE = this.mac_case_sensitive;
         }
-        if (this.macVolumeLabel !== null) {
-            if (runnerOs !== "macOS") {
+        if (this.mac_volume_label !== null) {
+            if (process.env.RUNNER_OS !== "macOS") {
                 throw new Error("`mac-volume-label` while `$RUNNER_OS` was not `macOS`");
             }
-            executionEnv.NIX_INSTALLER_VOLUME_LABEL = this.macVolumeLabel;
+            execution_env.NIX_INSTALLER_VOLUME_LABEL = this.mac_volume_label;
         }
-        if (this.macRootDisk !== null) {
-            if (runnerOs !== "macOS") {
+        if (this.mac_root_disk !== null) {
+            if (process.env.RUNNER_OS !== "macOS") {
                 throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
             }
-            executionEnv.NIX_INSTALLER_ROOT_DISK = this.macRootDisk;
+            execution_env.NIX_INSTALLER_ROOT_DISK = this.mac_root_disk;
         }
         if (this.logger !== null) {
-            executionEnv.NIX_INSTALLER_LOGGER = this.logger;
+            execution_env.NIX_INSTALLER_LOGGER = this.logger;
         }
-        if (this.logDirectives !== null) {
-            executionEnv.NIX_INSTALLER_LOG_DIRECTIVES = this.logDirectives;
+        if (this.log_directives !== null) {
+            execution_env.NIX_INSTALLER_LOG_DIRECTIVES = this.log_directives;
         }
         // TODO: Error if the user uses these on MacOS
         if (this.init !== null) {
-            if (runnerOs === "macOS") {
+            if (process.env.RUNNER_OS === "macOS") {
                 throw new Error("`init` is not a valid option when `$RUNNER_OS` is `macOS`");
             }
-            executionEnv.NIX_INSTALLER_INIT = this.init;
+            execution_env.NIX_INSTALLER_INIT = this.init;
         }
-        if (this.startDaemon !== null) {
-            if (this.startDaemon) {
-                executionEnv.NIX_INSTALLER_START_DAEMON = "true";
+        if (this.start_daemon !== null) {
+            if (this.start_daemon) {
+                execution_env.NIX_INSTALLER_START_DAEMON = "true";
             }
             else {
-                executionEnv.NIX_INSTALLER_START_DAEMON = "false";
+                execution_env.NIX_INSTALLER_START_DAEMON = "false";
             }
         }
-        let extraConf = "";
-        if (this.githubServerUrl !== null && this.githubToken !== null) {
-            const serverUrl = this.githubServerUrl.replace("https://", "");
-            extraConf += `access-tokens = ${serverUrl}=${this.githubToken}`;
-            extraConf += "\n";
+        let extra_conf = "";
+        if (this.github_server_url !== null && this.github_token !== null) {
+            const server_url = this.github_server_url.replace("https://", "");
+            extra_conf += `access-tokens = ${server_url}=${this.github_token}`;
+            extra_conf += "\n";
         }
-        if (this.trustRunnerUser !== null) {
+        if (this.trust_runner_user !== null) {
             const user = (0,external_node_os_.userInfo)().username;
             if (user) {
-                extraConf += `trusted-users = root ${user}`;
+                extra_conf += `trusted-users = root ${user}`;
             }
             else {
-                extraConf += `trusted-users = root`;
+                extra_conf += `trusted-users = root`;
             }
-            extraConf += "\n";
+            extra_conf += "\n";
         }
         if (this.flakehub) {
             try {
-                const flakeHubNetrcFile = await this.flakehubLogin();
-                extraConf += `netrc-file = ${flakeHubNetrcFile}`;
-                extraConf += "\n";
+                const flakehub_netrc_file = await this.flakehub_login();
+                extra_conf += `netrc-file = ${flakehub_netrc_file}`;
+                extra_conf += "\n";
             }
             catch (e) {
-                core.warning(`Failed to set up FlakeHub: ${e}`);
+                core.warning(`Failed to setup FlakeHub: ${e}`);
             }
         }
-        if (this.extraConf !== null && this.extraConf.length !== 0) {
-            extraConf += this.extraConf.join("\n");
-            extraConf += "\n";
+        if (this.extra_conf !== null && this.extra_conf.length !== 0) {
+            extra_conf += this.extra_conf.join("\n");
+            extra_conf += "\n";
         }
-        executionEnv.NIX_INSTALLER_EXTRA_CONF = extraConf;
-        if (process.env["ACT"] && !process.env["NOT_ACT"]) {
-            this.idslib.addFact(FACT_IN_GITHUB_ACTIONS, true);
+        execution_env.NIX_INSTALLER_EXTRA_CONF = extra_conf;
+        if (process.env.ACT && !process.env.NOT_ACT) {
+            this.idslib.addFact("in_act", true);
             core.info("Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`");
-            executionEnv.NIX_INSTALLER_INIT = "none";
+            execution_env.NIX_INSTALLER_INIT = "none";
         }
-        if (process.env["NSC_VM_ID"] && !process.env["NOT_NAMESPACE"]) {
-            this.idslib.addFact(FACT_IN_NAMESPACE_SO, true);
+        if (process.env.NSC_VM_ID && !process.env.NOT_NAMESPACE) {
+            this.idslib.addFact("in_namespace_so", true);
             core.info("Detected Namespace runner, assuming this is a https://namespace.so created container, set `NOT_NAMESPACE=true` to override this. This will change the setting of the `init` to be compatible with Namespace");
-            executionEnv.NIX_INSTALLER_INIT = "none";
+            execution_env.NIX_INSTALLER_INIT = "none";
         }
-        return executionEnv;
+        return execution_env;
     }
-    async executeInstall(binaryPath) {
-        const executionEnv = await this.executionEnvironment();
-        core.debug(`Execution environment: ${JSON.stringify(executionEnv, null, 4)}`);
+    async execute_install(binary_path) {
+        const execution_env = await this.executionEnvironment();
+        core.debug(`Execution environment: ${JSON.stringify(execution_env, null, 4)}`);
         const args = ["install"];
         if (this.planner) {
-            this.idslib.addFact(FACT_NIX_INSTALLER_PLANNER, this.planner);
+            this.idslib.addFact("nix_installer_planner", this.planner);
             args.push(this.planner);
         }
         else {
-            this.idslib.addFact(FACT_NIX_INSTALLER_PLANNER, getDefaultPlanner());
-            args.push(getDefaultPlanner());
+            this.idslib.addFact("nix_installer_planner", get_default_planner());
+            args.push(get_default_planner());
         }
-        if (this.extraArgs) {
-            const extraArgs = parseArgsStringToArgv(this.extraArgs);
-            args.concat(extraArgs);
+        if (this.extra_args) {
+            const extra_args = parseArgsStringToArgv(this.extra_args);
+            args.concat(extra_args);
         }
-        this.idslib.recordEvent(EVENT_INSTALL_NIX_START);
-        const exitCode = await exec.exec(binaryPath, args, {
+        this.idslib.recordEvent("install_nix_start");
+        const exit_code = await exec.exec(binary_path, args, {
             env: {
-                ...executionEnv,
+                ...execution_env,
                 ...process.env, // To get $PATH, etc
             },
         });
-        if (exitCode !== 0) {
-            this.idslib.recordEvent(EVENT_INSTALL_NIX_FAILURE, {
-                exitCode,
+        if (exit_code !== 0) {
+            this.idslib.recordEvent("install_nix_failure", {
+                exit_code,
             });
-            throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
+            throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
         }
-        this.idslib.recordEvent(EVENT_INSTALL_NIX_SUCCESS);
-        return exitCode;
+        this.idslib.recordEvent("install_nix_success");
+        return exit_code;
     }
     async install() {
-        const existingInstall = await this.detectExisting();
-        if (existingInstall) {
+        const existing_install = await this.detect_existing();
+        if (existing_install) {
             if (this.reinstall) {
                 // We need to uninstall, then reinstall
                 core.info("Nix was already installed, `reinstall` is set, uninstalling for a reinstall");
-                await this.executeUninstall();
+                await this.execute_uninstall();
             }
             else {
                 // We're already installed, and not reinstalling, just set GITHUB_PATH and finish early
-                await this.setGithubPath();
+                await this.set_github_path();
                 core.info("Nix was already installed, using existing install");
                 return;
             }
         }
         if (this.kvm) {
             core.startGroup("Configuring KVM");
-            if (await this.setupKvm()) {
+            if (await this.setup_kvm()) {
                 core.endGroup();
                 core.info("\u001b[32m Accelerated KVM is enabled \u001b[33m⚡️");
                 core.exportVariable("DETERMINATE_NIX_KVM", "1");
@@ -97683,13 +97988,13 @@ class NixInstallerAction {
         }
         // Normal just doing of the install
         core.startGroup("Installing Nix");
-        const binaryPath = await this.fetchBinary();
-        await this.executeInstall(binaryPath);
+        const binary_path = await this.fetch_binary();
+        await this.execute_install(binary_path);
         core.endGroup();
-        if (this.forceDockerShim) {
+        if (this.force_docker_shim) {
             await this.spawnDockerShim();
         }
-        await this.setGithubPath();
+        await this.set_github_path();
     }
     async spawnDockerShim() {
         core.startGroup("Configuring the Docker shim as the Nix Daemon's process supervisor");
@@ -97697,12 +98002,11 @@ class NixInstallerAction {
             X64: __nccwpck_require__.ab + "amd64.tar.gz",
             ARM64: __nccwpck_require__.ab + "arm64.tar.gz",
         };
-        const runnerArch = process.env["RUNNER_ARCH"];
         let arch;
-        if (runnerArch === "X64") {
+        if (process.env.RUNNER_ARCH === "X64") {
             arch = "X64";
         }
-        else if (runnerArch === "ARM64") {
+        else if (process.env.RUNNER_ARCH === "ARM64") {
             arch = "ARM64";
         }
         else {
@@ -97710,7 +98014,7 @@ class NixInstallerAction {
         }
         core.debug("Loading image: determinate-nix-shim:latest...");
         {
-            const exitCode = await exec.exec("docker", ["image", "load", "--input", images[arch]], {
+            const exit_code = await exec.exec("docker", ["image", "load", "--input", images[arch]], {
                 silent: true,
                 listeners: {
                     stdout: (data) => {
@@ -97727,14 +98031,14 @@ class NixInstallerAction {
                     },
                 },
             });
-            if (exitCode !== 0) {
-                throw new Error(`Failed to build the shim image, exit code: \`${exitCode}\``);
+            if (exit_code !== 0) {
+                throw new Error(`Failed to build the shim image, exit code: \`${exit_code}\``);
             }
         }
         {
             core.debug("Starting the Nix daemon through Docker...");
-            this.idslib.recordEvent(EVENT_START_DOCKER_SHIM);
-            const exitCode = await exec.exec("docker", [
+            this.idslib.recordEvent("start_docker_shim");
+            const exit_code = await exec.exec("docker", [
                 "--log-level=debug",
                 "run",
                 "--detach",
@@ -97780,20 +98084,20 @@ class NixInstallerAction {
                     },
                 },
             });
-            if (exitCode !== 0) {
-                throw new Error(`Failed to start the Nix daemon through Docker, exit code: \`${exitCode}\``);
+            if (exit_code !== 0) {
+                throw new Error(`Failed to start the Nix daemon through Docker, exit code: \`${exit_code}\``);
             }
         }
         core.endGroup();
         return;
     }
     async cleanupDockerShim() {
-        const containerId = core.getState("docker_shim_container_id");
-        if (containerId !== "") {
+        const container_id = core.getState("docker_shim_container_id");
+        if (container_id !== "") {
             core.startGroup("Cleaning up the Nix daemon's Docker shim");
             let cleaned = false;
             try {
-                await exec.exec("docker", ["rm", "--force", containerId]);
+                await exec.exec("docker", ["rm", "--force", container_id]);
                 cleaned = true;
             }
             catch {
@@ -97802,7 +98106,7 @@ class NixInstallerAction {
             if (!cleaned) {
                 core.info("trying to pkill the container's shim process");
                 try {
-                    await exec.exec("pkill", [containerId]);
+                    await exec.exec("pkill", [container_id]);
                     cleaned = true;
                 }
                 catch {
@@ -97810,7 +98114,7 @@ class NixInstallerAction {
                 }
             }
             if (cleaned) {
-                this.idslib.recordEvent(EVENT_CLEAN_UP_DOCKER_SHIM);
+                this.idslib.recordEvent("clean_up_docker_shim");
             }
             else {
                 core.warning("Giving up on cleaning up the nix daemon container");
@@ -97818,52 +98122,52 @@ class NixInstallerAction {
             core.endGroup();
         }
     }
-    async setGithubPath() {
+    async set_github_path() {
         // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
         try {
-            const nixVarNixProfilePath = "/nix/var/nix/profiles/default/bin";
-            const homeNixProfilePath = `${process.env["HOME"]}/.nix-profile/bin`;
-            core.addPath(nixVarNixProfilePath);
-            core.addPath(homeNixProfilePath);
-            core.info(`Added \`${nixVarNixProfilePath}\` and \`${homeNixProfilePath}\` to \`$GITHUB_PATH\``);
+            const nix_var_nix_profile_path = "/nix/var/nix/profiles/default/bin";
+            const home_nix_profile_path = `${process.env.HOME}/.nix-profile/bin`;
+            core.addPath(nix_var_nix_profile_path);
+            core.addPath(home_nix_profile_path);
+            core.info(`Added \`${nix_var_nix_profile_path}\` and \`${home_nix_profile_path}\` to \`$GITHUB_PATH\``);
         }
-        catch {
+        catch (error) {
             core.info("Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is done in the action. Prior to 0.11.0, this was only done in the `nix-installer` binary.");
         }
     }
-    async flakehubLogin() {
-        this.idslib.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
-        const netrcPath = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
+    async flakehub_login() {
+        this.idslib.recordEvent("login_to_flakehub");
+        const netrc_path = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
         const jwt = await core.getIDToken("api.flakehub.com");
-        await (0,promises_namespaceObject.writeFile)(netrcPath, [
+        await (0,promises_namespaceObject.writeFile)(netrc_path, [
             `machine api.flakehub.com login flakehub password ${jwt}`,
             `machine flakehub.com login flakehub password ${jwt}`,
         ].join("\n"));
         core.info("Logging in to FlakeHub.");
         // the join followed by a match on ^... looks silly, but extra_config
         // could contain multi-line values
-        if (this.extraConf?.join("\n").match(/^netrc-file/m)) {
+        if (this.extra_conf?.join("\n").match(/^netrc-file/m)) {
             core.warning("Logging in to FlakeHub conflicts with the Nix option `netrc-file`.");
         }
-        return netrcPath;
+        return netrc_path;
     }
-    async executeUninstall() {
-        this.idslib.recordEvent(EVENT_UNINSTALL_NIX);
-        const exitCode = await exec.exec(`/nix/nix-installer`, ["uninstall"], {
+    async execute_uninstall() {
+        this.idslib.recordEvent("uninstall");
+        const exit_code = await exec.exec(`/nix/nix-installer`, ["uninstall"], {
             env: {
                 NIX_INSTALLER_NO_CONFIRM: "true",
                 ...process.env, // To get $PATH, etc
             },
         });
-        if (exitCode !== 0) {
-            throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
+        if (exit_code !== 0) {
+            throw new Error(`Non-zero exit code of \`${exit_code}\` detected`);
         }
-        return exitCode;
+        return exit_code;
     }
-    async detectExisting() {
-        const receiptPath = "/nix/receipt.json";
+    async detect_existing() {
+        const receipt_path = "/nix/receipt.json";
         try {
-            await (0,promises_namespaceObject.access)(receiptPath);
+            await (0,promises_namespaceObject.access)(receipt_path);
             // There is a /nix/receipt.json
             return true;
         }
@@ -97872,16 +98176,16 @@ class NixInstallerAction {
             return false;
         }
     }
-    async setupKvm() {
-        this.idslib.recordEvent(EVENT_SETUP_KVM);
-        const currentUser = (0,external_node_os_.userInfo)();
-        const isRoot = currentUser.uid === 0;
-        const maybeSudo = isRoot ? "" : "sudo";
-        const kvmRules = "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
+    async setup_kvm() {
+        this.idslib.recordEvent("setup_kvm");
+        const current_user = (0,external_node_os_.userInfo)();
+        const is_root = current_user.uid === 0;
+        const maybe_sudo = is_root ? "" : "sudo";
+        const kvm_rules = "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
         try {
-            const writeFileExitCode = await exec.exec("sh", [
+            const write_file_exit_code = await exec.exec("sh", [
                 "-c",
-                `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | ${maybeSudo} tee ${kvmRules} > /dev/null`,
+                `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | ${maybe_sudo} tee ${kvm_rules} > /dev/null`,
             ], {
                 silent: true,
                 listeners: {
@@ -97899,15 +98203,15 @@ class NixInstallerAction {
                     },
                 },
             });
-            if (writeFileExitCode !== 0) {
-                throw new Error(`Non-zero exit code of \`${writeFileExitCode}\` detected while writing '${kvmRules}'`);
+            if (write_file_exit_code !== 0) {
+                throw new Error(`Non-zero exit code of \`${write_file_exit_code}\` detected while writing '${kvm_rules}'`);
             }
-            const debugRootRunThrow = async (action, command, args) => {
-                if (!isRoot) {
+            const debug_root_run_throw = async (action, command, args) => {
+                if (!is_root) {
                     args = [command, ...args];
                     command = "sudo";
                 }
-                const reloadExitCode = await exec.exec(command, args, {
+                const reload_exit_code = await exec.exec(command, args, {
                     silent: true,
                     listeners: {
                         stdout: (data) => {
@@ -97924,60 +98228,59 @@ class NixInstallerAction {
                         },
                     },
                 });
-                if (reloadExitCode !== 0) {
-                    throw new Error(`Non-zero exit code of \`${reloadExitCode}\` detected while ${action}.`);
+                if (reload_exit_code !== 0) {
+                    throw new Error(`Non-zero exit code of \`${reload_exit_code}\` detected while ${action}.`);
                 }
             };
-            await debugRootRunThrow("reloading udev rules", "udevadm", [
+            await debug_root_run_throw("reloading udev rules", "udevadm", [
                 "control",
                 "--reload-rules",
             ]);
-            await debugRootRunThrow("triggering udev against kvm", "udevadm", [
+            await debug_root_run_throw("triggering udev against kvm", "udevadm", [
                 "trigger",
                 "--name-match=kvm",
             ]);
             return true;
         }
-        catch {
-            if (isRoot) {
-                await exec.exec("rm", ["-f", kvmRules]);
+        catch (error) {
+            if (is_root) {
+                await exec.exec("rm", ["-f", kvm_rules]);
             }
             else {
-                await exec.exec("sudo", ["rm", "-f", kvmRules]);
+                await exec.exec("sudo", ["rm", "-f", kvm_rules]);
             }
             return false;
         }
     }
-    async fetchBinary() {
-        if (!this.localRoot) {
+    async fetch_binary() {
+        if (!this.local_root) {
             return await this.idslib.fetchExecutable();
         }
         else {
-            const localPath = (0,external_node_path_namespaceObject.join)(this.localRoot, `nix-installer-${this.platform}`);
-            core.info(`Using binary ${localPath}`);
-            return localPath;
+            const local_path = (0,external_node_path_namespaceObject.join)(this.local_root, `nix-installer-${this.platform}`);
+            core.info(`Using binary ${local_path}`);
+            return local_path;
         }
     }
-    async reportOverall() {
+    async report_overall() {
         try {
-            this.idslib.recordEvent(EVENT_CONCLUDE_WORKFLOW, {
-                conclusion: await this.getWorkflowConclusion(),
+            this.idslib.recordEvent("conclude_workflow", {
+                conclusion: await this.get_workflow_conclusion(),
             });
         }
-        catch (e) {
-            core.debug(`Error submitting post-run diagnostics report: ${e}`);
+        catch (error) {
+            core.debug(`Error submitting post-run diagnostics report: ${error}`);
         }
     }
-    async getWorkflowConclusion() {
-        if (this.githubToken == null) {
+    async get_workflow_conclusion() {
+        if (this.github_token == null) {
             return undefined;
         }
         try {
-            const octokit = github.getOctokit(this.githubToken);
+            const octokit = github.getOctokit(this.github_token);
             const jobs = await octokit.paginate(octokit.rest.actions.listJobsForWorkflowRun, {
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
-                /* eslint-disable camelcase */
                 run_id: github.context.runId,
             });
             core.debug(`awaited jobs: ${jobs}`);
@@ -97987,7 +98290,7 @@ class NixInstallerAction {
             if (job === undefined) {
                 return "no-jobs";
             }
-            const outcomes = (job.steps ?? []).map((j) => j.conclusion ?? "unknown");
+            const outcomes = (job.steps || []).map((j) => j.conclusion || "unknown");
             // Possible values: success, failure, cancelled, or skipped
             // from: https://docs.github.com/en/actions/learn-github-actions/contexts
             if (outcomes.includes("failure")) {
@@ -98001,23 +98304,72 @@ class NixInstallerAction {
             // Assume success if no jobs failed or were canceled
             return "success";
         }
-        catch (e) {
-            core.debug(`Error determining final disposition: ${e}`);
+        catch (error) {
+            core.debug(`Error determining final disposition: ${error}`);
             return "unavailable";
         }
     }
 }
-function getDefaultPlanner() {
-    const envOs = process.env["RUNNER_OS"];
-    if (envOs === "macOS") {
+function get_nix_platform() {
+    const env_os = process.env.RUNNER_OS;
+    const env_arch = process.env.RUNNER_ARCH;
+    if (env_os === "macOS" && env_arch === "X64") {
+        return "x86_64-darwin";
+    }
+    else if (env_os === "macOS" && env_arch === "ARM64") {
+        return "aarch64-darwin";
+    }
+    else if (env_os === "Linux" && env_arch === "X64") {
+        return "x86_64-linux";
+    }
+    else if (env_os === "Linux" && env_arch === "ARM64") {
+        return "aarch64-linux";
+    }
+    else {
+        throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${env_os}\`) and \`RUNNER_ARCH\` (currently \`${env_arch}\`)  combination`);
+    }
+}
+function get_default_planner() {
+    const env_os = process.env.RUNNER_OS;
+    if (env_os === "macOS") {
         return "macos";
     }
-    else if (envOs === "Linux") {
+    else if (env_os === "Linux") {
         return "linux";
     }
     else {
-        throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${envOs}\`)`);
+        throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${env_os}\`)`);
     }
+}
+function action_input_string_or_null(name) {
+    const value = core.getInput(name);
+    if (value === "") {
+        return null;
+    }
+    else {
+        return value;
+    }
+}
+function action_input_multiline_string_or_null(name) {
+    const value = core.getMultilineInput(name);
+    if (value.length === 0) {
+        return null;
+    }
+    else {
+        return value;
+    }
+}
+function action_input_number_or_null(name) {
+    const value = core.getInput(name);
+    if (value === "") {
+        return null;
+    }
+    else {
+        return Number(value);
+    }
+}
+function action_input_bool(name) {
+    return core.getBooleanInput(name);
 }
 function main() {
     const installer = new NixInstallerAction();
@@ -98027,7 +98379,7 @@ function main() {
     });
     installer.idslib.onPost(async () => {
         await installer.cleanupDockerShim();
-        await installer.reportOverall();
+        await installer.report_overall();
     });
     installer.idslib.execute();
 }
