@@ -172,13 +172,15 @@ jobs:
         if: success() || failure()
         run: |
           pkill magic-nix-cache
+      - name: Uninstall Nix
+        run: |
+          /nix/nix-installer uninstall --no-confirm
       - name: Reinstall Nix
         uses: ./
         with:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          reinstall: true
           extra-conf: |
             use-sqlite-wal = true
       - name: Test `nix` with `$GITHUB_PATH`
