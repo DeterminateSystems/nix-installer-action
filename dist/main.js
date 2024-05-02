@@ -46,8 +46,8 @@ class NixInstallerAction {
                 return result.SUCCESS;
             },
         });
-        const archOs = result.handle(platform.getArchOs());
-        const nixPlatform = result.handle(platform.getNixPlatform(archOs));
+        const archOs = result.valueOrFail(platform.getArchOs());
+        const nixPlatform = result.valueOrFail(platform.getNixPlatform(archOs));
         this.platform = nixPlatform;
         this.nixPackageUrl = inputs.getStringOrNull("nix-package-url");
         this.backtrace = inputs.getStringOrNull("backtrace");
@@ -286,25 +286,25 @@ class NixInstallerAction {
         // TODO: Error if the user uses these on not-MacOS
         if (this.macEncrypt !== null) {
             if (runnerOs !== "macOS") {
-                throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
+                return result.Err("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
             }
             executionEnv.NIX_INSTALLER_ENCRYPT = this.macEncrypt;
         }
         if (this.macCaseSensitive !== null) {
             if (runnerOs !== "macOS") {
-                throw new Error("`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`");
+                return result.Err("`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`");
             }
             executionEnv.NIX_INSTALLER_CASE_SENSITIVE = this.macCaseSensitive;
         }
         if (this.macVolumeLabel !== null) {
             if (runnerOs !== "macOS") {
-                throw new Error("`mac-volume-label` while `$RUNNER_OS` was not `macOS`");
+                return result.Err("`mac-volume-label` while `$RUNNER_OS` was not `macOS`");
             }
             executionEnv.NIX_INSTALLER_VOLUME_LABEL = this.macVolumeLabel;
         }
         if (this.macRootDisk !== null) {
             if (runnerOs !== "macOS") {
-                throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
+                return result.Err("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
             }
             executionEnv.NIX_INSTALLER_ROOT_DISK = this.macRootDisk;
         }
@@ -317,7 +317,7 @@ class NixInstallerAction {
         // TODO: Error if the user uses these on MacOS
         if (this.init !== null) {
             if (runnerOs === "macOS") {
-                throw new Error("`init` is not a valid option when `$RUNNER_OS` is `macOS`");
+                return result.Err("`init` is not a valid option when `$RUNNER_OS` is `macOS`");
             }
             executionEnv.NIX_INSTALLER_INIT = this.init;
         }
@@ -370,10 +370,10 @@ class NixInstallerAction {
             actionsCore.info("Detected Namespace runner, assuming this is a https://namespace.so created container, set `NOT_NAMESPACE=true` to override this. This will change the setting of the `init` to be compatible with Namespace");
             executionEnv.NIX_INSTALLER_INIT = "none";
         }
-        return executionEnv;
+        return result.Ok(executionEnv);
     }
     async executeInstall(binaryPath) {
-        const executionEnv = await this.executionEnvironment();
+        const executionEnv = result.valueOrFail(await this.executionEnvironment());
         actionsCore.debug(`Execution environment: ${JSON.stringify(executionEnv, null, 4)}`);
         const args = ["install"];
         if (this.planner) {
@@ -381,8 +381,9 @@ class NixInstallerAction {
             args.push(this.planner);
         }
         else {
-            this.idslib.addFact(FACT_NIX_INSTALLER_PLANNER, getDefaultPlanner());
-            args.push(getDefaultPlanner());
+            const defaultPlanner = result.valueOrFail(getDefaultPlanner());
+            this.idslib.addFact(FACT_NIX_INSTALLER_PLANNER, defaultPlanner);
+            args.push(defaultPlanner);
         }
         if (this.extraArgs) {
             const extraArgs = stringArgv(this.extraArgs);
@@ -399,10 +400,10 @@ class NixInstallerAction {
             this.idslib.recordEvent(EVENT_INSTALL_NIX_FAILURE, {
                 exitCode,
             });
-            throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
+            return result.Err(`Non-zero exit code of \`${exitCode}\` detected`);
         }
         this.idslib.recordEvent(EVENT_INSTALL_NIX_SUCCESS);
-        return exitCode;
+        return result.Ok(exitCode);
     }
     async install() {
         const existingInstall = await this.detectExisting();
@@ -457,7 +458,7 @@ class NixInstallerAction {
             arch = "ARM64";
         }
         else {
-            throw Error("Architecture not supported in Docker shim mode.");
+            return result.Err("Architecture not supported in Docker shim mode.");
         }
         actionsCore.debug("Loading image: determinate-nix-shim:latest...");
         {
@@ -479,7 +480,7 @@ class NixInstallerAction {
                 },
             });
             if (exitCode !== 0) {
-                throw new Error(`Failed to build the shim image, exit code: \`${exitCode}\``);
+                return result.Err(`Failed to build the shim image, exit code: \`${exitCode}\``);
             }
         }
         {
@@ -532,11 +533,11 @@ class NixInstallerAction {
                 },
             });
             if (exitCode !== 0) {
-                throw new Error(`Failed to start the Nix daemon through Docker, exit code: \`${exitCode}\``);
+                return result.Err(`Failed to start the Nix daemon through Docker, exit code: \`${exitCode}\``);
             }
         }
         actionsCore.endGroup();
-        return;
+        return result.Ok(undefined);
     }
     async cleanupDockerShim() {
         const containerId = actionsCore.getState("docker_shim_container_id");
@@ -607,9 +608,9 @@ class NixInstallerAction {
             },
         });
         if (exitCode !== 0) {
-            throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
+            return result.Err(`Non-zero exit code of \`${exitCode}\` detected`);
         }
-        return exitCode;
+        return result.Ok(exitCode);
     }
     async detectExisting() {
         const receiptPath = "/nix/receipt.json";
@@ -651,7 +652,7 @@ class NixInstallerAction {
                 },
             });
             if (writeFileExitCode !== 0) {
-                throw new Error(`Non-zero exit code of \`${writeFileExitCode}\` detected while writing '${kvmRules}'`);
+                return result.Err(`Non-zero exit code of \`${writeFileExitCode}\` detected while writing '${kvmRules}'`);
             }
             const debugRootRunThrow = async (action, command, args) => {
                 if (!isRoot) {
@@ -676,18 +677,19 @@ class NixInstallerAction {
                     },
                 });
                 if (reloadExitCode !== 0) {
-                    throw new Error(`Non-zero exit code of \`${reloadExitCode}\` detected while ${action}.`);
+                    return result.Err(`Non-zero exit code of \`${reloadExitCode}\` detected while ${action}.`);
                 }
+                return result.Ok(undefined);
             };
-            await debugRootRunThrow("reloading udev rules", "udevadm", [
+            await result.failOnError(debugRootRunThrow("reloading udev rules", "udevadm", [
                 "control",
                 "--reload-rules",
-            ]);
-            await debugRootRunThrow("triggering udev against kvm", "udevadm", [
+            ]));
+            await result.failOnError(debugRootRunThrow("triggering udev against kvm", "udevadm", [
                 "trigger",
                 "--name-match=kvm",
-            ]);
-            return true;
+            ]));
+            return result.Ok(true);
         }
         catch {
             if (isRoot) {
@@ -696,7 +698,7 @@ class NixInstallerAction {
             else {
                 await actionsExec.exec("sudo", ["rm", "-f", kvmRules]);
             }
-            return false;
+            return result.Ok(false);
         }
     }
     async fetchBinary() {
@@ -761,13 +763,13 @@ class NixInstallerAction {
 function getDefaultPlanner() {
     const envOs = process.env["RUNNER_OS"];
     if (envOs === "macOS") {
-        return "macos";
+        return result.Ok("macos");
     }
     else if (envOs === "Linux") {
-        return "linux";
+        return result.Ok("linux");
     }
     else {
-        throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${envOs}\`)`);
+        return result.Err(`Unsupported \`RUNNER_OS\` (currently \`${envOs}\`)`);
     }
 }
 function main() {

@@ -96857,7 +96857,7 @@ const got = source_create(defaults);
 
 ;// CONCATENATED MODULE: external "node:stream/promises"
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@a5791d496d35928a7b09ad0be96ab9c913389a6b_fmjtwylt722vct6fw4zyo6h3ti/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@abd5b78c8e24857812017ab2da0f962095811f10_aevkkihm5mrch6za6n77eo4c6e/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -96874,16 +96874,17 @@ __export(result_exports, {
   Ok: () => ts_results.Ok,
   SUCCESS: () => SUCCESS,
   coerceErrorToString: () => coerceErrorToString,
-  handle: () => handle,
-  handleHook: () => handleHook
+  failOnError: () => failOnError,
+  valueOrFail: () => valueOrFail
 });
 
 
 
-function handle(res) {
+function valueOrFail(res) {
   if (res.ok) {
     return res.val;
   } else {
+    core.setFailed(res.val);
     throw new Error(res.val);
   }
 }
@@ -96896,13 +96897,14 @@ function coerceErrorToString(e) {
     return `unknown error: ${e}`;
   }
 }
-async function handleHook(callback) {
+async function failOnError(callback) {
   const res = await callback;
   if (res.err) {
-    core.error(res.val);
+    core.setFailed(res.val);
   }
+  return;
 }
-var SUCCESS = (0,ts_results.Ok)(void 0);
+var SUCCESS = (0,ts_results.Ok)("SUCCESS");
 
 // src/linux-release-info.ts
 
@@ -97356,9 +97358,9 @@ var IdsToolbox = class _IdsToolbox {
       },
       hooks: {
         beforeRetry: [
-          (error3, retryCount) => {
+          (error2, retryCount) => {
             core.info(
-              `Retrying after error ${error3.code}, retry #: ${retryCount}`
+              `Retrying after error ${error2.code}, retry #: ${retryCount}`
             );
           }
         ]
@@ -97384,8 +97386,8 @@ var IdsToolbox = class _IdsToolbox {
       }
     }
     this.identity = identify(this.actionOptions.name);
-    this.archOs = handle(getArchOs());
-    this.nixSystem = handle(getNixPlatform(this.archOs));
+    this.archOs = valueOrFail(getArchOs());
+    this.nixSystem = valueOrFail(getNixPlatform(this.archOs));
     this.facts.arch_os = this.archOs;
     this.facts.nix_system = this.nixSystem;
     async () => {
@@ -97430,8 +97432,8 @@ var IdsToolbox = class _IdsToolbox {
     this.recordEvent(`begin_${this.executionPhase}`);
   }
   execute() {
-    this.executeAsync().catch((error3) => {
-      console.log(error3);
+    this.executeAsync().catch((error2) => {
+      console.log(error2);
       process.exitCode = 1;
     });
   }
@@ -97445,9 +97447,9 @@ var IdsToolbox = class _IdsToolbox {
         return;
       }
       if (this.executionPhase === "main") {
-        await handleHook(this.actionOptions.hookMain());
+        await failOnError(this.actionOptions.hookMain());
       } else if (this.executionPhase === "post" && this.actionOptions.hookPost) {
-        await handleHook(this.actionOptions.hookPost());
+        await failOnError(this.actionOptions.hookPost());
       }
       this.addFact(FACT_ENDED_WITH_EXCEPTION, false);
     } catch (e) {
@@ -97822,8 +97824,8 @@ class NixInstallerAction {
                 return result_exports.SUCCESS;
             },
         });
-        const archOs = result_exports.handle(platform_exports.getArchOs());
-        const nixPlatform = result_exports.handle(platform_exports.getNixPlatform(archOs));
+        const archOs = result_exports.valueOrFail(platform_exports.getArchOs());
+        const nixPlatform = result_exports.valueOrFail(platform_exports.getNixPlatform(archOs));
         this.platform = nixPlatform;
         this.nixPackageUrl = inputs_exports.getStringOrNull("nix-package-url");
         this.backtrace = inputs_exports.getStringOrNull("backtrace");
@@ -98062,25 +98064,25 @@ class NixInstallerAction {
         // TODO: Error if the user uses these on not-MacOS
         if (this.macEncrypt !== null) {
             if (runnerOs !== "macOS") {
-                throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
+                return result_exports.Err("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
             }
             executionEnv.NIX_INSTALLER_ENCRYPT = this.macEncrypt;
         }
         if (this.macCaseSensitive !== null) {
             if (runnerOs !== "macOS") {
-                throw new Error("`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`");
+                return result_exports.Err("`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`");
             }
             executionEnv.NIX_INSTALLER_CASE_SENSITIVE = this.macCaseSensitive;
         }
         if (this.macVolumeLabel !== null) {
             if (runnerOs !== "macOS") {
-                throw new Error("`mac-volume-label` while `$RUNNER_OS` was not `macOS`");
+                return result_exports.Err("`mac-volume-label` while `$RUNNER_OS` was not `macOS`");
             }
             executionEnv.NIX_INSTALLER_VOLUME_LABEL = this.macVolumeLabel;
         }
         if (this.macRootDisk !== null) {
             if (runnerOs !== "macOS") {
-                throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
+                return result_exports.Err("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
             }
             executionEnv.NIX_INSTALLER_ROOT_DISK = this.macRootDisk;
         }
@@ -98093,7 +98095,7 @@ class NixInstallerAction {
         // TODO: Error if the user uses these on MacOS
         if (this.init !== null) {
             if (runnerOs === "macOS") {
-                throw new Error("`init` is not a valid option when `$RUNNER_OS` is `macOS`");
+                return result_exports.Err("`init` is not a valid option when `$RUNNER_OS` is `macOS`");
             }
             executionEnv.NIX_INSTALLER_INIT = this.init;
         }
@@ -98146,10 +98148,10 @@ class NixInstallerAction {
             core.info("Detected Namespace runner, assuming this is a https://namespace.so created container, set `NOT_NAMESPACE=true` to override this. This will change the setting of the `init` to be compatible with Namespace");
             executionEnv.NIX_INSTALLER_INIT = "none";
         }
-        return executionEnv;
+        return result_exports.Ok(executionEnv);
     }
     async executeInstall(binaryPath) {
-        const executionEnv = await this.executionEnvironment();
+        const executionEnv = result_exports.valueOrFail(await this.executionEnvironment());
         core.debug(`Execution environment: ${JSON.stringify(executionEnv, null, 4)}`);
         const args = ["install"];
         if (this.planner) {
@@ -98157,8 +98159,9 @@ class NixInstallerAction {
             args.push(this.planner);
         }
         else {
-            this.idslib.addFact(FACT_NIX_INSTALLER_PLANNER, getDefaultPlanner());
-            args.push(getDefaultPlanner());
+            const defaultPlanner = result_exports.valueOrFail(getDefaultPlanner());
+            this.idslib.addFact(FACT_NIX_INSTALLER_PLANNER, defaultPlanner);
+            args.push(defaultPlanner);
         }
         if (this.extraArgs) {
             const extraArgs = parseArgsStringToArgv(this.extraArgs);
@@ -98175,10 +98178,10 @@ class NixInstallerAction {
             this.idslib.recordEvent(EVENT_INSTALL_NIX_FAILURE, {
                 exitCode,
             });
-            throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
+            return result_exports.Err(`Non-zero exit code of \`${exitCode}\` detected`);
         }
         this.idslib.recordEvent(EVENT_INSTALL_NIX_SUCCESS);
-        return exitCode;
+        return result_exports.Ok(exitCode);
     }
     async install() {
         const existingInstall = await this.detectExisting();
@@ -98233,7 +98236,7 @@ class NixInstallerAction {
             arch = "ARM64";
         }
         else {
-            throw Error("Architecture not supported in Docker shim mode.");
+            return result_exports.Err("Architecture not supported in Docker shim mode.");
         }
         core.debug("Loading image: determinate-nix-shim:latest...");
         {
@@ -98255,7 +98258,7 @@ class NixInstallerAction {
                 },
             });
             if (exitCode !== 0) {
-                throw new Error(`Failed to build the shim image, exit code: \`${exitCode}\``);
+                return result_exports.Err(`Failed to build the shim image, exit code: \`${exitCode}\``);
             }
         }
         {
@@ -98308,11 +98311,11 @@ class NixInstallerAction {
                 },
             });
             if (exitCode !== 0) {
-                throw new Error(`Failed to start the Nix daemon through Docker, exit code: \`${exitCode}\``);
+                return result_exports.Err(`Failed to start the Nix daemon through Docker, exit code: \`${exitCode}\``);
             }
         }
         core.endGroup();
-        return;
+        return result_exports.Ok(undefined);
     }
     async cleanupDockerShim() {
         const containerId = core.getState("docker_shim_container_id");
@@ -98383,9 +98386,9 @@ class NixInstallerAction {
             },
         });
         if (exitCode !== 0) {
-            throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
+            return result_exports.Err(`Non-zero exit code of \`${exitCode}\` detected`);
         }
-        return exitCode;
+        return result_exports.Ok(exitCode);
     }
     async detectExisting() {
         const receiptPath = "/nix/receipt.json";
@@ -98427,7 +98430,7 @@ class NixInstallerAction {
                 },
             });
             if (writeFileExitCode !== 0) {
-                throw new Error(`Non-zero exit code of \`${writeFileExitCode}\` detected while writing '${kvmRules}'`);
+                return result_exports.Err(`Non-zero exit code of \`${writeFileExitCode}\` detected while writing '${kvmRules}'`);
             }
             const debugRootRunThrow = async (action, command, args) => {
                 if (!isRoot) {
@@ -98452,18 +98455,19 @@ class NixInstallerAction {
                     },
                 });
                 if (reloadExitCode !== 0) {
-                    throw new Error(`Non-zero exit code of \`${reloadExitCode}\` detected while ${action}.`);
+                    return result_exports.Err(`Non-zero exit code of \`${reloadExitCode}\` detected while ${action}.`);
                 }
+                return result_exports.Ok(undefined);
             };
-            await debugRootRunThrow("reloading udev rules", "udevadm", [
+            await result_exports.failOnError(debugRootRunThrow("reloading udev rules", "udevadm", [
                 "control",
                 "--reload-rules",
-            ]);
-            await debugRootRunThrow("triggering udev against kvm", "udevadm", [
+            ]));
+            await result_exports.failOnError(debugRootRunThrow("triggering udev against kvm", "udevadm", [
                 "trigger",
                 "--name-match=kvm",
-            ]);
-            return true;
+            ]));
+            return result_exports.Ok(true);
         }
         catch {
             if (isRoot) {
@@ -98472,7 +98476,7 @@ class NixInstallerAction {
             else {
                 await exec.exec("sudo", ["rm", "-f", kvmRules]);
             }
-            return false;
+            return result_exports.Ok(false);
         }
     }
     async fetchBinary() {
@@ -98537,13 +98541,13 @@ class NixInstallerAction {
 function getDefaultPlanner() {
     const envOs = process.env["RUNNER_OS"];
     if (envOs === "macOS") {
-        return "macos";
+        return result_exports.Ok("macos");
     }
     else if (envOs === "Linux") {
-        return "linux";
+        return result_exports.Ok("linux");
     }
     else {
-        throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${envOs}\`)`);
+        return result_exports.Err(`Unsupported \`RUNNER_OS\` (currently \`${envOs}\`)`);
     }
 }
 function main() {
