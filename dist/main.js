@@ -34,6 +34,7 @@ class NixInstallerAction {
             name: "nix-installer",
             fetchStyle: "nix-style",
             legacySourcePrefix: "nix-installer",
+            requireNix: "ignore",
         });
         this.platform = platform.getNixPlatform(platform.getArchOs());
         this.nixPackageUrl = inputs.getStringOrNull("nix-package-url");
