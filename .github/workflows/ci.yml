@@ -48,7 +48,6 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: echo $PATH
         run: echo $PATH
 
@@ -131,7 +130,6 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
@@ -168,12 +166,6 @@ jobs:
           hello
           nix store gc
           nix run nixpkgs#hello
-      - name: Terminate the magic nix cache pre-reinstall
-        if: success() || failure()
-        run: |
-          pkill magic-nix-cache
-      # Reinstate the MNC
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Reinstall Nix
         uses: ./
         with:
