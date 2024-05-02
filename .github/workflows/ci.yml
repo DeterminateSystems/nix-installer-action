@@ -88,6 +88,9 @@ jobs:
           hello
           nix store gc
           nix run nixpkgs#hello
+      - name: Uninstall Nix
+        run: |
+          /nix/nix-installer uninstall --no-confirm
       - name: Reinstall Nix
         uses: ./
         with:
