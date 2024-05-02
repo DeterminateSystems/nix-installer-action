@@ -89417,8 +89417,6 @@ function firstString() {
     }
 }
 
-// EXTERNAL MODULE: external "path"
-var external_path_ = __nccwpck_require__(1017);
 // EXTERNAL MODULE: external "node:util"
 var external_node_util_ = __nccwpck_require__(7261);
 // EXTERNAL MODULE: external "os"
@@ -97270,7 +97268,6 @@ function mungeDiagnosticEndpoint(inputUrl) {
 
 
 
-
 var EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
 var EVENT_INSTALL_NIX_START = "install_nix_start";
 var EVENT_INSTALL_NIX_SUCCESS = "install_nix_start";
@@ -97701,8 +97698,8 @@ ${stderrBuffer}`
       "Configuring the Docker shim as the Nix Daemon's process supervisor"
     );
     const images = {
-      X64: __nccwpck_require__.ab + "amd64.tar.gz",
-      ARM64: __nccwpck_require__.ab + "arm64.tar.gz"
+      X64: (0,external_node_path_namespaceObject.join)(__dirname, "/../docker-shim/amd64.tar.gz"),
+      ARM64: (0,external_node_path_namespaceObject.join)(__dirname, "/../docker-shim/arm64.tar.gz")
     };
     const runnerArch = process.env["RUNNER_ARCH"];
     let arch;
