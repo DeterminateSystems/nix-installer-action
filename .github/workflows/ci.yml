@@ -97,7 +97,6 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
-          reinstall: true
           extra-conf: |
             use-sqlite-wal = true
       - name: Test `nix` with `$GITHUB_PATH`
