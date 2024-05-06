@@ -71491,7 +71491,7 @@ const {
   staticPropertyDescriptors,
   readOperation,
   fireAProgressEvent
-} = __nccwpck_require__(5579)
+} = __nccwpck_require__(2882)
 const {
   kState,
   kError,
@@ -71935,7 +71935,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 5579:
+/***/ 2882:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 
@@ -96378,7 +96378,7 @@ const got = source_create(defaults);
 
 ;// CONCATENATED MODULE: external "node:stream/promises"
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@cd38b227c4d6faca10aed591b1f8863ef7b93dce_nckxvs7jbq6qb4vr5xhgyxcrgy/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@d872d42fb693faad3027a08c78620639f23168e1_tj7555e2gallxxhsq2k6pe3ybq/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -96724,22 +96724,26 @@ function getNixPlatform(archOs) {
 // src/inputs.ts
 var inputs_exports = {};
 __export(inputs_exports, {
+  getArrayOfStrings: () => getArrayOfStrings,
   getBool: () => getBool,
-  getCommaSeparatedArrayOfStrings: () => getCommaSeparatedArrayOfStrings,
   getMultilineStringOrNull: () => getMultilineStringOrNull,
   getNumberOrNull: () => getNumberOrNull,
   getString: () => getString,
   getStringOrNull: () => getStringOrNull,
-  getStringOrUndefined: () => getStringOrUndefined
+  getStringOrUndefined: () => getStringOrUndefined,
+  handleString: () => handleString
 });
 
 var getBool = (name) => {
   return core.getBooleanInput(name);
 };
-var getCommaSeparatedArrayOfStrings = (name, stripWhitespace) => {
-  const strip = stripWhitespace ?? false;
+var getArrayOfStrings = (name, separator) => {
   const original = getString(name);
-  return (strip ? original.replace(/\s+/g, "") : original).split(",");
+  return handleString(original, separator);
+};
+var handleString = (input, separator) => {
+  const sepChar = separator === "comma" ? "," : /\s+/;
+  return input.trim().split(sepChar).map((s) => s.trim());
 };
 var getMultilineStringOrNull = (name) => {
   const value = core.getMultilineInput(name);
@@ -96825,8 +96829,11 @@ var IDS_HOST = process.env["IDS_HOST"] ?? DEFAULT_IDS_HOST;
 var EVENT_EXCEPTION = "exception";
 var EVENT_ARTIFACT_CACHE_HIT = "artifact_cache_hit";
 var EVENT_ARTIFACT_CACHE_MISS = "artifact_cache_miss";
+var EVENT_ARTIFACT_CACHE_PERSIST = "artifact_cache_persist";
 var FACT_ENDED_WITH_EXCEPTION = "ended_with_exception";
 var FACT_FINAL_EXCEPTION = "final_exception";
+var FACT_SOURCE_URL = "source_url";
+var FACT_SOURCE_URL_ETAG = "source_url_etag";
 var IdsToolbox = class {
   constructor(actionOptions) {
     this.actionOptions = makeOptionsConfident(actionOptions);
@@ -96988,6 +96995,7 @@ var IdsToolbox = class {
       const versionCheckup = await this.client.head(correlatedUrl);
       if (versionCheckup.headers.etag) {
         const v = versionCheckup.headers.etag;
+        this.addFact(FACT_SOURCE_URL_ETAG, v);
         core.debug(
           `Checking the tool cache for ${this.getUrl()} at ${v}`
         );
@@ -97036,6 +97044,7 @@ var IdsToolbox = class {
   getUrl() {
     const p = this.sourceParameters;
     if (p.url) {
+      this.addFact(FACT_SOURCE_URL, p.url);
       return new URL(p.url);
     }
     const fetchUrl = new URL(IDS_HOST);
@@ -97052,6 +97061,7 @@ var IdsToolbox = class {
       fetchUrl.pathname += `/stable`;
     }
     fetchUrl.pathname += `/${this.architectureFetchSuffix}`;
+    this.addFact(FACT_SOURCE_URL, fetchUrl.toString());
     return fetchUrl;
   }
   cacheKey(version2) {
@@ -97099,7 +97109,7 @@ var IdsToolbox = class {
         void 0,
         true
       );
-      this.recordEvent(EVENT_ARTIFACT_CACHE_HIT);
+      this.recordEvent(EVENT_ARTIFACT_CACHE_PERSIST);
     } finally {
       process.env.GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE_BACKUP;
       delete process.env.GITHUB_WORKSPACE_BACKUP;

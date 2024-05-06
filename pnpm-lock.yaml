@@ -16,7 +16,7 @@ dependencies:
     version: 5.1.1
   detsys-ts:
     specifier: github:DeterminateSystems/detsys-ts
-    version: github.com/DeterminateSystems/detsys-ts/cd38b227c4d6faca10aed591b1f8863ef7b93dce
+    version: github.com/DeterminateSystems/detsys-ts/d872d42fb693faad3027a08c78620639f23168e1
   string-argv:
     specifier: ^0.3.2
     version: 0.3.2
@@ -26,8 +26,8 @@ devDependencies:
     specifier: ^4.3.0
     version: 4.3.0(prettier@3.2.5)
   "@types/node":
-    specifier: ^20.12.8
-    version: 20.12.8
+    specifier: ^20.12.9
+    version: 20.12.9
   "@types/uuid":
     specifier: ^9.0.8
     version: 9.0.8
@@ -1327,14 +1327,14 @@ packages:
         integrity: sha512-24xFj9R5+rfQJLRyM56qh+wnVSYhyXC2tkoBndtY0U+vubqNsYXGjufB2nn8Q6gt0LrARwL6UBtMCSVCwl4B1g==,
       }
     dependencies:
-      "@types/node": 20.12.8
+      "@types/node": 20.12.9
       form-data: 4.0.0
     dev: false
 
-  /@types/node@20.12.8:
+  /@types/node@20.12.9:
     resolution:
       {
-        integrity: sha512-NU0rJLJnshZWdE/097cdCBbyW1h4hEg0xpovcoAQYHl8dnEyp/NAOiE45pvc+Bd1Dt+2r94v2eGFpQJ4R7g+2w==,
+        integrity: sha512-o93r47yu04MHumPBCFg0bMPBMNgtMg3jzbhl7e68z50+BMHmRMGDJv13eBlUgOdc9i/uoJXGMGYLtJV4ReTXEg==,
       }
     dependencies:
       undici-types: 5.26.5
@@ -1352,7 +1352,7 @@ packages:
         integrity: sha512-sOUTGn6h1SfQ+gbgqC364jLFBw2lnFqkgF3q0WovEHRLMrVD1sd5aufqi/aJObLekJO+Aq5z646U4Oxy6shXMA==,
       }
     dependencies:
-      "@types/node": 20.12.8
+      "@types/node": 20.12.9
     dev: false
 
   /@types/uuid@9.0.8:
@@ -1843,10 +1843,10 @@ packages:
     engines: { node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7 }
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001615
-      electron-to-chromium: 1.4.754
+      caniuse-lite: 1.0.30001616
+      electron-to-chromium: 1.4.756
       node-releases: 2.0.14
-      update-browserslist-db: 1.0.14(browserslist@4.23.0)
+      update-browserslist-db: 1.0.15(browserslist@4.23.0)
     dev: true
 
   /bundle-require@4.1.0(esbuild@0.19.12):
@@ -1916,10 +1916,10 @@ packages:
     engines: { node: ">=6" }
     dev: true
 
-  /caniuse-lite@1.0.30001615:
+  /caniuse-lite@1.0.30001616:
     resolution:
       {
-        integrity: sha512-1IpazM5G3r38meiae0bHRnPhz+CBQ3ZLqbQMtrg+AsTPKAXgW38JNsXkyZ+v8waCsDmPq87lmfun5Q2AGysNEQ==,
+        integrity: sha512-RHVYKov7IcdNjVHJFNY/78RdG4oGVjbayxv8u5IO74Wv7Hlq4PnJE6mo/OjFijjVFNy5ijnCt6H3IIo4t+wfEw==,
       }
     dev: true
 
@@ -2214,10 +2214,10 @@ packages:
       }
     dev: true
 
-  /electron-to-chromium@1.4.754:
+  /electron-to-chromium@1.4.756:
     resolution:
       {
-        integrity: sha512-7Kr5jUdns5rL/M9wFFmMZAgFDuL2YOnanFH4OI4iFzUqyh3XOL7nAGbSlSMZdzKMIyyTpNSbqZsWG9odwLeKvA==,
+        integrity: sha512-RJKZ9+vEBMeiPAvKNWyZjuYyUqMndcP1f335oHqn3BEQbs2NFtVrnK5+6Xg5wSM9TknNNpWghGDUCKGYF+xWXw==,
       }
     dev: true
 
@@ -2484,7 +2484,7 @@ packages:
       eslint-module-utils: 2.8.1(@typescript-eslint/parser@7.8.0)(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@7.8.0)(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
       fast-glob: 3.3.2
-      get-tsconfig: 4.7.3
+      get-tsconfig: 4.7.4
       is-core-module: 2.13.1
       is-glob: 4.0.3
     transitivePeerDependencies:
@@ -3110,10 +3110,10 @@ packages:
       get-intrinsic: 1.2.4
     dev: true
 
-  /get-tsconfig@4.7.3:
+  /get-tsconfig@4.7.4:
     resolution:
       {
-        integrity: sha512-ZvkrzoUA0PQZM6fy6+/Hce561s+faD1rsNwhnO5FelNjyy7EMGJ3Rz1AQ8GYDWjhRs/7dBLOEJvhK8MiEJOAFg==,
+        integrity: sha512-ofbkKj+0pjXjhejr007J/fLf+sW+8H7K5GCm+msC8q3IpvgjobpyPqSRFemNyIMxklC0zeJpi7VDFna19FacvQ==,
       }
     dependencies:
       resolve-pkg-maps: 1.0.0
@@ -3150,7 +3150,7 @@ packages:
       foreground-child: 3.1.1
       jackspeak: 2.3.6
       minimatch: 9.0.4
-      minipass: 7.0.4
+      minipass: 7.1.0
       path-scurry: 1.10.2
     dev: true
 
@@ -4043,10 +4043,10 @@ packages:
       }
     dev: true
 
-  /minipass@7.0.4:
+  /minipass@7.1.0:
     resolution:
       {
-        integrity: sha512-jYofLM5Dam9279rdkWzqHozUo4ybjdZmCsDHePy5V/PbBcVMiSZR97gmAy45aqi8CK1lG2ECd356FU86avfwUQ==,
+        integrity: sha512-oGZRv2OT1lO2UF1zUcwdTb3wqUwI0kBGTgt/T7OdSj6M6N5m3o5uPf0AIW6lVxGGoiWUR7e2AwTE+xiwK8WQig==,
       }
     engines: { node: ">=16 || 14 >=14.17" }
     dev: true
@@ -4326,7 +4326,7 @@ packages:
     engines: { node: ">=16 || 14 >=14.17" }
     dependencies:
       lru-cache: 10.2.2
-      minipass: 7.0.4
+      minipass: 7.1.0
     dev: true
 
   /path-type@4.0.0:
@@ -5212,10 +5212,10 @@ packages:
       }
     dev: false
 
-  /update-browserslist-db@1.0.14(browserslist@4.23.0):
+  /update-browserslist-db@1.0.15(browserslist@4.23.0):
     resolution:
       {
-        integrity: sha512-JixKH8GR2pWYshIPUg/NujK3JO7JiqEEUiNArE86NQyrgUuZeTlZQN3xuS/yiV5Kb48ev9K6RqNkaJjXsdg7Jw==,
+        integrity: sha512-K9HWH62x3/EalU1U6sjSZiylm9C8tgq2mSvshZpqc7QE69RaA2qjhkW2HlNA0tFpEbtyFz7HTqbSdN4MSwUodA==,
       }
     hasBin: true
     peerDependencies:
@@ -5440,10 +5440,10 @@ packages:
     engines: { node: ">=10" }
     dev: true
 
-  github.com/DeterminateSystems/detsys-ts/cd38b227c4d6faca10aed591b1f8863ef7b93dce:
+  github.com/DeterminateSystems/detsys-ts/d872d42fb693faad3027a08c78620639f23168e1:
     resolution:
       {
-        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/cd38b227c4d6faca10aed591b1f8863ef7b93dce,
+        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/d872d42fb693faad3027a08c78620639f23168e1,
       }
     name: detsys-ts
     version: 1.0.0
