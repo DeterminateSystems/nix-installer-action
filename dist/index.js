@@ -96378,7 +96378,9 @@ const got = source_create(defaults);
 
 ;// CONCATENATED MODULE: external "node:stream/promises"
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@d872d42fb693faad3027a08c78620639f23168e1_tj7555e2gallxxhsq2k6pe3ybq/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: external "node:zlib"
+const external_node_zlib_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:zlib");
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@2391ba1ef3d22027cd4d9ecce147007a88f63643_is35d24tynybsms6zejuqsabhi/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -96743,7 +96745,11 @@ var getArrayOfStrings = (name, separator) => {
 };
 var handleString = (input, separator) => {
   const sepChar = separator === "comma" ? "," : /\s+/;
-  return input.trim().split(sepChar).map((s) => s.trim());
+  const trimmed = input.trim();
+  if (trimmed === "") {
+    return [];
+  }
+  return trimmed.split(sepChar).map((s) => s.trim());
 };
 var getMultilineStringOrNull = (name) => {
   const value = core.getMultilineInput(name);
@@ -96824,6 +96830,8 @@ function constructSourceParameters(legacyPrefix) {
 
 
 
+
+
 var DEFAULT_IDS_HOST = "https://install.determinate.systems";
 var IDS_HOST = process.env["IDS_HOST"] ?? DEFAULT_IDS_HOST;
 var EVENT_EXCEPTION = "exception";
@@ -96839,6 +96847,7 @@ var IdsToolbox = class {
     this.actionOptions = makeOptionsConfident(actionOptions);
     this.hookMain = void 0;
     this.hookPost = void 0;
+    this.exceptionAttachments = /* @__PURE__ */ new Map();
     this.events = [];
     this.client = got_dist_source.extend({
       retry: {
@@ -96917,6 +96926,17 @@ var IdsToolbox = class {
     );
     this.recordEvent(`begin_${this.executionPhase}`);
   }
+  /**
+   * Attach a file to the diagnostics data in error conditions.
+   *
+   * The file at `location` doesn't need to exist when stapleFile is called.
+   *
+   * If the file doesn't exist or is unreadable when trying to staple the attachments, the JS error will be stored in a context value at `staple_failure_{name}`.
+   * If the file is readable, the file's contents will be stored in a context value at `staple_value_{name}`.
+   */
+  stapleFile(name, location) {
+    this.exceptionAttachments.set(name, location);
+  }
   onMain(callback) {
     this.hookMain = callback;
   }
@@ -96928,6 +96948,9 @@ var IdsToolbox = class {
       console.log(error2);
       process.exitCode = 1;
     });
+  }
+  stringifyError(error2) {
+    return error2 instanceof Error || typeof error2 == "string" ? error2.toString() : JSON.stringify(error2);
   }
   async executeAsync() {
     try {
@@ -96946,14 +96969,31 @@ var IdsToolbox = class {
       this.addFact(FACT_ENDED_WITH_EXCEPTION, false);
     } catch (error2) {
       this.addFact(FACT_ENDED_WITH_EXCEPTION, true);
-      const reportable = error2 instanceof Error || typeof error2 == "string" ? error2.toString() : JSON.stringify(error2);
+      const reportable = this.stringifyError(error2);
       this.addFact(FACT_FINAL_EXCEPTION, reportable);
       if (this.executionPhase === "post") {
         core.warning(reportable);
       } else {
         core.setFailed(reportable);
       }
-      this.recordEvent(EVENT_EXCEPTION);
+      const do_gzip = (0,external_node_util_.promisify)(external_node_zlib_namespaceObject.gzip);
+      const exceptionContext = /* @__PURE__ */ new Map();
+      for (const [attachmentLabel, filePath] of this.exceptionAttachments) {
+        try {
+          const logText = (0,external_node_fs_namespaceObject.readFileSync)(filePath);
+          const buf = await do_gzip(logText);
+          exceptionContext.set(
+            `staple_value_${attachmentLabel}`,
+            buf.toString("base64")
+          );
+        } catch (e) {
+          exceptionContext.set(
+            `staple_failure_${attachmentLabel}`,
+            this.stringifyError(e)
+          );
+        }
+      }
+      this.recordEvent(EVENT_EXCEPTION, Object.fromEntries(exceptionContext));
     } finally {
       await this.complete();
     }
