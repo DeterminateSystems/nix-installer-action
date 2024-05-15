@@ -7,6 +7,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  tests:
+    runs-on: ubuntu-22.04
+    needs:
+      - check-dist-up-to-date
+      - install-nix-linux
+      - install-nix-macos
+    steps:
+      - run: true
+
   check-dist-up-to-date:
     name: Check the dist/ folder is up to date
     runs-on: ubuntu-22.04
@@ -28,8 +37,9 @@ jobs:
         run: git status --porcelain=v1
       - name: Ensure no staged changes
         run: git diff --exit-code
-  run-test-suite:
-    name: Run test suite
+
+  install-nix-linux:
+    name: Run test suite for Linux systems
     strategy:
       matrix:
         runner:
@@ -116,9 +126,16 @@ jobs:
           duration: 5m
           authorized-users: grahamc
 
-  run-x86_64-darwin:
-    name: Run x86_64 Darwin
-    runs-on: macos-12
+  install-nix-macos:
+    name: Run test suite for macOS systems
+    strategy:
+      matrix:
+        runner:
+          # x86_64-darwin
+          - macos-12
+          # aarch64-darwin
+          - macos-latest-xlarge
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       id-token: write
