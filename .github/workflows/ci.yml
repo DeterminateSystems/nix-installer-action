@@ -28,6 +28,7 @@ jobs:
         run: git status --porcelain=v1
       - name: Ensure no staged changes
         run: git diff --exit-code
+
   run-test-suite:
     name: Run test suite
     strategy:
@@ -36,6 +37,7 @@ jobs:
           - ubuntu-latest
           - nscloud-ubuntu-22.04-amd64-4x16
           - namespace-profile-default-arm64
+          - 
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -116,9 +118,15 @@ jobs:
           duration: 5m
           authorized-users: grahamc
 
-  run-x86_64-darwin:
-    name: Run x86_64 Darwin
-    runs-on: macos-12
+  run-darwin:
+    strategy:
+      matrix:
+        runner:
+          # x86_64-darwin
+          - macos-12
+          # aarch64-darwin
+          - macos-latest-xlarge
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       id-token: write
