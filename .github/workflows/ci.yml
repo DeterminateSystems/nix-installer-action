@@ -13,8 +13,6 @@ jobs:
       - check-dist-up-to-date
       - install-nix-linux
       - install-nix-macos
-    steps:
-      - run: true
 
   check-dist-up-to-date:
     name: Check the dist/ folder is up to date
