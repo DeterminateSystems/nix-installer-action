@@ -7,6 +7,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  tests:
+    runs-on: ubuntu-22.04
+    needs:
+      - check-dist-up-to-date
+      - install-nix-linux
+      - install-nix-macos
+    steps:
+      - run: true
+
   check-dist-up-to-date:
     name: Check the dist/ folder is up to date
     runs-on: ubuntu-22.04
@@ -29,7 +38,7 @@ jobs:
       - name: Ensure no staged changes
         run: git diff --exit-code
 
-  run-test-suite-linux:
+  install-nix-linux:
     name: Run test suite for Linux systems
     strategy:
       matrix:
@@ -117,7 +126,7 @@ jobs:
           duration: 5m
           authorized-users: grahamc
 
-  run-test-suite-darwin:
+  install-nix-macos:
     name: Run test suite for macOS systems
     strategy:
       matrix:
