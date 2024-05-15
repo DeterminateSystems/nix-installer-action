@@ -6,7 +6,7 @@ import { join } from "node:path";
 import fs from "node:fs";
 import { userInfo } from "node:os";
 import stringArgv from "string-argv";
-import { cwd } from "node:process";
+import * as path from "path";
 import { IdsToolbox, inputs, platform } from "detsys-ts";
 import { randomUUID } from "node:crypto";
 
@@ -559,8 +559,8 @@ class NixInstallerAction {
     );
 
     const images: { [key: string]: string } = {
-      X64: join(cwd(), "/../docker-shim/amd64.tar.gz"),
-      ARM64: join(cwd(), "/../docker-shim/arm64.tar.gz"),
+      X64: path.join(__dirname, "/../docker-shim/amd64.tar.gz"),
+      ARM64: path.join(__dirname, "/../docker-shim/arm64.tar.gz"),
     };
 
     const runnerArch = process.env["RUNNER_ARCH"];
