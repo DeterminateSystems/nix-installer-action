@@ -211,3 +211,13 @@ jobs:
         with:
           duration: 5m
           authorized-users: grahamc
+
+  install-with-non-default-inputs:
+    name: Install Nix using non-default Action inputs
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          source-url: https://install.determinate.systems/nix-installer/stable/X64-Linux
+      - run: nix --version

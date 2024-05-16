@@ -92,7 +92,7 @@ inputs:
     description: The tag of `nix-installer` to use (conflicts with `source-revision`, `source-branch`, `source-pr`)
     required: false
   source-url:
-    description: A URL pointing to a `nix-installer.sh` script
+    description: A URL pointing to a `nix-installer` executable
     required: false
   nix-package-url:
     description: The Nix package URL
