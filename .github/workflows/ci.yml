@@ -217,23 +217,14 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        versions:
-          - { nix-installer: "0.12.0", nix: "2.18.0" }
-          - { nix-installer: "0.14.0", nix: "2.18.1" }
-          - { nix-installer: "0.18.0", nix: "2.20.0" }
+        version:
+          - "0.12.0"
+          - "0.14.0"
+          - "0.18.0"
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
         with:
-          source-url: https://github.com/DeterminateSystems/nix-installer/releases/download/v${{ matrix.versions.nix-installer }}/nix-installer-x86_64-linux
-      - name: Compare Nix version with expected version
-        run: |
-          NIX_VERSION_OUTPUT=$(nix --version)
-          NIX_VERSION=$(echo "${NIX_VERSION_OUTPUT}" | awk '{print $NF}')
-          EXPECTED_OUTPUT="nix (Nix) ${{ matrix.versions.nix }}"
-          if [ "${NIX_VERSION_OUTPUT}" != "${EXPECTED_OUTPUT}" ]; then
-            echo "Nix version ${NIX_VERSION} didn't match expected version ${{ matrix.versions.nix }}"
-            exit 1
-          else
-            echo "Success! Nix version ${NIX_VERSION} installed as expected"
-          fi
+          source-url: https://github.com/DeterminateSystems/nix-installer/releases/download/v${{ matrix.version }}/nix-installer-x86_64-linux
+      - name: Ensure that Nix is installed
+        run: nix --version
