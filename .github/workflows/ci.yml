@@ -212,18 +212,25 @@ jobs:
           duration: 5m
           authorized-users: grahamc
 
-  install-with-non-default-inputs:
-    name: Install Nix using non-default Action inputs
+  install-with-non-default-source-url:
+    name: Install Nix using non-default source-url inputs
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        version:
-          - "0.12.0"
-          - "0.14.0"
-          - "0.19.0"
+        versions:
+          - { nix-installer: "0.12.0", nix: "2.20.0" }
+          - { nix-installer: "0.14.0", nix: "2.20.0" }
+          - { nix-installer: "0.18.0", nix: "2.20.0" }
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
         with:
-          source-url: https://github.com/DeterminateSystems/nix-installer/releases/download/v${{ matrix.version }}/nix-installer-x86_64-linux
-      - run: nix --version
+          source-url: https://github.com/DeterminateSystems/nix-installer/releases/download/v${{ matrix.versions.nix-installer }}/nix-installer-x86_64-linux
+      - run: |
+          NIX_VERSION_OUTPUT=$(nix --version)
+          NIX_VERSION=$(echo "{NIX_VERSION}" | awk '{print $NF}')
+          EXPECTED_OUTPUT="nix (Nix) ${{ matrix.versions.nix }}"
+          if [ "${NIX_VERSION_OUTPUT}" != "${EXPECTED_OUTPUT}" ]; then
+            echo "Nix version ${NIX_VERSION} didn't match expected version ${{ matrix.versions.nix }}"
+            exit 1
+          fi
