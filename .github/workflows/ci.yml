@@ -219,5 +219,5 @@ jobs:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
         with:
-          source-url: https://install.determinate.systems/nix-installer/stable/X64-Linux
+          source-url: https://github.com/DeterminateSystems/nix-installer/releases/download/v0.19.0/nix-installer-x86_64-linux
       - run: nix --version
