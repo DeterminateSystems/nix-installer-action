@@ -215,9 +215,15 @@ jobs:
   install-with-non-default-inputs:
     name: Install Nix using non-default Action inputs
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        version:
+          - "0.17.0"
+          - "0.18.0"
+          - "0.19.0"
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
         with:
-          source-url: https://github.com/DeterminateSystems/nix-installer/releases/download/v0.19.0/nix-installer-x86_64-linux
+          source-url: https://github.com/DeterminateSystems/nix-installer/releases/download/v${{ matrix.version }}/nix-installer-x86_64-linux
       - run: nix --version
