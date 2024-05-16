@@ -229,7 +229,7 @@ jobs:
       - name: Compare Nix version with expected version
         run: |
           NIX_VERSION_OUTPUT=$(nix --version)
-          NIX_VERSION=$(echo "${NIX_VERSION}" | awk '{print $NF}')
+          NIX_VERSION=$(echo "${NIX_VERSION_OUTPUT}" | awk '{print $NF}')
           EXPECTED_OUTPUT="nix (Nix) ${{ matrix.versions.nix }}"
           if [ "${NIX_VERSION_OUTPUT}" != "${EXPECTED_OUTPUT}" ]; then
             echo "Nix version ${NIX_VERSION} didn't match expected version ${{ matrix.versions.nix }}"
