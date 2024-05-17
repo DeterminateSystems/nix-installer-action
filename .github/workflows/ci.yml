@@ -223,15 +223,15 @@ jobs:
         with:
           source-url: https://github.com/DeterminateSystems/nix-installer/releases/download/v0.18.0/nix-installer-x86_64-linux
       - name: Ensure that the expected Nix version is installed via alternative source-url
-        run: .github/verify-version.sh 2.18.0
+        run: .github/verify-version.sh 2.21.2
 
       - name: Install with alternative source-pr
         uses: ./
         with:
-          # https://github.com/DeterminateSystems/nix-installer/pull/938
-          source-pr: "938"
+          # https://github.com/DeterminateSystems/nix-installer/pull/665
+          source-pr: "665"
       - name: Ensure that the expected Nix version is installed via alternative source-pr
-        run: .github/verify-version.sh 2.21.2
+        run: .github/verify-version.sh 2.18.0
 
       - name: Install with alternative source-revision
         uses: ./
