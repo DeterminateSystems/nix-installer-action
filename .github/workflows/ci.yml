@@ -13,6 +13,7 @@ jobs:
       - check-dist-up-to-date
       - install-nix-linux
       - install-nix-macos
+      - install-with-non-default-source-inputs
     steps:
       - run: true
 
