@@ -217,14 +217,14 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Install with alternative source-url
-        uses: ./.
+        uses: ./
         with:
           source-url: https://github.com/DeterminateSystems/nix-installer/releases/download/v0.18.0/nix-installer-x86_64-linux
       - name: Ensure that Nix is installed via alternative source-url
         run: nix --version
 
       - name: Install with alternative source-pr
-        uses: ./.
+        uses: ./
         with:
           # https://github.com/DeterminateSystems/nix-installer/pull/938
           source-pr: "938"
@@ -232,7 +232,7 @@ jobs:
         run: nix --version
 
       - name: Install with alternative source-revision
-        uses: ./.
+        uses: ./
         with:
           # https://github.com/DeterminateSystems/nix-installer/tree/ccf1d39a83099657ad324e7927676432435431e1
           source-revision: "ccf1d39a83099657ad324e7927676432435431e1"
@@ -240,7 +240,7 @@ jobs:
         run: nix --version
 
       - name: Install with alternative source-branch
-        uses: ./.
+        uses: ./
         with:
           # https://github.com/DeterminateSystems/nix-installer/tree/lazy-trees
           source-revision: "lazy-trees"
@@ -248,7 +248,7 @@ jobs:
         run: nix --version
 
       - name: Install with alternative source-tag
-        uses: ./.
+        uses: ./
         with:
           # https://github.com/DeterminateSystems/nix-installer/tree/v0.14.0
           source-tag: "v0.14.0"
