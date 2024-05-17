@@ -212,8 +212,8 @@ jobs:
           duration: 5m
           authorized-users: grahamc
 
-  install-with-non-default-source-url:
-    name: Install Nix using non-default source-url inputs
+  install-with-non-default-source-inputs:
+    name: Install Nix using non-default source-* inputs
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
