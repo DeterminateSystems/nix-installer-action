@@ -216,6 +216,8 @@ jobs:
     name: Install Nix using non-default source-url inputs
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v4
+
       - name: Install with alternative source-url
         uses: ./
         with:
