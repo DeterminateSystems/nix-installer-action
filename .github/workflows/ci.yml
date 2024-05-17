@@ -13,6 +13,7 @@ jobs:
       - check-dist-up-to-date
       - install-nix-linux
       - install-nix-macos
+      - install-with-non-default-source-inputs
     steps:
       - run: true
 
@@ -213,46 +214,25 @@ jobs:
           authorized-users: grahamc
 
   install-with-non-default-source-inputs:
-    name: Install Nix using non-default source-* inputs
+    name: Install Nix using non-default source-${{ matrix.inputs.key }}
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        inputs:
+          # https://github.com/DeterminateSystems/nix-installer/blob/v0.18.0
+          - key: url
+            value: https://github.com/DeterminateSystems/nix-installer/releases/download/v0.18.0/nix-installer-x86_64-linux
+            nix-version: "2.21.2"
+          # https://github.com/DeterminateSystems/nix-installer/tree/7011c077ec491da410fbc39f68676b0908b9ce7e
+          - key: revision
+            value: 7011c077ec491da410fbc39f68676b0908b9ce7e
+            nix-version: "2.19.2"
+
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install with alternative source-url
+      - name: Install with alternative source-${{ matrix.inputs.key }}
         uses: ./
         with:
-          source-url: https://github.com/DeterminateSystems/nix-installer/releases/download/v0.18.0/nix-installer-x86_64-linux
-      - name: Ensure that the expected Nix version is installed via alternative source-url
-        run: .github/verify-version.sh 2.21.2
-
-      - name: Install with alternative source-pr
-        uses: ./
-        with:
-          # https://github.com/DeterminateSystems/nix-installer/pull/665
-          source-pr: "665"
-      - name: Ensure that the expected Nix version is installed via alternative source-pr
-        run: .github/verify-version.sh 2.18.0
-
-      - name: Install with alternative source-revision
-        uses: ./
-        with:
-          # https://github.com/DeterminateSystems/nix-installer/tree/ccf1d39a83099657ad324e7927676432435431e1
-          source-revision: "ccf1d39a83099657ad324e7927676432435431e1"
-      - name: Ensure that the expected Nix version is installed via alternative source-revision
-        run: .github/verify-version.sh 2.21.2
-
-      - name: Install with alternative source-branch
-        uses: ./
-        with:
-          # https://github.com/DeterminateSystems/nix-installer/tree/lazy-trees
-          source-revision: "lazy-trees"
-      - name: Ensure that the expected Nix version is installed via alternative source-branch
-        run: .github/verify-version.sh 2.21.2
-
-      - name: Install with alternative source-tag
-        uses: ./
-        with:
-          # https://github.com/DeterminateSystems/nix-installer/tree/v0.14.0
-          source-tag: "v0.14.0"
-      - name: Ensure that the expected Nix version is installed via alternative source-tag
-        run: .github/verify-version.sh 2.18.0
+          source-${{ matrix.inputs.key }}: ${{ matrix.inputs.value }}
+      - name: Ensure that the expected Nix version ${{ matrix.inputs.nix-version }} is installed via alternative source-${{ matrix.inputs.key }}
+        run: .github/verify-version.sh ${{ matrix.inputs.nix-version }}
