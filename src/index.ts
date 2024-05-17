@@ -30,7 +30,7 @@ const EVENT_CONCLUDE_WORKFLOW = "conclude_workflow";
 // Facts
 const FACT_HAS_DOCKER = "has_docker";
 const FACT_HAS_SYSTEMD = "has_systemd";
-const FACT_IN_GITHUB_ACTIONS = "in_act";
+const FACT_IN_ACT = "in_act";
 const FACT_IN_NAMESPACE_SO = "in_namespace_so";
 const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 
@@ -453,7 +453,7 @@ class NixInstallerAction {
     executionEnv.NIX_INSTALLER_EXTRA_CONF = extraConf;
 
     if (process.env["ACT"] && !process.env["NOT_ACT"]) {
-      this.idslib.addFact(FACT_IN_GITHUB_ACTIONS, true);
+      this.idslib.addFact(FACT_IN_ACT, true);
       actionsCore.info(
         "Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`",
       );
