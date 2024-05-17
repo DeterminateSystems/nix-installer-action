@@ -127,12 +127,12 @@ class NixInstallerAction {
       throwIfNoEntry: false,
     });
     if (systemdCheck?.isDirectory()) {
+      this.idslib.addFact(FACT_HAS_SYSTEMD, true);
       if (this.forceDockerShim) {
         actionsCore.warning(
           "Systemd is detected, but ignoring it since force-docker-shim is enabled.",
         );
       } else {
-        this.idslib.addFact(FACT_HAS_SYSTEMD, true);
         return;
       }
     }
