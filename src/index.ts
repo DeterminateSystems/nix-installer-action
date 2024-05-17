@@ -123,6 +123,11 @@ class NixInstallerAction {
       return;
     }
 
+    if (process.env["ACT"] && !process.env["NOT_ACT"]) {
+      actionsCore.debug("Not bothering to detect if the docker shim should be used, as it is typically incompatible with act.")
+      return;
+    }
+
     const systemdCheck = fs.statSync("/run/systemd/system", {
       throwIfNoEntry: false,
     });
