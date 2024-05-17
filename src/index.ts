@@ -124,7 +124,9 @@ class NixInstallerAction {
     }
 
     if (process.env["ACT"] && !process.env["NOT_ACT"]) {
-      actionsCore.debug("Not bothering to detect if the docker shim should be used, as it is typically incompatible with act.")
+      actionsCore.debug(
+        "Not bothering to detect if the docker shim should be used, as it is typically incompatible with act.",
+      );
       return;
     }
 
