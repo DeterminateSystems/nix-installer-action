@@ -222,18 +222,10 @@ jobs:
           - key: url
             value: https://github.com/DeterminateSystems/nix-installer/releases/download/v0.18.0/nix-installer-x86_64-linux
             nix-version: "2.21.2"
-          # https://github.com/DeterminateSystems/nix-installer/pull/738
-          - key: pr
-            value: "738"
-            nix-version: "2.18.1"
           # https://github.com/DeterminateSystems/nix-installer/tree/7011c077ec491da410fbc39f68676b0908b9ce7e
           - key: revision
             value: 7011c077ec491da410fbc39f68676b0908b9ce7e
             nix-version: "2.19.2"
-          # https://github.com/DeterminateSystems/nix-installer/tree/v0.14.0
-          - key: tag
-            value: v0.14.0
-            nix-version: "2.18.0"
 
     steps:
       - uses: actions/checkout@v4
