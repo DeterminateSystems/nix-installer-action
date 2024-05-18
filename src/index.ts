@@ -435,7 +435,7 @@ class NixInstallerAction {
       extraConf += `access-tokens = ${serverUrl}=${this.githubToken}`;
       extraConf += "\n";
     }
-    if (this.trustRunnerUser !== null && this.trustRunnerUser) {
+    if (this.trustRunnerUser) {
       const user = userInfo().username;
       if (user) {
         extraConf += `trusted-users = root ${user}`;
