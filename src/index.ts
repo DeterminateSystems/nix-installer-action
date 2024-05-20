@@ -30,7 +30,7 @@ const EVENT_CONCLUDE_WORKFLOW = "conclude_workflow";
 // Facts
 const FACT_HAS_DOCKER = "has_docker";
 const FACT_HAS_SYSTEMD = "has_systemd";
-const FACT_IN_GITHUB_ACTIONS = "in_act";
+const FACT_IN_ACT = "in_act";
 const FACT_IN_NAMESPACE_SO = "in_namespace_so";
 const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 
@@ -132,16 +132,23 @@ class NixInstallerAction extends DetSysAction {
       return;
     }
 
+    if (process.env["ACT"] && !process.env["NOT_ACT"]) {
+      actionsCore.debug(
+        "Not bothering to detect if the docker shim should be used, as it is typically incompatible with act.",
+      );
+      return;
+    }
+
     const systemdCheck = fs.statSync("/run/systemd/system", {
       throwIfNoEntry: false,
     });
     if (systemdCheck?.isDirectory()) {
+      this.addFact(FACT_HAS_SYSTEMD, true);
       if (this.forceDockerShim) {
         actionsCore.warning(
           "Systemd is detected, but ignoring it since force-docker-shim is enabled.",
         );
       } else {
-        this.addFact(FACT_HAS_SYSTEMD, true);
         return;
       }
     }
@@ -437,7 +444,7 @@ class NixInstallerAction extends DetSysAction {
       extraConf += `access-tokens = ${serverUrl}=${this.githubToken}`;
       extraConf += "\n";
     }
-    if (this.trustRunnerUser !== null) {
+    if (this.trustRunnerUser) {
       const user = userInfo().username;
       if (user) {
         extraConf += `trusted-users = root ${user}`;
@@ -462,7 +469,7 @@ class NixInstallerAction extends DetSysAction {
     executionEnv.NIX_INSTALLER_EXTRA_CONF = extraConf;
 
     if (process.env["ACT"] && !process.env["NOT_ACT"]) {
-      this.addFact(FACT_IN_GITHUB_ACTIONS, true);
+      this.addFact(FACT_IN_ACT, true);
       actionsCore.info(
         "Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`",
       );

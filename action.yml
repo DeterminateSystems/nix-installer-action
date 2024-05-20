@@ -113,7 +113,7 @@ inputs:
     default: "https://install.determinate.systems/nix-installer/diagnostic"
   trust-runner-user:
     description: Whether to make the runner user trusted by the Nix daemon
-    default: "true"
+    default: true
   nix-installer-branch:
     description: (deprecated) The branch of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-revision`, `nix-installer-pr`)
     required: false

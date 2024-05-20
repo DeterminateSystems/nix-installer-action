@@ -97703,7 +97703,7 @@ var EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 var EVENT_CONCLUDE_WORKFLOW = "conclude_workflow";
 var FACT_HAS_DOCKER = "has_docker";
 var FACT_HAS_SYSTEMD = "has_systemd";
-var FACT_IN_GITHUB_ACTIONS = "in_act";
+var FACT_IN_ACT = "in_act";
 var FACT_IN_NAMESPACE_SO = "in_namespace_so";
 var FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 var NixInstallerAction = class extends DetSysAction {
@@ -97764,16 +97764,22 @@ var NixInstallerAction = class extends DetSysAction {
       }
       return;
     }
+    if (process.env["ACT"] && !process.env["NOT_ACT"]) {
+      core.debug(
+        "Not bothering to detect if the docker shim should be used, as it is typically incompatible with act."
+      );
+      return;
+    }
     const systemdCheck = external_node_fs_namespaceObject.statSync("/run/systemd/system", {
       throwIfNoEntry: false
     });
     if (systemdCheck?.isDirectory()) {
+      this.addFact(FACT_HAS_SYSTEMD, true);
       if (this.forceDockerShim) {
         core.warning(
           "Systemd is detected, but ignoring it since force-docker-shim is enabled."
         );
       } else {
-        this.addFact(FACT_HAS_SYSTEMD, true);
         return;
       }
     }
@@ -98017,7 +98023,7 @@ ${stderrBuffer}`
       extraConf += `access-tokens = ${serverUrl}=${this.githubToken}`;
       extraConf += "\n";
     }
-    if (this.trustRunnerUser !== null) {
+    if (this.trustRunnerUser) {
       const user = (0,external_node_os_.userInfo)().username;
       if (user) {
         extraConf += `trusted-users = root ${user}`;
@@ -98041,7 +98047,7 @@ ${stderrBuffer}`
     }
     executionEnv.NIX_INSTALLER_EXTRA_CONF = extraConf;
     if (process.env["ACT"] && !process.env["NOT_ACT"]) {
-      this.addFact(FACT_IN_GITHUB_ACTIONS, true);
+      this.addFact(FACT_IN_ACT, true);
       core.info(
         "Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`"
       );
