@@ -15,7 +15,6 @@ inputs:
     required: false
   flakehub:
     description: Automatically log in to your [FlakeHub](https://flakehub.com) account, for accessing private flakes.
-    required: false
     default: false
   force-docker-shim:
     description: Force the use of Docker as a process supervisor. This setting is automatically enabled when necessary.
@@ -31,7 +30,6 @@ inputs:
     required: false
   kvm:
     description: Automatically configure the GitHub Actions Runner for NixOS test supports, if the host supports it.
-    required: false
     default: true
   local-root:
     description: A local `nix-installer` binary root, overrides any settings which change the `nix-installer` used (binaries should be named `nix-installer-$ARCH-$OS`, eg. `nix-installer-x86_64-linux`)
@@ -62,7 +60,6 @@ inputs:
     required: false
   modify-profile:
     description: Modify the user profile to automatically load nix
-    required: false
     default: true
   nix-build-group-id:
     description: The Nix build group GID
@@ -102,11 +99,9 @@ inputs:
     required: false
   reinstall:
     description: Force a reinstall if an existing installation is detected (consider backing up `/nix/store`)
-    required: false
     default: false
   start-daemon:
     description: "If the daemon should be started, requires `planner: linux`"
-    required: false
     default: true
   diagnostic-endpoint:
     description: "Diagnostic endpoint url where the installer sends data to. To disable set this to an empty string."

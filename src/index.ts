@@ -46,7 +46,7 @@ class NixInstallerAction extends DetSysAction {
   kvm: boolean;
   githubServerUrl: string;
   githubToken: string | null;
-  forceDockerShim: boolean | null;
+  forceDockerShim: boolean;
   init: string | null;
   localRoot: string | null;
   logDirectives: string | null;
@@ -66,7 +66,7 @@ class NixInstallerAction extends DetSysAction {
   planner: string | null;
   reinstall: boolean;
   startDaemon: boolean;
-  trustRunnerUser: boolean | null;
+  trustRunnerUser: boolean;
   runnerOs: string | undefined;
 
   constructor() {
