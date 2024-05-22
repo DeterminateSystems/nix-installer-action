@@ -34,6 +34,8 @@ const FACT_IN_ACT = "in_act";
 const FACT_IN_NAMESPACE_SO = "in_namespace_so";
 const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 
+type RunnerArch = "X64" | "ARM64";
+
 class NixInstallerAction extends DetSysAction {
   platform: string;
   nixPackageUrl: string | null;
@@ -42,7 +44,7 @@ class NixInstallerAction extends DetSysAction {
   extraConf: string[] | null;
   flakehub: boolean;
   kvm: boolean;
-  githubServerUrl: string | null;
+  githubServerUrl: string;
   githubToken: string | null;
   forceDockerShim: boolean | null;
   init: string | null;
@@ -65,6 +67,7 @@ class NixInstallerAction extends DetSysAction {
   reinstall: boolean;
   startDaemon: boolean;
   trustRunnerUser: boolean | null;
+  runnerOs: string | undefined;
 
   constructor() {
     super({
@@ -83,7 +86,7 @@ class NixInstallerAction extends DetSysAction {
     this.kvm = inputs.getBool("kvm");
     this.forceDockerShim = inputs.getBool("force-docker-shim");
     this.githubToken = inputs.getStringOrNull("github-token");
-    this.githubServerUrl = inputs.getStringOrNull("github-server-url");
+    this.githubServerUrl = inputs.getString("github-server-url");
     this.init = inputs.getStringOrNull("init");
     this.localRoot = inputs.getStringOrNull("local-root");
     this.logDirectives = inputs.getStringOrNull("log-directives");
@@ -104,11 +107,12 @@ class NixInstallerAction extends DetSysAction {
     this.reinstall = inputs.getBool("reinstall");
     this.startDaemon = inputs.getBool("start-daemon");
     this.trustRunnerUser = inputs.getBool("trust-runner-user");
+    this.runnerOs = process.env["RUNNER_OS"];
   }
 
   async main(): Promise<void> {
     await this.detectAndForceDockerShim();
-    await this.install();
+    await this.installNix();
   }
 
   async post(): Promise<void> {
@@ -116,13 +120,11 @@ class NixInstallerAction extends DetSysAction {
     await this.reportOverall();
   }
 
-  async detectAndForceDockerShim(): Promise<void> {
-    const runnerOs = process.env["RUNNER_OS"];
-
+  private async detectAndForceDockerShim(): Promise<void> {
     // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
     // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
     // and especially GitHub Enterprise Server.
-    if (runnerOs !== "Linux") {
+    if (this.runnerOs !== "Linux") {
       if (this.forceDockerShim) {
         actionsCore.warning(
           "Ignoring force-docker-shim which is set to true, as it is only supported on Linux.",
@@ -226,7 +228,7 @@ class NixInstallerAction extends DetSysAction {
   // and instead using a mounted docker socket.
   // In the case of the socket mount solution, the shim will cause issues since the given mount paths will
   // equate to mount paths on the host, not mount paths to the docker container in question.
-  async detectDockerWithMountedDockerSocket(): Promise<boolean> {
+  private async detectDockerWithMountedDockerSocket(): Promise<boolean> {
     let cgroupsBuffer;
     try {
       // If we are inside a docker container, the last line of `/proc/self/cgroup` should be
@@ -323,9 +325,8 @@ class NixInstallerAction extends DetSysAction {
     return foundDockerSockMount;
   }
 
-  private async executionEnvironment(): Promise<ExecuteEnvironment> {
+  private async determineExecutionEnvironment(): Promise<ExecuteEnvironment> {
     const executionEnv: ExecuteEnvironment = {};
-    const runnerOs = process.env["RUNNER_OS"];
 
     executionEnv.NIX_INSTALLER_NO_CONFIRM = "true";
     executionEnv.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(
@@ -333,7 +334,7 @@ class NixInstallerAction extends DetSysAction {
     );
 
     if (this.backtrace !== null) {
-      executionEnv.RUST_BACKTRACE = this.backtrace;
+      executionEnv["RUST_BACKTRACE"] = this.backtrace;
     }
     if (this.modifyProfile !== null) {
       if (this.modifyProfile) {
@@ -381,14 +382,14 @@ class NixInstallerAction extends DetSysAction {
 
     // TODO: Error if the user uses these on not-MacOS
     if (this.macEncrypt !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOs) {
         throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ENCRYPT = this.macEncrypt;
     }
 
     if (this.macCaseSensitive !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOs) {
         throw new Error(
           "`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`",
         );
@@ -397,7 +398,7 @@ class NixInstallerAction extends DetSysAction {
     }
 
     if (this.macVolumeLabel !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOs) {
         throw new Error(
           "`mac-volume-label` while `$RUNNER_OS` was not `macOS`",
         );
@@ -406,7 +407,7 @@ class NixInstallerAction extends DetSysAction {
     }
 
     if (this.macRootDisk !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOs) {
         throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ROOT_DISK = this.macRootDisk;
@@ -422,7 +423,7 @@ class NixInstallerAction extends DetSysAction {
 
     // TODO: Error if the user uses these on MacOS
     if (this.init !== null) {
-      if (runnerOs === "macOS") {
+      if (this.isMacOs) {
         throw new Error(
           "`init` is not a valid option when `$RUNNER_OS` is `macOS`",
         );
@@ -488,7 +489,7 @@ class NixInstallerAction extends DetSysAction {
   }
 
   private async executeInstall(binaryPath: string): Promise<number> {
-    const executionEnv = await this.executionEnvironment();
+    const executionEnv = await this.determineExecutionEnvironment();
     actionsCore.debug(
       `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`,
     );
@@ -498,8 +499,8 @@ class NixInstallerAction extends DetSysAction {
       this.addFact(FACT_NIX_INSTALLER_PLANNER, this.planner);
       args.push(this.planner);
     } else {
-      this.addFact(FACT_NIX_INSTALLER_PLANNER, getDefaultPlanner());
-      args.push(getDefaultPlanner());
+      this.addFact(FACT_NIX_INSTALLER_PLANNER, this.defaultPlanner);
+      args.push(this.defaultPlanner);
     }
 
     if (this.extraArgs) {
@@ -527,7 +528,7 @@ class NixInstallerAction extends DetSysAction {
     return exitCode;
   }
 
-  async install(): Promise<void> {
+  private async installNix(): Promise<void> {
     const existingInstall = await this.detectExisting();
     if (existingInstall) {
       if (this.reinstall) {
@@ -538,7 +539,7 @@ class NixInstallerAction extends DetSysAction {
         await this.executeUninstall();
       } else {
         // We're already installed, and not reinstalling, just set GITHUB_PATH and finish early
-        await this.setGithubPath();
+        await this.setGitHubPath();
         actionsCore.info("Nix was already installed, using existing install");
         return;
       }
@@ -546,7 +547,7 @@ class NixInstallerAction extends DetSysAction {
 
     if (this.kvm) {
       actionsCore.startGroup("Configuring KVM");
-      if (await this.setupKvm()) {
+      if (await this.setUpKvm()) {
         actionsCore.endGroup();
         actionsCore.info("\u001b[32m Accelerated KVM is enabled \u001b[33m⚡️");
         actionsCore.exportVariable("DETERMINATE_NIX_KVM", "1");
@@ -566,10 +567,10 @@ class NixInstallerAction extends DetSysAction {
     if (this.forceDockerShim) {
       await this.spawnDockerShim();
     }
-    await this.setGithubPath();
+    await this.setGitHubPath();
   }
 
-  async spawnDockerShim(): Promise<void> {
+  private async spawnDockerShim(): Promise<void> {
     actionsCore.startGroup(
       "Configuring the Docker shim as the Nix Daemon's process supervisor",
     );
@@ -580,7 +581,8 @@ class NixInstallerAction extends DetSysAction {
     };
 
     const runnerArch = process.env["RUNNER_ARCH"];
-    let arch;
+
+    let arch: RunnerArch;
 
     if (runnerArch === "X64") {
       arch = "X64";
@@ -685,7 +687,8 @@ class NixInstallerAction extends DetSysAction {
 
     return;
   }
-  async cleanupDockerShim(): Promise<void> {
+
+  private async cleanupDockerShim(): Promise<void> {
     const containerId = actionsCore.getState("docker_shim_container_id");
 
     if (containerId !== "") {
@@ -723,7 +726,7 @@ class NixInstallerAction extends DetSysAction {
     }
   }
 
-  async setGithubPath(): Promise<void> {
+  private async setGitHubPath(): Promise<void> {
     // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
     try {
       const nixVarNixProfilePath = "/nix/var/nix/profiles/default/bin";
@@ -740,7 +743,7 @@ class NixInstallerAction extends DetSysAction {
     }
   }
 
-  async flakehubLogin(): Promise<string> {
+  private async flakehubLogin(): Promise<string> {
     this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
     const netrcPath = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
 
@@ -767,7 +770,7 @@ class NixInstallerAction extends DetSysAction {
     return netrcPath;
   }
 
-  async executeUninstall(): Promise<number> {
+  private async executeUninstall(): Promise<number> {
     this.recordEvent(EVENT_UNINSTALL_NIX);
     const exitCode = await actionsExec.exec(
       `/nix/nix-installer`,
@@ -787,7 +790,7 @@ class NixInstallerAction extends DetSysAction {
     return exitCode;
   }
 
-  async detectExisting(): Promise<boolean> {
+  private async detectExisting(): Promise<boolean> {
     const receiptPath = "/nix/receipt.json";
     try {
       await access(receiptPath);
@@ -799,7 +802,7 @@ class NixInstallerAction extends DetSysAction {
     }
   }
 
-  private async setupKvm(): Promise<boolean> {
+  private async setUpKvm(): Promise<boolean> {
     this.recordEvent(EVENT_SETUP_KVM);
     const currentUser = userInfo();
     const isRoot = currentUser.uid === 0;
@@ -904,7 +907,7 @@ class NixInstallerAction extends DetSysAction {
     }
   }
 
-  async reportOverall(): Promise<void> {
+  private async reportOverall(): Promise<void> {
     try {
       this.recordEvent(EVENT_CONCLUDE_WORKFLOW, {
         conclusion: await this.getWorkflowConclusion(),
@@ -962,6 +965,26 @@ class NixInstallerAction extends DetSysAction {
       return "unavailable";
     }
   }
+
+  private get defaultPlanner(): string {
+    if (this.isMacOs) {
+      return "macos";
+    } else if (this.isLinux) {
+      return "linux";
+    } else {
+      throw new Error(
+        `Unsupported \`RUNNER_OS\` (currently \`${this.runnerOs}\`)`,
+      );
+    }
+  }
+
+  private get isMacOs(): boolean {
+    return this.runnerOs === "macOS";
+  }
+
+  private get isLinux(): boolean {
+    return this.runnerOs === "Linux";
+  }
 }
 
 type ExecuteEnvironment = {
@@ -990,22 +1013,8 @@ type ExecuteEnvironment = {
   NIX_INSTALLER_LOGGER?: string;
 };
 
-function getDefaultPlanner(): string {
-  const envOs = process.env["RUNNER_OS"];
-
-  if (envOs === "macOS") {
-    return "macos";
-  } else if (envOs === "Linux") {
-    return "linux";
-  } else {
-    throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${envOs}\`)`);
-  }
-}
-
 function main(): void {
-  const installer = new NixInstallerAction();
-
-  installer.execute();
+  new NixInstallerAction().execute();
 }
 
 main();

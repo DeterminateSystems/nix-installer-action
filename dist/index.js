@@ -96688,11 +96688,13 @@ const got = source_create(defaults);
 
 
 
+;// CONCATENATED MODULE: external "node:child_process"
+const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
 ;// CONCATENATED MODULE: external "node:stream/promises"
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
 ;// CONCATENATED MODULE: external "node:zlib"
 const external_node_zlib_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:zlib");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@72fdea127914f20c4531ed50440e039a908496b7_ckr2kiyk4steagchkrhkemyxbu/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@180884918b85ef67dad81f70b4130eca5268242e_o7ea7dhs7wrsl7wvvt2otnlz3q/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -96996,45 +96998,6 @@ function hashEnvironmentVariables(prefix, variables) {
   return `${prefix}-${hash.digest("hex")}`;
 }
 
-// src/platform.ts
-var platform_exports = {};
-__export(platform_exports, {
-  getArchOs: () => getArchOs,
-  getNixPlatform: () => getNixPlatform
-});
-
-function getArchOs() {
-  const envArch = process.env.RUNNER_ARCH;
-  const envOs = process.env.RUNNER_OS;
-  if (envArch && envOs) {
-    return `${envArch}-${envOs}`;
-  } else {
-    core.error(
-      `Can't identify the platform: RUNNER_ARCH or RUNNER_OS undefined (${envArch}-${envOs})`
-    );
-    throw new Error("RUNNER_ARCH and/or RUNNER_OS is not defined");
-  }
-}
-function getNixPlatform(archOs) {
-  const archOsMap = /* @__PURE__ */ new Map([
-    ["X64-macOS", "x86_64-darwin"],
-    ["ARM64-macOS", "aarch64-darwin"],
-    ["X64-Linux", "x86_64-linux"],
-    ["ARM64-Linux", "aarch64-linux"]
-  ]);
-  const mappedTo = archOsMap.get(archOs);
-  if (mappedTo) {
-    return mappedTo;
-  } else {
-    core.error(
-      `ArchOs (${archOs}) doesn't map to a supported Nix platform.`
-    );
-    throw new Error(
-      `Cannot convert ArchOs (${archOs}) to a supported Nix platform.`
-    );
-  }
-}
-
 // src/inputs.ts
 var inputs_exports = {};
 __export(inputs_exports, {
@@ -97099,6 +97062,45 @@ var getStringOrUndefined = (name) => {
   }
 };
 
+// src/platform.ts
+var platform_exports = {};
+__export(platform_exports, {
+  getArchOs: () => getArchOs,
+  getNixPlatform: () => getNixPlatform
+});
+
+function getArchOs() {
+  const envArch = process.env.RUNNER_ARCH;
+  const envOs = process.env.RUNNER_OS;
+  if (envArch && envOs) {
+    return `${envArch}-${envOs}`;
+  } else {
+    core.error(
+      `Can't identify the platform: RUNNER_ARCH or RUNNER_OS undefined (${envArch}-${envOs})`
+    );
+    throw new Error("RUNNER_ARCH and/or RUNNER_OS is not defined");
+  }
+}
+function getNixPlatform(archOs) {
+  const archOsMap = /* @__PURE__ */ new Map([
+    ["X64-macOS", "x86_64-darwin"],
+    ["ARM64-macOS", "aarch64-darwin"],
+    ["X64-Linux", "x86_64-linux"],
+    ["ARM64-Linux", "aarch64-linux"]
+  ]);
+  const mappedTo = archOsMap.get(archOs);
+  if (mappedTo) {
+    return mappedTo;
+  } else {
+    core.error(
+      `ArchOs (${archOs}) doesn't map to a supported Nix platform.`
+    );
+    throw new Error(
+      `Cannot convert ArchOs (${archOs}) to a supported Nix platform.`
+    );
+  }
+}
+
 // src/sourcedef.ts
 
 function constructSourceParameters(legacyPrefix) {
@@ -97145,6 +97147,8 @@ function noisilyGetInput(suffix, legacyPrefix) {
 
 
 
+
+
 var DEFAULT_IDS_HOST = "https://install.determinate.systems";
 var IDS_HOST = process.env["IDS_HOST"] ?? DEFAULT_IDS_HOST;
 var EVENT_EXCEPTION = "exception";
@@ -97167,10 +97171,20 @@ var STATE_KEY_EXECUTION_PHASE = "detsys_action_execution_phase";
 var STATE_KEY_NIX_NOT_FOUND = "detsys_action_nix_not_found";
 var STATE_NOT_FOUND = "not-found";
 var DetSysAction = class {
+  determineExecutionPhase() {
+    const currentPhase = core.getState(STATE_KEY_EXECUTION_PHASE);
+    if (currentPhase === "") {
+      core.saveState(STATE_KEY_EXECUTION_PHASE, "post");
+      return "main";
+    } else {
+      return "post";
+    }
+  }
   constructor(actionOptions) {
     this.actionOptions = makeOptionsConfident(actionOptions);
     this.exceptionAttachments = /* @__PURE__ */ new Map();
     this.nixStoreTrust = "unknown";
+    this.strictMode = getBool("ci-mode");
     this.events = [];
     this.client = got_dist_source.extend({
       retry: {
@@ -97220,19 +97234,13 @@ var DetSysAction = class {
           this.addFact(FACT_OS_VERSION, details.version);
         }
       }).catch((e) => {
-        core.debug(`Failure getting platform details: ${e}`);
+        core.debug(
+          `Failure getting platform details: ${stringifyError(e)}`
+        );
       });
     }
-    {
-      const phase = core.getState(STATE_KEY_EXECUTION_PHASE);
-      if (phase === "") {
-        core.saveState(STATE_KEY_EXECUTION_PHASE, "post");
-        this.executionPhase = "main";
-      } else {
-        this.executionPhase = "post";
-      }
-      this.facts.execution_phase = this.executionPhase;
-    }
+    this.executionPhase = this.determineExecutionPhase();
+    this.facts.execution_phase = this.executionPhase;
     if (this.actionOptions.fetchStyle === "gh-env-style") {
       this.architectureFetchSuffix = this.archOs;
     } else if (this.actionOptions.fetchStyle === "nix-style") {
@@ -97260,12 +97268,26 @@ var DetSysAction = class {
   stapleFile(name, location) {
     this.exceptionAttachments.set(name, location);
   }
+  setExecutionPhase() {
+    const phase = core.getState(STATE_KEY_EXECUTION_PHASE);
+    if (phase === "") {
+      core.saveState(STATE_KEY_EXECUTION_PHASE, "post");
+      this.executionPhase = "main";
+    } else {
+      this.executionPhase = "post";
+    }
+    this.facts.execution_phase = this.executionPhase;
+  }
+  /**
+   * Execute the Action as defined.
+   */
   execute() {
     this.executeAsync().catch((error2) => {
       console.log(error2);
       process.exitCode = 1;
     });
   }
+  // Whether the
   get isMain() {
     return this.executionPhase === "main";
   }
@@ -97290,9 +97312,9 @@ var DetSysAction = class {
         await this.post();
       }
       this.addFact(FACT_ENDED_WITH_EXCEPTION, false);
-    } catch (error2) {
+    } catch (e) {
       this.addFact(FACT_ENDED_WITH_EXCEPTION, true);
-      const reportable = stringifyError(error2);
+      const reportable = stringifyError(e);
       this.addFact(FACT_FINAL_EXCEPTION, reportable);
       if (this.isPost) {
         core.warning(reportable);
@@ -97309,10 +97331,10 @@ var DetSysAction = class {
             `staple_value_${attachmentLabel}`,
             buf.toString("base64")
           );
-        } catch (e) {
+        } catch (innerError) {
           exceptionContext.set(
             `staple_failure_${attachmentLabel}`,
-            stringifyError(e)
+            stringifyError(innerError)
           );
         }
       }
@@ -97343,7 +97365,24 @@ var DetSysAction = class {
       uuid: (0,external_node_crypto_namespaceObject.randomUUID)()
     });
   }
-  async fetch() {
+  /**
+   * Fetches a file in `.xz` format, imports its contents into the Nix store,
+   * and returns the path of the executable at `/nix/store/STORE_PATH/bin/${bin}`.
+   */
+  async unpackClosure(bin) {
+    const artifact = this.fetchArtifact();
+    const { stdout } = await (0,external_node_util_.promisify)(external_node_child_process_namespaceObject.exec)(
+      `cat "${artifact}" | xz -d | nix-store --import`
+    );
+    const paths = stdout.split(external_node_os_.EOL);
+    const lastPath = paths.at(-2);
+    return `${lastPath}/bin/${bin}`;
+  }
+  /**
+   * Fetch an artifact, such as a tarball, from the URL determined by the `source-*`
+   * inputs and other factors.
+   */
+  async fetchArtifact() {
     core.startGroup(
       `Downloading ${this.actionOptions.name} for ${this.architectureFetchSuffix}`
     );
@@ -97387,7 +97426,7 @@ var DetSysAction = class {
         try {
           await this.saveCachedVersion(v, destFile);
         } catch (e) {
-          core.debug(`Error caching the artifact: ${e}`);
+          core.debug(`Error caching the artifact: ${stringifyError(e)}`);
         }
       }
       return destFile;
@@ -97395,10 +97434,23 @@ var DetSysAction = class {
       core.endGroup();
     }
   }
+  /**
+   * Fetches the executable at the URL determined by the `source-*` inputs and
+   * other facts, `chmod`s it, and returns the path to the executable on disk.
+   */
   async fetchExecutable() {
-    const binaryPath = await this.fetch();
+    const binaryPath = await this.fetchArtifact();
     await (0,promises_namespaceObject.chmod)(binaryPath, promises_namespaceObject.constants.S_IXUSR | promises_namespaceObject.constants.S_IXGRP);
     return binaryPath;
+  }
+  /**
+   * A helper function for failing on error only if strict mode is enabled.
+   * This is intended only for CI environments testing Actions themselves.
+   */
+  failOnError(msg) {
+    if (this.strictMode) {
+      core.setFailed(`strict mode failure: ${msg}`);
+    }
   }
   async complete() {
     this.recordEvent(`complete_${this.executionPhase}`);
@@ -97566,7 +97618,7 @@ var DetSysAction = class {
     }
   }
   async submitEvents() {
-    if (!this.actionOptions.diagnosticsUrl) {
+    if (this.actionOptions.diagnosticsUrl === void 0) {
       core.debug(
         "Diagnostics are disabled. Not sending the following events:"
       );
@@ -97582,8 +97634,10 @@ var DetSysAction = class {
       await this.client.post(this.actionOptions.diagnosticsUrl, {
         json: batch
       });
-    } catch (error2) {
-      core.debug(`Error submitting diagnostics event: ${error2}`);
+    } catch (e) {
+      core.debug(
+        `Error submitting diagnostics event: ${stringifyError(e)}`
+      );
     }
     this.events = [];
   }
@@ -97630,7 +97684,7 @@ function determineDiagnosticsUrl(idsProjectName, urlOption) {
         return mungeDiagnosticEndpoint(new URL(providedDiagnosticEndpoint));
       } catch (e) {
         core.info(
-          `User-provided diagnostic endpoint ignored: not a valid URL: ${e}`
+          `User-provided diagnostic endpoint ignored: not a valid URL: ${stringifyError(e)}`
         );
       }
     }
@@ -97642,7 +97696,7 @@ function determineDiagnosticsUrl(idsProjectName, urlOption) {
     return diagnosticUrl;
   } catch (e) {
     core.info(
-      `Generated diagnostic endpoint ignored: not a valid URL: ${e}`
+      `Generated diagnostic endpoint ignored: not a valid URL: ${stringifyError(e)}`
     );
   }
   return void 0;
@@ -97663,7 +97717,9 @@ function mungeDiagnosticEndpoint(inputUrl) {
     inputUrl.password = currentIdsHost.password;
     return inputUrl;
   } catch (e) {
-    core.info(`Default or overridden IDS host isn't a valid URL: ${e}`);
+    core.info(
+      `Default or overridden IDS host isn't a valid URL: ${stringifyError(e)}`
+    );
   }
   return inputUrl;
 }
@@ -97723,7 +97779,7 @@ var NixInstallerAction = class extends DetSysAction {
     this.kvm = inputs_exports.getBool("kvm");
     this.forceDockerShim = inputs_exports.getBool("force-docker-shim");
     this.githubToken = inputs_exports.getStringOrNull("github-token");
-    this.githubServerUrl = inputs_exports.getStringOrNull("github-server-url");
+    this.githubServerUrl = inputs_exports.getString("github-server-url");
     this.init = inputs_exports.getStringOrNull("init");
     this.localRoot = inputs_exports.getStringOrNull("local-root");
     this.logDirectives = inputs_exports.getStringOrNull("log-directives");
@@ -97744,18 +97800,18 @@ var NixInstallerAction = class extends DetSysAction {
     this.reinstall = inputs_exports.getBool("reinstall");
     this.startDaemon = inputs_exports.getBool("start-daemon");
     this.trustRunnerUser = inputs_exports.getBool("trust-runner-user");
+    this.runnerOs = process.env["RUNNER_OS"];
   }
   async main() {
     await this.detectAndForceDockerShim();
-    await this.install();
+    await this.installNix();
   }
   async post() {
     await this.cleanupDockerShim();
     await this.reportOverall();
   }
   async detectAndForceDockerShim() {
-    const runnerOs = process.env["RUNNER_OS"];
-    if (runnerOs !== "Linux") {
+    if (this.runnerOs !== "Linux") {
       if (this.forceDockerShim) {
         core.warning(
           "Ignoring force-docker-shim which is set to true, as it is only supported on Linux."
@@ -97926,15 +97982,14 @@ ${stderrBuffer}`
     }
     return foundDockerSockMount;
   }
-  async executionEnvironment() {
+  async determineExecutionEnvironment() {
     const executionEnv = {};
-    const runnerOs = process.env["RUNNER_OS"];
     executionEnv.NIX_INSTALLER_NO_CONFIRM = "true";
     executionEnv.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(
       this.getCorrelationHashes()
     );
     if (this.backtrace !== null) {
-      executionEnv.RUST_BACKTRACE = this.backtrace;
+      executionEnv["RUST_BACKTRACE"] = this.backtrace;
     }
     if (this.modifyProfile !== null) {
       if (this.modifyProfile) {
@@ -97969,13 +98024,13 @@ ${stderrBuffer}`
     }
     executionEnv.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT = this.getDiagnosticsUrl()?.toString() ?? "";
     if (this.macEncrypt !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOs) {
         throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ENCRYPT = this.macEncrypt;
     }
     if (this.macCaseSensitive !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOs) {
         throw new Error(
           "`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`"
         );
@@ -97983,7 +98038,7 @@ ${stderrBuffer}`
       executionEnv.NIX_INSTALLER_CASE_SENSITIVE = this.macCaseSensitive;
     }
     if (this.macVolumeLabel !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOs) {
         throw new Error(
           "`mac-volume-label` while `$RUNNER_OS` was not `macOS`"
         );
@@ -97991,7 +98046,7 @@ ${stderrBuffer}`
       executionEnv.NIX_INSTALLER_VOLUME_LABEL = this.macVolumeLabel;
     }
     if (this.macRootDisk !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOs) {
         throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ROOT_DISK = this.macRootDisk;
@@ -98003,7 +98058,7 @@ ${stderrBuffer}`
       executionEnv.NIX_INSTALLER_LOG_DIRECTIVES = this.logDirectives;
     }
     if (this.init !== null) {
-      if (runnerOs === "macOS") {
+      if (this.isMacOs) {
         throw new Error(
           "`init` is not a valid option when `$RUNNER_OS` is `macOS`"
         );
@@ -98063,7 +98118,7 @@ ${stderrBuffer}`
     return executionEnv;
   }
   async executeInstall(binaryPath) {
-    const executionEnv = await this.executionEnvironment();
+    const executionEnv = await this.determineExecutionEnvironment();
     core.debug(
       `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`
     );
@@ -98072,8 +98127,8 @@ ${stderrBuffer}`
       this.addFact(FACT_NIX_INSTALLER_PLANNER, this.planner);
       args.push(this.planner);
     } else {
-      this.addFact(FACT_NIX_INSTALLER_PLANNER, getDefaultPlanner());
-      args.push(getDefaultPlanner());
+      this.addFact(FACT_NIX_INSTALLER_PLANNER, this.defaultPlanner);
+      args.push(this.defaultPlanner);
     }
     if (this.extraArgs) {
       const extraArgs = parseArgsStringToArgv(this.extraArgs);
@@ -98096,7 +98151,7 @@ ${stderrBuffer}`
     this.recordEvent(EVENT_INSTALL_NIX_SUCCESS);
     return exitCode;
   }
-  async install() {
+  async installNix() {
     const existingInstall = await this.detectExisting();
     if (existingInstall) {
       if (this.reinstall) {
@@ -98105,14 +98160,14 @@ ${stderrBuffer}`
         );
         await this.executeUninstall();
       } else {
-        await this.setGithubPath();
+        await this.setGitHubPath();
         core.info("Nix was already installed, using existing install");
         return;
       }
     }
     if (this.kvm) {
       core.startGroup("Configuring KVM");
-      if (await this.setupKvm()) {
+      if (await this.setUpKvm()) {
         core.endGroup();
         core.info("\x1B[32m Accelerated KVM is enabled \x1B[33m\u26A1\uFE0F");
         core.exportVariable("DETERMINATE_NIX_KVM", "1");
@@ -98129,7 +98184,7 @@ ${stderrBuffer}`
     if (this.forceDockerShim) {
       await this.spawnDockerShim();
     }
-    await this.setGithubPath();
+    await this.setGitHubPath();
   }
   async spawnDockerShim() {
     core.startGroup(
@@ -98271,7 +98326,7 @@ ${stderrBuffer}`
       core.endGroup();
     }
   }
-  async setGithubPath() {
+  async setGitHubPath() {
     try {
       const nixVarNixProfilePath = "/nix/var/nix/profiles/default/bin";
       const homeNixProfilePath = `${process.env["HOME"]}/.nix-profile/bin`;
@@ -98332,7 +98387,7 @@ ${stderrBuffer}`
       return false;
     }
   }
-  async setupKvm() {
+  async setUpKvm() {
     this.recordEvent(EVENT_SETUP_KVM);
     const currentUser = (0,external_node_os_.userInfo)();
     const isRoot = currentUser.uid === 0;
@@ -98465,20 +98520,26 @@ ${stderrBuffer}`
       return "unavailable";
     }
   }
-};
-function getDefaultPlanner() {
-  const envOs = process.env["RUNNER_OS"];
-  if (envOs === "macOS") {
-    return "macos";
-  } else if (envOs === "Linux") {
-    return "linux";
-  } else {
-    throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${envOs}\`)`);
+  get defaultPlanner() {
+    if (this.isMacOs) {
+      return "macos";
+    } else if (this.isLinux) {
+      return "linux";
+    } else {
+      throw new Error(
+        `Unsupported \`RUNNER_OS\` (currently \`${this.runnerOs}\`)`
+      );
+    }
   }
-}
+  get isMacOs() {
+    return this.runnerOs === "macOS";
+  }
+  get isLinux() {
+    return this.runnerOs === "Linux";
+  }
+};
 function main() {
-  const installer = new NixInstallerAction();
-  installer.execute();
+  new NixInstallerAction().execute();
 }
 main();
 
