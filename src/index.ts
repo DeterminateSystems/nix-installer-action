@@ -34,6 +34,13 @@ const FACT_IN_ACT = "in_act";
 const FACT_IN_NAMESPACE_SO = "in_namespace_so";
 const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 
+type WorkflowConclusion =
+  | "success"
+  | "failure"
+  | "cancelled"
+  | "unavailable"
+  | "no-jobs";
+
 class NixInstallerAction extends DetSysAction {
   platform: string;
   nixPackageUrl: string | null;
@@ -926,7 +933,7 @@ class NixInstallerAction extends DetSysAction {
   }
 
   private async getWorkflowConclusion(): Promise<
-    undefined | "success" | "failure" | "cancelled" | "unavailable" | "no-jobs"
+    undefined | WorkflowConclusion
   > {
     if (this.githubToken == null) {
       return undefined;
