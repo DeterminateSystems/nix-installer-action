@@ -79,6 +79,9 @@ inputs:
   nix-build-user-prefix:
     description: The Nix build user prefix (user numbers will be postfixed)
     required: false
+  source-binary:
+    description: Run a version of the nix-installer binary from somewhere already on disk. Conflicts with all other `source-*` options. Intended only for testing this Action.
+    required: false
   source-branch:
     description: The branch of `nix-installer` to use (conflicts with `source-tag`, `source-revision`, `source-pr`)
     required: false
