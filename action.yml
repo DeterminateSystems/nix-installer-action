@@ -129,7 +129,7 @@ inputs:
   nix-installer-url:
     description: (deprecated) A URL pointing to a `nix-installer.sh` script
     required: false
-  ci-mode:
+  _internal-strict-mode:
     description: Whether to fail when any errors are thrown. Used only to test the Action; do not set this in your own workflows.
     default: false
 

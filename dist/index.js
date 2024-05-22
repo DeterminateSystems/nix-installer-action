@@ -96694,7 +96694,7 @@ const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createReq
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
 ;// CONCATENATED MODULE: external "node:zlib"
 const external_node_zlib_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:zlib");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@180884918b85ef67dad81f70b4130eca5268242e_o7ea7dhs7wrsl7wvvt2otnlz3q/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@ed02129aed8e4d6402d920152652877189bece70_3whmnlhrx56zhgtsjnkrhnutfu/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -97184,7 +97184,7 @@ var DetSysAction = class {
     this.actionOptions = makeOptionsConfident(actionOptions);
     this.exceptionAttachments = /* @__PURE__ */ new Map();
     this.nixStoreTrust = "unknown";
-    this.strictMode = getBool("ci-mode");
+    this.strictMode = getBool("_internal-strict-mode");
     this.events = [];
     this.client = got_dist_source.extend({
       retry: {
