@@ -14,7 +14,7 @@ inputs:
     description: Extra configuration lines for `/etc/nix/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)
     required: false
   flakehub:
-    description: Automatically log in to your [FlakeHub](https://flakehub.com) account, for accessing private flakes.
+    description: Automatically log into your [FlakeHub](https://flakehub.com) account, for accessing private flakes.
     default: false
   force-docker-shim:
     description: Force the use of Docker as a process supervisor. This setting is automatically enabled when necessary.
