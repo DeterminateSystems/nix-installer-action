@@ -65,6 +65,7 @@ class NixInstallerAction extends DetSysAction {
   reinstall: boolean;
   startDaemon: boolean;
   trustRunnerUser: boolean | null;
+  runnerOs: string | undefined;
 
   constructor() {
     super({
@@ -104,6 +105,7 @@ class NixInstallerAction extends DetSysAction {
     this.reinstall = inputs.getBool("reinstall");
     this.startDaemon = inputs.getBool("start-daemon");
     this.trustRunnerUser = inputs.getBool("trust-runner-user");
+    this.runnerOs = process.env["RUNNER_OS"];
   }
 
   async main(): Promise<void> {
@@ -116,13 +118,23 @@ class NixInstallerAction extends DetSysAction {
     await this.reportOverall();
   }
 
-  async detectAndForceDockerShim(): Promise<void> {
-    const runnerOs = process.env["RUNNER_OS"];
+  private get isMacOS(): boolean {
+    return this.runnerOs === "macOS";
+  }
 
+  private get isLinux(): boolean {
+    return this.runnerOs === "Linux";
+  }
+
+  private get isAct(): boolean {
+    return process.env["ACT"] !== "" && !(process.env["NOT_ACT"] === "");
+  }
+
+  async detectAndForceDockerShim(): Promise<void> {
     // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
     // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
     // and especially GitHub Enterprise Server.
-    if (runnerOs !== "Linux") {
+    if (this.isLinux) {
       if (this.forceDockerShim) {
         actionsCore.warning(
           "Ignoring force-docker-shim which is set to true, as it is only supported on Linux.",
@@ -132,7 +144,7 @@ class NixInstallerAction extends DetSysAction {
       return;
     }
 
-    if (process.env["ACT"] && !process.env["NOT_ACT"]) {
+    if (this.isAct) {
       actionsCore.debug(
         "Not bothering to detect if the docker shim should be used, as it is typically incompatible with act.",
       );
@@ -325,7 +337,6 @@ class NixInstallerAction extends DetSysAction {
 
   private async executionEnvironment(): Promise<ExecuteEnvironment> {
     const executionEnv: ExecuteEnvironment = {};
-    const runnerOs = process.env["RUNNER_OS"];
 
     executionEnv.NIX_INSTALLER_NO_CONFIRM = "true";
     executionEnv.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(
@@ -381,14 +392,14 @@ class NixInstallerAction extends DetSysAction {
 
     // TODO: Error if the user uses these on not-MacOS
     if (this.macEncrypt !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOS) {
         throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ENCRYPT = this.macEncrypt;
     }
 
     if (this.macCaseSensitive !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOS) {
         throw new Error(
           "`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`",
         );
@@ -397,7 +408,7 @@ class NixInstallerAction extends DetSysAction {
     }
 
     if (this.macVolumeLabel !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOS) {
         throw new Error(
           "`mac-volume-label` while `$RUNNER_OS` was not `macOS`",
         );
@@ -406,7 +417,7 @@ class NixInstallerAction extends DetSysAction {
     }
 
     if (this.macRootDisk !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOS) {
         throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ROOT_DISK = this.macRootDisk;
@@ -422,7 +433,7 @@ class NixInstallerAction extends DetSysAction {
 
     // TODO: Error if the user uses these on MacOS
     if (this.init !== null) {
-      if (runnerOs === "macOS") {
+      if (this.isMacOS) {
         throw new Error(
           "`init` is not a valid option when `$RUNNER_OS` is `macOS`",
         );
@@ -498,8 +509,8 @@ class NixInstallerAction extends DetSysAction {
       this.addFact(FACT_NIX_INSTALLER_PLANNER, this.planner);
       args.push(this.planner);
     } else {
-      this.addFact(FACT_NIX_INSTALLER_PLANNER, getDefaultPlanner());
-      args.push(getDefaultPlanner());
+      this.addFact(FACT_NIX_INSTALLER_PLANNER, this.defaultPlanner);
+      args.push(this.defaultPlanner);
     }
 
     if (this.extraArgs) {
@@ -962,6 +973,18 @@ class NixInstallerAction extends DetSysAction {
       return "unavailable";
     }
   }
+
+  private get defaultPlanner(): string {
+    if (this.isMacOS) {
+      return "macos";
+    } else if (this.isLinux) {
+      return "linux";
+    } else {
+      throw new Error(
+        `Unsupported \`RUNNER_OS\` (currently \`${this.runnerOs}\`)`,
+      );
+    }
+  }
 }
 
 type ExecuteEnvironment = {
@@ -989,18 +1012,6 @@ type ExecuteEnvironment = {
   NIX_INSTALLER_LOG_DIRECTIVES?: string;
   NIX_INSTALLER_LOGGER?: string;
 };
-
-function getDefaultPlanner(): string {
-  const envOs = process.env["RUNNER_OS"];
-
-  if (envOs === "macOS") {
-    return "macos";
-  } else if (envOs === "Linux") {
-    return "linux";
-  } else {
-    throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${envOs}\`)`);
-  }
-}
 
 function main(): void {
   new NixInstallerAction().execute();
