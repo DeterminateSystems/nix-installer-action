@@ -19,6 +19,7 @@ inputs:
     default: false
   force-docker-shim:
     description: Force the use of Docker as a process supervisor. This setting is automatically enabled when necessary.
+    required: false
     default: false
   github-token:
     description: A GitHub token for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)
@@ -79,6 +80,9 @@ inputs:
   nix-build-user-prefix:
     description: The Nix build user prefix (user numbers will be postfixed)
     required: false
+  source-binary:
+    description: Run a version of the nix-installer binary from somewhere already on disk. Conflicts with all other `source-*` options. Intended only for testing this Action.
+    required: false
   source-branch:
     description: The branch of `nix-installer` to use (conflicts with `source-tag`, `source-revision`, `source-pr`)
     required: false
@@ -129,6 +133,10 @@ inputs:
   nix-installer-url:
     description: (deprecated) A URL pointing to a `nix-installer.sh` script
     required: false
+  _internal-strict-mode:
+    description: Whether to fail when any errors are thrown. Used only to test the Action; do not set this in your own workflows.
+    required: false
+    default: false
 
 runs:
   using: "node20"

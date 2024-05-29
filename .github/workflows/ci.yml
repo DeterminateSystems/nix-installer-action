@@ -59,6 +59,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+          _internal-strict-mode: true
       - name: echo $PATH
         run: echo $PATH
 
@@ -90,6 +91,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+          _internal-strict-mode: true
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -107,6 +109,7 @@ jobs:
           reinstall: true
           extra-conf: |
             use-sqlite-wal = true
+          _internal-strict-mode: true
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -148,6 +151,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+          _internal-strict-mode: true
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
@@ -176,6 +180,7 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+          _internal-strict-mode: true
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -193,6 +198,7 @@ jobs:
           reinstall: true
           extra-conf: |
             use-sqlite-wal = true
+          _internal-strict-mode: true
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -234,5 +240,6 @@ jobs:
         uses: ./
         with:
           source-${{ matrix.inputs.key }}: ${{ matrix.inputs.value }}
+          _internal-strict-mode: true
       - name: Ensure that the expected Nix version ${{ matrix.inputs.nix-version }} is installed via alternative source-${{ matrix.inputs.key }}
         run: .github/verify-version.sh ${{ matrix.inputs.nix-version }}

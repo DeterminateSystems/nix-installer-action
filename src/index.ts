@@ -7,7 +7,7 @@ import fs from "node:fs";
 import { userInfo } from "node:os";
 import stringArgv from "string-argv";
 import * as path from "path";
-import { IdsToolbox, inputs, platform } from "detsys-ts";
+import { DetSysAction, inputs, platform } from "detsys-ts";
 import { randomUUID } from "node:crypto";
 
 // Nix installation events
@@ -34,8 +34,14 @@ const FACT_IN_ACT = "in_act";
 const FACT_IN_NAMESPACE_SO = "in_namespace_so";
 const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 
-class NixInstallerAction {
-  idslib: IdsToolbox;
+type WorkflowConclusion =
+  | "success"
+  | "failure"
+  | "cancelled"
+  | "unavailable"
+  | "no-jobs";
+
+class NixInstallerAction extends DetSysAction {
   platform: string;
   nixPackageUrl: string | null;
   backtrace: string | null;
@@ -45,7 +51,7 @@ class NixInstallerAction {
   kvm: boolean;
   githubServerUrl: string | null;
   githubToken: string | null;
-  forceDockerShim: boolean | null;
+  forceDockerShim: boolean;
   init: string | null;
   localRoot: string | null;
   logDirectives: string | null;
@@ -65,10 +71,11 @@ class NixInstallerAction {
   planner: string | null;
   reinstall: boolean;
   startDaemon: boolean;
-  trustRunnerUser: boolean | null;
+  trustRunnerUser: boolean;
+  runnerOs: string | undefined;
 
   constructor() {
-    this.idslib = new IdsToolbox({
+    super({
       name: "nix-installer",
       fetchStyle: "nix-style",
       legacySourcePrefix: "nix-installer",
@@ -105,15 +112,43 @@ class NixInstallerAction {
     this.reinstall = inputs.getBool("reinstall");
     this.startDaemon = inputs.getBool("start-daemon");
     this.trustRunnerUser = inputs.getBool("trust-runner-user");
+    this.runnerOs = process.env["RUNNER_OS"];
   }
 
-  async detectAndForceDockerShim(): Promise<void> {
-    const runnerOs = process.env["RUNNER_OS"];
+  async main(): Promise<void> {
+    await this.detectAndForceDockerShim();
+    await this.install();
+  }
 
-    // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
-    // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
-    // and especially GitHub Enterprise Server.
-    if (runnerOs !== "Linux") {
+  async post(): Promise<void> {
+    await this.cleanupDockerShim();
+    await this.reportOverall();
+  }
+
+  private get isMacOS(): boolean {
+    return this.runnerOs === "macOS";
+  }
+
+  private get isLinux(): boolean {
+    return this.runnerOs === "Linux";
+  }
+
+  private get isRunningInAct(): boolean {
+    return process.env["ACT"] !== undefined && !(process.env["NOT_ACT"] === "");
+  }
+
+  private get isRunningInNamespaceRunner(): boolean {
+    return (
+      process.env["NSC_VM_ID"] !== undefined &&
+      !(process.env["NOT_NAMESPACE"] === "true")
+    );
+  }
+
+  // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
+  // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
+  // and especially GitHub Enterprise Server.
+  async detectAndForceDockerShim(): Promise<void> {
+    if (!this.isLinux) {
       if (this.forceDockerShim) {
         actionsCore.warning(
           "Ignoring force-docker-shim which is set to true, as it is only supported on Linux.",
@@ -123,7 +158,7 @@ class NixInstallerAction {
       return;
     }
 
-    if (process.env["ACT"] && !process.env["NOT_ACT"]) {
+    if (this.isRunningInAct) {
       actionsCore.debug(
         "Not bothering to detect if the docker shim should be used, as it is typically incompatible with act.",
       );
@@ -134,7 +169,7 @@ class NixInstallerAction {
       throwIfNoEntry: false,
     });
     if (systemdCheck?.isDirectory()) {
-      this.idslib.addFact(FACT_HAS_SYSTEMD, true);
+      this.addFact(FACT_HAS_SYSTEMD, true);
       if (this.forceDockerShim) {
         actionsCore.warning(
           "Systemd is detected, but ignoring it since force-docker-shim is enabled.",
@@ -143,13 +178,13 @@ class NixInstallerAction {
         return;
       }
     }
-    this.idslib.addFact(FACT_HAS_SYSTEMD, false);
+    this.addFact(FACT_HAS_SYSTEMD, false);
 
     actionsCore.debug(
       "Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor.",
     );
 
-    this.idslib.addFact(FACT_HAS_DOCKER, false); // Set to false here, and only in the success case do we set it to true
+    this.addFact(FACT_HAS_DOCKER, false); // Set to false here, and only in the success case do we set it to true
     let exitCode;
     try {
       exitCode = await actionsExec.exec("docker", ["info"], {
@@ -183,7 +218,7 @@ class NixInstallerAction {
         return;
       }
     }
-    this.idslib.addFact(FACT_HAS_DOCKER, true);
+    this.addFact(FACT_HAS_DOCKER, true);
 
     if (
       !this.forceDockerShim &&
@@ -316,11 +351,10 @@ class NixInstallerAction {
 
   private async executionEnvironment(): Promise<ExecuteEnvironment> {
     const executionEnv: ExecuteEnvironment = {};
-    const runnerOs = process.env["RUNNER_OS"];
 
     executionEnv.NIX_INSTALLER_NO_CONFIRM = "true";
     executionEnv.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(
-      this.idslib.getCorrelationHashes(),
+      this.getCorrelationHashes(),
     );
 
     if (this.backtrace !== null) {
@@ -368,18 +402,18 @@ class NixInstallerAction {
     }
 
     executionEnv.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
-      this.idslib.getDiagnosticsUrl()?.toString() ?? "";
+      this.getDiagnosticsUrl()?.toString() ?? "";
 
     // TODO: Error if the user uses these on not-MacOS
     if (this.macEncrypt !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOS) {
         throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ENCRYPT = this.macEncrypt;
     }
 
     if (this.macCaseSensitive !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOS) {
         throw new Error(
           "`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`",
         );
@@ -388,7 +422,7 @@ class NixInstallerAction {
     }
 
     if (this.macVolumeLabel !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOS) {
         throw new Error(
           "`mac-volume-label` while `$RUNNER_OS` was not `macOS`",
         );
@@ -397,7 +431,7 @@ class NixInstallerAction {
     }
 
     if (this.macRootDisk !== null) {
-      if (runnerOs !== "macOS") {
+      if (!this.isMacOS) {
         throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ROOT_DISK = this.macRootDisk;
@@ -413,7 +447,7 @@ class NixInstallerAction {
 
     // TODO: Error if the user uses these on MacOS
     if (this.init !== null) {
-      if (runnerOs === "macOS") {
+      if (this.isMacOS) {
         throw new Error(
           "`init` is not a valid option when `$RUNNER_OS` is `macOS`",
         );
@@ -459,16 +493,16 @@ class NixInstallerAction {
     }
     executionEnv.NIX_INSTALLER_EXTRA_CONF = extraConf;
 
-    if (process.env["ACT"] && !process.env["NOT_ACT"]) {
-      this.idslib.addFact(FACT_IN_ACT, true);
+    if (this.isRunningInAct) {
+      this.addFact(FACT_IN_ACT, true);
       actionsCore.info(
         "Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`",
       );
       executionEnv.NIX_INSTALLER_INIT = "none";
     }
 
-    if (process.env["NSC_VM_ID"] && !process.env["NOT_NAMESPACE"]) {
-      this.idslib.addFact(FACT_IN_NAMESPACE_SO, true);
+    if (this.isRunningInNamespaceRunner) {
+      this.addFact(FACT_IN_NAMESPACE_SO, true);
       actionsCore.info(
         "Detected Namespace runner, assuming this is a https://namespace.so created container, set `NOT_NAMESPACE=true` to override this. This will change the setting of the `init` to be compatible with Namespace",
       );
@@ -486,11 +520,11 @@ class NixInstallerAction {
 
     const args = ["install"];
     if (this.planner) {
-      this.idslib.addFact(FACT_NIX_INSTALLER_PLANNER, this.planner);
+      this.addFact(FACT_NIX_INSTALLER_PLANNER, this.planner);
       args.push(this.planner);
     } else {
-      this.idslib.addFact(FACT_NIX_INSTALLER_PLANNER, getDefaultPlanner());
-      args.push(getDefaultPlanner());
+      this.addFact(FACT_NIX_INSTALLER_PLANNER, this.defaultPlanner);
+      args.push(this.defaultPlanner);
     }
 
     if (this.extraArgs) {
@@ -498,7 +532,7 @@ class NixInstallerAction {
       args.concat(extraArgs);
     }
 
-    this.idslib.recordEvent(EVENT_INSTALL_NIX_START);
+    this.recordEvent(EVENT_INSTALL_NIX_START);
     const exitCode = await actionsExec.exec(binaryPath, args, {
       env: {
         ...executionEnv,
@@ -507,13 +541,13 @@ class NixInstallerAction {
     });
 
     if (exitCode !== 0) {
-      this.idslib.recordEvent(EVENT_INSTALL_NIX_FAILURE, {
+      this.recordEvent(EVENT_INSTALL_NIX_FAILURE, {
         exitCode,
       });
       throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
     }
 
-    this.idslib.recordEvent(EVENT_INSTALL_NIX_SUCCESS);
+    this.recordEvent(EVENT_INSTALL_NIX_SUCCESS);
 
     return exitCode;
   }
@@ -613,7 +647,7 @@ class NixInstallerAction {
 
     {
       actionsCore.debug("Starting the Nix daemon through Docker...");
-      this.idslib.recordEvent(EVENT_START_DOCKER_SHIM);
+      this.recordEvent(EVENT_START_DOCKER_SHIM);
       const exitCode = await actionsExec.exec(
         "docker",
         [
@@ -640,7 +674,7 @@ class NixInstallerAction {
           "always",
           "--init",
           "--name",
-          `determinate-nix-shim-${this.idslib.getUniqueId()}-${randomUUID()}`,
+          `determinate-nix-shim-${this.getUniqueId()}-${randomUUID()}`,
           "determinate-nix-shim:latest",
         ],
         {
@@ -703,7 +737,7 @@ class NixInstallerAction {
       }
 
       if (cleaned) {
-        this.idslib.recordEvent(EVENT_CLEAN_UP_DOCKER_SHIM);
+        this.recordEvent(EVENT_CLEAN_UP_DOCKER_SHIM);
       } else {
         actionsCore.warning(
           "Giving up on cleaning up the nix daemon container",
@@ -732,7 +766,7 @@ class NixInstallerAction {
   }
 
   async flakehubLogin(): Promise<string> {
-    this.idslib.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
+    this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
     const netrcPath = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
 
     const jwt = await actionsCore.getIDToken("api.flakehub.com");
@@ -759,7 +793,7 @@ class NixInstallerAction {
   }
 
   async executeUninstall(): Promise<number> {
-    this.idslib.recordEvent(EVENT_UNINSTALL_NIX);
+    this.recordEvent(EVENT_UNINSTALL_NIX);
     const exitCode = await actionsExec.exec(
       `/nix/nix-installer`,
       ["uninstall"],
@@ -791,7 +825,7 @@ class NixInstallerAction {
   }
 
   private async setupKvm(): Promise<boolean> {
-    this.idslib.recordEvent(EVENT_SETUP_KVM);
+    this.recordEvent(EVENT_SETUP_KVM);
     const currentUser = userInfo();
     const isRoot = currentUser.uid === 0;
     const maybeSudo = isRoot ? "" : "sudo";
@@ -887,7 +921,7 @@ class NixInstallerAction {
 
   private async fetchBinary(): Promise<string> {
     if (!this.localRoot) {
-      return await this.idslib.fetchExecutable();
+      return await this.fetchExecutable();
     } else {
       const localPath = join(this.localRoot, `nix-installer-${this.platform}`);
       actionsCore.info(`Using binary ${localPath}`);
@@ -897,7 +931,7 @@ class NixInstallerAction {
 
   async reportOverall(): Promise<void> {
     try {
-      this.idslib.recordEvent(EVENT_CONCLUDE_WORKFLOW, {
+      this.recordEvent(EVENT_CONCLUDE_WORKFLOW, {
         conclusion: await this.getWorkflowConclusion(),
       });
     } catch (e) {
@@ -906,7 +940,7 @@ class NixInstallerAction {
   }
 
   private async getWorkflowConclusion(): Promise<
-    undefined | "success" | "failure" | "cancelled" | "unavailable" | "no-jobs"
+    undefined | WorkflowConclusion
   > {
     if (this.githubToken == null) {
       return undefined;
@@ -953,6 +987,18 @@ class NixInstallerAction {
       return "unavailable";
     }
   }
+
+  private get defaultPlanner(): string {
+    if (this.isMacOS) {
+      return "macos";
+    } else if (this.isLinux) {
+      return "linux";
+    } else {
+      throw new Error(
+        `Unsupported \`RUNNER_OS\` (currently \`${this.runnerOs}\`)`,
+      );
+    }
+  }
 }
 
 type ExecuteEnvironment = {
@@ -981,32 +1027,8 @@ type ExecuteEnvironment = {
   NIX_INSTALLER_LOGGER?: string;
 };
 
-function getDefaultPlanner(): string {
-  const envOs = process.env["RUNNER_OS"];
-
-  if (envOs === "macOS") {
-    return "macos";
-  } else if (envOs === "Linux") {
-    return "linux";
-  } else {
-    throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${envOs}\`)`);
-  }
-}
-
 function main(): void {
-  const installer = new NixInstallerAction();
-
-  installer.idslib.onMain(async () => {
-    await installer.detectAndForceDockerShim();
-    await installer.install();
-  });
-
-  installer.idslib.onPost(async () => {
-    await installer.cleanupDockerShim();
-    await installer.reportOverall();
-  });
-
-  installer.idslib.execute();
+  new NixInstallerAction().execute();
 }
 
 main();
