@@ -19,6 +19,7 @@ inputs:
     default: false
   force-docker-shim:
     description: Force the use of Docker as a process supervisor. This setting is automatically enabled when necessary.
+    required: false
     default: false
   github-token:
     description: A GitHub token for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)

@@ -133,11 +133,11 @@ class NixInstallerAction extends DetSysAction {
     return this.runnerOs === "Linux";
   }
 
-  private get runningInAct(): boolean {
+  private get isRunningInAct(): boolean {
     return process.env["ACT"] !== undefined && !(process.env["NOT_ACT"] === "");
   }
 
-  private get runningInNamespaceRunner(): boolean {
+  private get isRunningInNamespaceRunner(): boolean {
     return (
       process.env["NSC_VM_ID"] !== undefined &&
       !(process.env["NOT_NAMESPACE"] === "true")
@@ -148,7 +148,7 @@ class NixInstallerAction extends DetSysAction {
     // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
     // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
     // and especially GitHub Enterprise Server.
-    if (this.isLinux) {
+    if (!this.isLinux) {
       if (this.forceDockerShim) {
         actionsCore.warning(
           "Ignoring force-docker-shim which is set to true, as it is only supported on Linux.",
@@ -158,7 +158,7 @@ class NixInstallerAction extends DetSysAction {
       return;
     }
 
-    if (this.runningInAct) {
+    if (this.isRunningInAct) {
       actionsCore.debug(
         "Not bothering to detect if the docker shim should be used, as it is typically incompatible with act.",
       );
@@ -493,7 +493,7 @@ class NixInstallerAction extends DetSysAction {
     }
     executionEnv.NIX_INSTALLER_EXTRA_CONF = extraConf;
 
-    if (this.runningInAct) {
+    if (this.isRunningInAct) {
       this.addFact(FACT_IN_ACT, true);
       actionsCore.info(
         "Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`",
@@ -501,7 +501,7 @@ class NixInstallerAction extends DetSysAction {
       executionEnv.NIX_INSTALLER_INIT = "none";
     }
 
-    if (this.runningInNamespaceRunner) {
+    if (this.isRunningInNamespaceRunner) {
       this.addFact(FACT_IN_NAMESPACE_SO, true);
       actionsCore.info(
         "Detected Namespace runner, assuming this is a https://namespace.so created container, set `NOT_NAMESPACE=true` to override this. This will change the setting of the `init` to be compatible with Namespace",
