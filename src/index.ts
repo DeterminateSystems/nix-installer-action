@@ -133,8 +133,15 @@ class NixInstallerAction extends DetSysAction {
     return this.runnerOs === "Linux";
   }
 
-  private get isAct(): boolean {
+  private get runningInAct(): boolean {
     return process.env["ACT"] !== "" && !(process.env["NOT_ACT"] === "");
+  }
+
+  private get runningInNamespaceRunner(): boolean {
+    return (
+      process.env["NSC_VM_ID"] !== undefined &&
+      !(process.env["NOT_NAMESPACE"] === "true")
+    );
   }
 
   async detectAndForceDockerShim(): Promise<void> {
@@ -151,7 +158,7 @@ class NixInstallerAction extends DetSysAction {
       return;
     }
 
-    if (this.isAct) {
+    if (this.runningInAct) {
       actionsCore.debug(
         "Not bothering to detect if the docker shim should be used, as it is typically incompatible with act.",
       );
@@ -486,7 +493,7 @@ class NixInstallerAction extends DetSysAction {
     }
     executionEnv.NIX_INSTALLER_EXTRA_CONF = extraConf;
 
-    if (process.env["ACT"] && !process.env["NOT_ACT"]) {
+    if (this.runningInAct) {
       this.addFact(FACT_IN_ACT, true);
       actionsCore.info(
         "Detected `$ACT` environment, assuming this is a https://github.com/nektos/act created container, set `NOT_ACT=true` to override this. This will change the setting of the `init` to be compatible with `act`",
@@ -494,7 +501,7 @@ class NixInstallerAction extends DetSysAction {
       executionEnv.NIX_INSTALLER_INIT = "none";
     }
 
-    if (process.env["NSC_VM_ID"] && !process.env["NOT_NAMESPACE"]) {
+    if (this.runningInNamespaceRunner) {
       this.addFact(FACT_IN_NAMESPACE_SO, true);
       actionsCore.info(
         "Detected Namespace runner, assuming this is a https://namespace.so created container, set `NOT_NAMESPACE=true` to override this. This will change the setting of the `init` to be compatible with Namespace",
