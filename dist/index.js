@@ -97865,7 +97865,7 @@ var NixInstallerAction = class extends DetSysAction {
     return this.runnerOs === "Linux";
   }
   get runningInAct() {
-    return process.env["ACT"] !== "" && !(process.env["NOT_ACT"] === "");
+    return process.env["ACT"] !== void 0 && !(process.env["NOT_ACT"] === "");
   }
   get runningInNamespaceRunner() {
     return process.env["NSC_VM_ID"] !== void 0 && !(process.env["NOT_NAMESPACE"] === "true");

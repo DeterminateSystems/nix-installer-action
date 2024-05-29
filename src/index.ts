@@ -134,7 +134,7 @@ class NixInstallerAction extends DetSysAction {
   }
 
   private get runningInAct(): boolean {
-    return process.env["ACT"] !== "" && !(process.env["NOT_ACT"] === "");
+    return process.env["ACT"] !== undefined && !(process.env["NOT_ACT"] === "");
   }
 
   private get runningInNamespaceRunner(): boolean {
