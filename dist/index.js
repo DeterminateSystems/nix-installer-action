@@ -97870,6 +97870,9 @@ var NixInstallerAction = class extends DetSysAction {
   get isRunningInNamespaceRunner() {
     return process.env["NSC_VM_ID"] !== void 0 && !(process.env["NOT_NAMESPACE"] === "true");
   }
+  // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
+  // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
+  // and especially GitHub Enterprise Server.
   async detectAndForceDockerShim() {
     if (!this.isLinux) {
       if (this.forceDockerShim) {

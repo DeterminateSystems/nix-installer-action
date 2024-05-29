@@ -144,10 +144,10 @@ class NixInstallerAction extends DetSysAction {
     );
   }
 
+  // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
+  // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
+  // and especially GitHub Enterprise Server.
   async detectAndForceDockerShim(): Promise<void> {
-    // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
-    // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
-    // and especially GitHub Enterprise Server.
     if (!this.isLinux) {
       if (this.forceDockerShim) {
         actionsCore.warning(
