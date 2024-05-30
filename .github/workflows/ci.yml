@@ -14,8 +14,13 @@ jobs:
       - install-nix-linux
       - install-nix-macos
       - install-with-non-default-source-inputs
+    # NOTE(cole-h): GitHub treats "skipped" as "OK" for the purposes of required checks on branch
+    # protection, so we take advantage of this fact and fail if any of the dependent actions failed,
+    # or "skip" (which is a success for GHA's purposes) if none of them did.
+    if: failure()
     steps:
-      - run: true
+      - name: Dependent checks failed
+        run: exit 1
 
   check-dist-up-to-date:
     name: Check the dist/ folder is up to date
