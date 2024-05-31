@@ -97931,7 +97931,8 @@ var NixInstallerAction = class extends DetSysAction {
       name: "nix-installer",
       fetchStyle: "nix-style",
       legacySourcePrefix: "nix-installer",
-      requireNix: "ignore"
+      requireNix: "ignore",
+      diagnosticsSuffix: "diagnostic"
     });
     this.platform = platform_exports.getNixPlatform(platform_exports.getArchOs());
     this.nixPackageUrl = inputs_exports.getStringOrNull("nix-package-url");

@@ -80,6 +80,7 @@ class NixInstallerAction extends DetSysAction {
       fetchStyle: "nix-style",
       legacySourcePrefix: "nix-installer",
       requireNix: "ignore",
+      diagnosticsSuffix: "diagnostic",
     });
 
     this.platform = platform.getNixPlatform(platform.getArchOs());
