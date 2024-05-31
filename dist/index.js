@@ -89321,6 +89321,8 @@ var external_node_util_ = __nccwpck_require__(7261);
 var external_os_ = __nccwpck_require__(2037);
 ;// CONCATENATED MODULE: external "node:crypto"
 const external_node_crypto_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:crypto");
+;// CONCATENATED MODULE: external "node:dns/promises"
+const external_node_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:dns/promises");
 // EXTERNAL MODULE: ./node_modules/.pnpm/@actions+cache@3.2.4/node_modules/@actions/cache/lib/cache.js
 var cache = __nccwpck_require__(6878);
 ;// CONCATENATED MODULE: ./node_modules/.pnpm/@sindresorhus+is@6.3.1/node_modules/@sindresorhus/is/dist/index.js
@@ -96717,7 +96719,7 @@ const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createReq
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
 ;// CONCATENATED MODULE: external "node:zlib"
 const external_node_zlib_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:zlib");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@5fcb0532d85556ebc2de286e483885976531339d_uqngfub4ls4loys67iy653x57e/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@a64e178f55222b9094e9c579c0c9898fadbe8a26_vtt5xyvrj4xosii66x2nfcntqu/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -96803,9 +96805,9 @@ async function readAsyncOsReleaseFile(fileList, options) {
 ${fileData}`);
       }
       break;
-    } catch (error2) {
+    } catch (error3) {
       if (options.debug) {
-        console.error(error2);
+        console.error(error3);
       }
     }
   }
@@ -96827,9 +96829,9 @@ function readSyncOsreleaseFile(releaseFileList, options) {
 ${fileData}`);
       }
       break;
-    } catch (error2) {
+    } catch (error3) {
       if (options.debug) {
-        console.error(error2);
+        console.error(error3);
       }
     }
   }
@@ -97021,6 +97023,186 @@ function hashEnvironmentVariables(prefix, variables) {
   return `${prefix}-${hash.digest("hex")}`;
 }
 
+// src/errors.ts
+function stringifyError(e) {
+  if (e instanceof Error) {
+    return e.message;
+  } else if (typeof e === "string") {
+    return e;
+  } else {
+    return JSON.stringify(e);
+  }
+}
+
+// src/ids-host.ts
+
+
+var DEFAULT_LOOKUP = "_detsys_ids._tcp.install.determinate.systems.";
+var ALLOWED_SUFFIXES = [
+  ".install.determinate.systems",
+  ".install.detsys.dev"
+];
+var DEFAULT_IDS_HOST = "https://install.determinate.systems";
+var LOOKUP = process.env["IDS_LOOKUP"] ?? DEFAULT_LOOKUP;
+var IdsHost = class {
+  constructor(idsProjectName, diagnosticsSuffix, runtimeDiagnosticsUrl) {
+    this.idsProjectName = idsProjectName;
+    this.diagnosticsSuffix = diagnosticsSuffix;
+    this.runtimeDiagnosticsUrl = runtimeDiagnosticsUrl;
+  }
+  async getRootUrl() {
+    const idsHost = process.env["IDS_HOST"];
+    if (idsHost !== void 0) {
+      try {
+        return new URL(idsHost);
+      } catch (err) {
+        core.error(
+          `IDS_HOST environment variable is not a valid URL. Ignoring. ${stringifyError(err)}`
+        );
+      }
+    }
+    let url = void 0;
+    try {
+      const urls = await this.getUrlsByPreference();
+      url = urls[0];
+    } catch (err) {
+      core.error(
+        `Error collecting IDS URLs by preference: ${stringifyError(err)}`
+      );
+    }
+    if (url === void 0) {
+      url = new URL(DEFAULT_IDS_HOST);
+    }
+    return url;
+  }
+  async getDiagnosticsUrl() {
+    if (this.runtimeDiagnosticsUrl === "") {
+      return void 0;
+    }
+    if (this.runtimeDiagnosticsUrl !== void 0) {
+      try {
+        return new URL(this.runtimeDiagnosticsUrl);
+      } catch (err) {
+        core.info(
+          `User-provided diagnostic endpoint ignored: not a valid URL: ${stringifyError(err)}`
+        );
+      }
+    }
+    try {
+      const diagnosticUrl = await this.getRootUrl();
+      diagnosticUrl.pathname += this.idsProjectName;
+      diagnosticUrl.pathname += "/";
+      diagnosticUrl.pathname += this.diagnosticsSuffix || "diagnostics";
+      return diagnosticUrl;
+    } catch (err) {
+      core.info(
+        `Generated diagnostic endpoint ignored, and diagnostics are disabled: not a valid URL: ${stringifyError(err)}`
+      );
+      return void 0;
+    }
+  }
+  async getUrlsByPreference() {
+    if (this.prioritizedURLs === void 0) {
+      this.prioritizedURLs = orderRecordsByPriorityWeight(
+        await discoverServiceRecords()
+      ).flatMap((record) => recordToUrl(record) || []);
+    }
+    return this.prioritizedURLs;
+  }
+};
+function recordToUrl(record) {
+  const urlStr = `https://${record.name}:${record.port}`;
+  try {
+    return new URL(urlStr);
+  } catch (err) {
+    core.debug(
+      `Record ${JSON.stringify(record)} produced an invalid URL: ${urlStr} (${err})`
+    );
+    return void 0;
+  }
+}
+async function discoverServiceRecords() {
+  return await discoverServicesStub((0,external_node_dns_promises_namespaceObject.resolveSrv)(LOOKUP), 1e3);
+}
+async function discoverServicesStub(lookup, timeout) {
+  const defaultFallback = new Promise(
+    (resolve, _reject) => {
+      setTimeout(resolve, timeout, []);
+    }
+  );
+  let records;
+  try {
+    records = await Promise.race([lookup, defaultFallback]);
+  } catch (reason) {
+    core.debug(`Error resolving SRV records: ${stringifyError(reason)}`);
+    records = [];
+  }
+  const acceptableRecords = records.filter((record) => {
+    for (const suffix of ALLOWED_SUFFIXES) {
+      if (record.name.endsWith(suffix)) {
+        return true;
+      }
+    }
+    core.debug(
+      `Unacceptable domain due to an invalid suffix: ${record.name}`
+    );
+    return false;
+  });
+  if (acceptableRecords.length === 0) {
+    core.debug(`No records found for ${LOOKUP}`);
+  } else {
+    core.debug(
+      `Resolved ${LOOKUP} to ${JSON.stringify(acceptableRecords)}`
+    );
+  }
+  return acceptableRecords;
+}
+function orderRecordsByPriorityWeight(records) {
+  const byPriorityWeight = /* @__PURE__ */ new Map();
+  for (const record of records) {
+    const existing = byPriorityWeight.get(record.priority);
+    if (existing) {
+      existing.push(record);
+    } else {
+      byPriorityWeight.set(record.priority, [record]);
+    }
+  }
+  const prioritizedRecords = [];
+  const keys = Array.from(byPriorityWeight.keys()).sort(
+    (a, b) => a - b
+  );
+  for (const priority of keys) {
+    const recordsByPrio = byPriorityWeight.get(priority);
+    if (recordsByPrio === void 0) {
+      continue;
+    }
+    prioritizedRecords.push(...weightedRandom(recordsByPrio));
+  }
+  return prioritizedRecords;
+}
+function weightedRandom(records) {
+  const scratchRecords = records.slice();
+  const result = [];
+  while (scratchRecords.length > 0) {
+    const weights = [];
+    {
+      for (let i = 0; i < scratchRecords.length; i++) {
+        weights.push(
+          scratchRecords[i].weight + (i > 0 ? scratchRecords[i - 1].weight : 0)
+        );
+      }
+    }
+    const point = Math.random() * weights[weights.length - 1];
+    for (let selectedIndex = 0; selectedIndex < weights.length; selectedIndex++) {
+      if (weights[selectedIndex] > point) {
+        result.push(scratchRecords.splice(selectedIndex, 1)[0]);
+        break;
+      }
+    }
+  }
+  return result;
+}
+
 // src/inputs.ts
 var inputs_exports = {};
 __export(inputs_exports, {
@@ -97181,21 +97363,6 @@ function noisilyGetInput(suffix, legacyPrefix) {
 
 
 
-
-// src/errors.ts
-function stringifyError(e) {
-  if (e instanceof Error) {
-    return e.message;
-  } else if (typeof e === "string") {
-    return e;
-  } else {
-    return JSON.stringify(e);
-  }
-}
-
-// src/index.ts
-var DEFAULT_IDS_HOST = "https://install.determinate.systems";
-var IDS_HOST = process.env["IDS_HOST"] ?? DEFAULT_IDS_HOST;
 var EVENT_EXCEPTION = "exception";
 var EVENT_ARTIFACT_CACHE_HIT = "artifact_cache_hit";
 var EVENT_ARTIFACT_CACHE_MISS = "artifact_cache_miss";
@@ -97229,6 +97396,11 @@ var DetSysAction = class {
   }
   constructor(actionOptions) {
     this.actionOptions = makeOptionsConfident(actionOptions);
+    this.idsHost = new IdsHost(
+      this.actionOptions.idsProjectName,
+      actionOptions.diagnosticsSuffix,
+      process.env["INPUT_DIAGNOSTIC-ENDPOINT"]
+    );
     this.exceptionAttachments = /* @__PURE__ */ new Map();
     this.nixStoreTrust = "unknown";
     this.strictMode = getBool("_internal-strict-mode");
@@ -97240,9 +97412,9 @@ var DetSysAction = class {
       },
       hooks: {
         beforeRetry: [
-          (error2, retryCount) => {
+          (error3, retryCount) => {
             core.info(
-              `Retrying after error ${error2.code}, retry #: ${retryCount}`
+              `Retrying after error ${error3.code}, retry #: ${retryCount}`
             );
           }
         ]
@@ -97319,8 +97491,8 @@ var DetSysAction = class {
    * Execute the Action as defined.
    */
   execute() {
-    this.executeAsync().catch((error2) => {
-      console.log(error2);
+    this.executeAsync().catch((error3) => {
+      console.log(error3);
       process.exitCode = 1;
     });
   }
@@ -97331,8 +97503,8 @@ var DetSysAction = class {
   addFact(key, value) {
     this.facts[key] = value;
   }
-  getDiagnosticsUrl() {
-    return this.actionOptions.diagnosticsUrl;
+  async getDiagnosticsUrl() {
+    return await this.idsHost.getDiagnosticsUrl();
   }
   getUniqueId() {
     return this.identity.run_differentiator || process.env.RUNNER_TRACKING_ID || (0,external_node_crypto_namespaceObject.randomUUID)();
@@ -97446,7 +97618,7 @@ var DetSysAction = class {
     );
     try {
       core.info(`Fetching from ${this.getSourceUrl()}`);
-      const correlatedUrl = this.getSourceUrl();
+      const correlatedUrl = await this.getSourceUrl();
       correlatedUrl.searchParams.set("ci", "github");
       correlatedUrl.searchParams.set(
         "correlation",
@@ -97505,13 +97677,13 @@ var DetSysAction = class {
     this.recordEvent(`complete_${this.executionPhase}`);
     await this.submitEvents();
   }
-  getSourceUrl() {
+  async getSourceUrl() {
     const p = this.sourceParameters;
     if (p.url) {
       this.addFact(FACT_SOURCE_URL, p.url);
       return new URL(p.url);
     }
-    const fetchUrl = new URL(IDS_HOST);
+    const fetchUrl = await this.idsHost.getRootUrl();
     fetchUrl.pathname += this.actionOptions.idsProjectName;
     if (p.tag) {
       fetchUrl.pathname += `/tag/${p.tag}`;
@@ -97667,7 +97839,8 @@ var DetSysAction = class {
     }
   }
   async submitEvents() {
-    if (this.actionOptions.diagnosticsUrl === void 0) {
+    const diagnosticsUrl = await this.idsHost.getDiagnosticsUrl();
+    if (diagnosticsUrl === void 0) {
       core.debug(
         "Diagnostics are disabled. Not sending the following events:"
       );
@@ -97680,7 +97853,7 @@ var DetSysAction = class {
       events: this.events
     };
     try {
-      await this.client.post(this.actionOptions.diagnosticsUrl, {
+      await this.client.post(diagnosticsUrl, {
         json: batch,
         timeout: {
           request: DIAGNOSTIC_ENDPOINT_TIMEOUT_MS
@@ -97694,8 +97867,8 @@ var DetSysAction = class {
     this.events = [];
   }
 };
-function stringifyError2(error2) {
-  return error2 instanceof Error || typeof error2 == "string" ? error2.toString() : JSON.stringify(error2);
+function stringifyError2(error3) {
+  return error3 instanceof Error || typeof error3 == "string" ? error3.toString() : JSON.stringify(error3);
 }
 function makeOptionsConfident(actionOptions) {
   const idsProjectName = actionOptions.idsProjectName ?? actionOptions.name;
@@ -97705,71 +97878,11 @@ function makeOptionsConfident(actionOptions) {
     eventPrefix: actionOptions.eventPrefix || "action:",
     fetchStyle: actionOptions.fetchStyle,
     legacySourcePrefix: actionOptions.legacySourcePrefix,
-    requireNix: actionOptions.requireNix,
-    diagnosticsUrl: determineDiagnosticsUrl(
-      idsProjectName,
-      actionOptions.diagnosticsUrl
-    )
+    requireNix: actionOptions.requireNix
   };
   core.debug("idslib options:");
   core.debug(JSON.stringify(finalOpts, void 0, 2));
   return finalOpts;
-}
-function determineDiagnosticsUrl(idsProjectName, urlOption) {
-  if (urlOption === null) {
-    return void 0;
-  }
-  if (urlOption !== void 0) {
-    return urlOption;
-  }
-  {
-    const providedDiagnosticEndpoint = process.env["INPUT_DIAGNOSTIC-ENDPOINT"];
-    if (providedDiagnosticEndpoint === "") {
-      return void 0;
-    }
-    if (providedDiagnosticEndpoint !== void 0) {
-      try {
-        return mungeDiagnosticEndpoint(new URL(providedDiagnosticEndpoint));
-      } catch (e) {
-        core.info(
-          `User-provided diagnostic endpoint ignored: not a valid URL: ${stringifyError2(e)}`
-        );
-      }
-    }
-  }
-  try {
-    const diagnosticUrl = new URL(IDS_HOST);
-    diagnosticUrl.pathname += idsProjectName;
-    diagnosticUrl.pathname += "/diagnostics";
-    return diagnosticUrl;
-  } catch (e) {
-    core.info(
-      `Generated diagnostic endpoint ignored: not a valid URL: ${stringifyError2(e)}`
-    );
-  }
-  return void 0;
-}
-function mungeDiagnosticEndpoint(inputUrl) {
-  if (DEFAULT_IDS_HOST === IDS_HOST) {
-    return inputUrl;
-  }
-  try {
-    const defaultIdsHost = new URL(DEFAULT_IDS_HOST);
-    const currentIdsHost = new URL(IDS_HOST);
-    if (inputUrl.origin !== defaultIdsHost.origin) {
-      return inputUrl;
-    }
-    inputUrl.protocol = currentIdsHost.protocol;
-    inputUrl.host = currentIdsHost.host;
-    inputUrl.username = currentIdsHost.username;
-    inputUrl.password = currentIdsHost.password;
-    return inputUrl;
-  } catch (e) {
-    core.info(
-      `Default or overridden IDS host isn't a valid URL: ${stringifyError2(e)}`
-    );
-  }
-  return inputUrl;
 }
 
 /*!
