@@ -16,7 +16,7 @@ dependencies:
     version: 5.1.1
   detsys-ts:
     specifier: github:DeterminateSystems/detsys-ts#srv
-    version: github.com/DeterminateSystems/detsys-ts/7d713c3804174531749ebc72c845b6a39a9990d9
+    version: github.com/DeterminateSystems/detsys-ts/6595e455a4d967a64ea9ae6632b2863cfe16dbe8
   string-argv:
     specifier: ^0.3.2
     version: 0.3.2
@@ -5432,10 +5432,10 @@ packages:
     engines: { node: ">=10" }
     dev: true
 
-  github.com/DeterminateSystems/detsys-ts/7d713c3804174531749ebc72c845b6a39a9990d9:
+  github.com/DeterminateSystems/detsys-ts/6595e455a4d967a64ea9ae6632b2863cfe16dbe8:
     resolution:
       {
-        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/7d713c3804174531749ebc72c845b6a39a9990d9,
+        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/6595e455a4d967a64ea9ae6632b2863cfe16dbe8,
       }
     name: detsys-ts
     version: 1.0.0

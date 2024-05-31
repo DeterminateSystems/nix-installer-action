@@ -96719,7 +96719,7 @@ const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createReq
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
 ;// CONCATENATED MODULE: external "node:zlib"
 const external_node_zlib_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:zlib");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@7d713c3804174531749ebc72c845b6a39a9990d9_ydojq2qeicpy4eslwy45ek6bkq/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@6595e455a4d967a64ea9ae6632b2863cfe16dbe8_vfoqnhj3oi4me63hobtxlmdxde/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -97049,6 +97049,12 @@ var IdsHost = class {
     this.idsProjectName = idsProjectName;
     this.diagnosticsSuffix = diagnosticsSuffix;
     this.runtimeDiagnosticsUrl = runtimeDiagnosticsUrl;
+  }
+  markCurrentHostBroken() {
+    this.prioritizedURLs?.shift();
+  }
+  setPrioritizedUrls(urls) {
+    this.prioritizedURLs = urls;
   }
   async getRootUrl() {
     const idsHost = process.env["IDS_HOST"];
@@ -97865,6 +97871,22 @@ var DetSysAction = class {
       core.debug(
         `Error submitting diagnostics event: ${stringifyError2(e)}`
       );
+      this.idsHost.markCurrentHostBroken();
+      const secondaryDiagnosticsUrl = await this.idsHost.getDiagnosticsUrl();
+      if (secondaryDiagnosticsUrl !== void 0) {
+        try {
+          await this.client.post(secondaryDiagnosticsUrl, {
+            json: batch,
+            timeout: {
+              request: DIAGNOSTIC_ENDPOINT_TIMEOUT_MS
+            }
+          });
+        } catch (err) {
+          core.debug(
+            `Error submitting diagnostics event to secondary host (${secondaryDiagnosticsUrl}): ${stringifyError2(err)}`
+          );
+        }
+      }
     }
     this.events = [];
   }
