@@ -98198,7 +98198,7 @@ ${stderrBuffer}`
     if (this.sslCertFile !== null) {
       executionEnv.NIX_INSTALLER_SSL_CERT_FILE = this.sslCertFile;
     }
-    executionEnv.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT = this.getDiagnosticsUrl()?.toString() ?? "";
+    executionEnv.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT = (await this.getDiagnosticsUrl())?.toString() ?? "";
     if (this.macEncrypt !== null) {
       if (!this.isMacOS) {
         throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");

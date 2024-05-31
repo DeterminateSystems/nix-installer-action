@@ -402,7 +402,7 @@ class NixInstallerAction extends DetSysAction {
     }
 
     executionEnv.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT =
-      this.getDiagnosticsUrl()?.toString() ?? "";
+      (await this.getDiagnosticsUrl())?.toString() ?? "";
 
     // TODO: Error if the user uses these on not-MacOS
     if (this.macEncrypt !== null) {
