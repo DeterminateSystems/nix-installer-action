@@ -115,6 +115,7 @@ inputs:
   diagnostic-endpoint:
     description: "Diagnostic endpoint url where the installer sends data to. To disable set this to an empty string."
     required: false
+    default: "-"
   trust-runner-user:
     description: Whether to make the runner user trusted by the Nix daemon
     default: true

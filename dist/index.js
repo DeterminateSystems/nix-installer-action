@@ -96719,7 +96719,7 @@ const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createReq
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
 ;// CONCATENATED MODULE: external "node:zlib"
 const external_node_zlib_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:zlib");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@473872937d1ba25146b9e433cd91f3c00acbeeaa_6hoevb7f7m4pb26yg6rm6n2v5y/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@7d713c3804174531749ebc72c845b6a39a9990d9_ydojq2qeicpy4eslwy45ek6bkq/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -97079,7 +97079,7 @@ var IdsHost = class {
     if (this.runtimeDiagnosticsUrl === "") {
       return void 0;
     }
-    if (this.runtimeDiagnosticsUrl !== void 0) {
+    if (this.runtimeDiagnosticsUrl !== "-" && this.runtimeDiagnosticsUrl !== void 0) {
       try {
         return new URL(this.runtimeDiagnosticsUrl);
       } catch (err) {
