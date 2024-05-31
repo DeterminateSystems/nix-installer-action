@@ -96719,7 +96719,7 @@ const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createReq
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
 ;// CONCATENATED MODULE: external "node:zlib"
 const external_node_zlib_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:zlib");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@e81a2a0518ae6b0e1c63392042fa2ec7bb8e91f7_rc6zyepbhsqnhgzmlwrn2obpdy/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@473872937d1ba25146b9e433cd91f3c00acbeeaa_6hoevb7f7m4pb26yg6rm6n2v5y/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -97073,7 +97073,7 @@ var IdsHost = class {
     if (url === void 0) {
       url = new URL(DEFAULT_IDS_HOST);
     }
-    return url;
+    return new URL(url);
   }
   async getDiagnosticsUrl() {
     if (this.runtimeDiagnosticsUrl === "") {
@@ -97399,6 +97399,8 @@ var DetSysAction = class {
     this.idsHost = new IdsHost(
       this.actionOptions.idsProjectName,
       actionOptions.diagnosticsSuffix,
+      // Note: we don't use actionsCore.getInput('diagnostic-endpoint') on purpose:
+      // getInput silently converts absent data to an empty string.
       process.env["INPUT_DIAGNOSTIC-ENDPOINT"]
     );
     this.exceptionAttachments = /* @__PURE__ */ new Map();
