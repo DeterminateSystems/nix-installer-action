@@ -96719,7 +96719,7 @@ const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createReq
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
 ;// CONCATENATED MODULE: external "node:zlib"
 const external_node_zlib_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:zlib");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@a64e178f55222b9094e9c579c0c9898fadbe8a26_vtt5xyvrj4xosii66x2nfcntqu/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@e81a2a0518ae6b0e1c63392042fa2ec7bb8e91f7_rc6zyepbhsqnhgzmlwrn2obpdy/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -97617,7 +97617,7 @@ var DetSysAction = class {
       `Downloading ${this.actionOptions.name} for ${this.architectureFetchSuffix}`
     );
     try {
-      core.info(`Fetching from ${this.getSourceUrl()}`);
+      core.info(`Fetching from ${await this.getSourceUrl()}`);
       const correlatedUrl = await this.getSourceUrl();
       correlatedUrl.searchParams.set("ci", "github");
       correlatedUrl.searchParams.set(
@@ -97629,7 +97629,7 @@ var DetSysAction = class {
         const v = versionCheckup.headers.etag;
         this.addFact(FACT_SOURCE_URL_ETAG, v);
         core.debug(
-          `Checking the tool cache for ${this.getSourceUrl()} at ${v}`
+          `Checking the tool cache for ${await this.getSourceUrl()} at ${v}`
         );
         const cached = await this.getCachedVersion(v);
         if (cached) {
