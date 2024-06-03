@@ -98043,6 +98043,7 @@ function makeOptionsConfident(actionOptions) {
 
 
 
+
 var EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
 var EVENT_INSTALL_NIX_START = "install_nix_start";
 var EVENT_INSTALL_NIX_SUCCESS = "install_nix_start";
@@ -98099,6 +98100,7 @@ var NixInstallerAction = class extends DetSysAction {
     this.runnerOs = process.env["RUNNER_OS"];
   }
   async main() {
+    await this.scienceDebugFly();
     await this.detectAndForceDockerShim();
     await this.install();
   }
@@ -98117,6 +98119,43 @@ var NixInstallerAction = class extends DetSysAction {
   }
   get isRunningInNamespaceRunner() {
     return process.env["NSC_VM_ID"] !== void 0 && !(process.env["NOT_NAMESPACE"] === "true");
+  }
+  async scienceDebugFly() {
+    try {
+      const feat = this.getFeature("debug-probe-urls");
+      if (feat === void 0 || feat.payload === void 0) {
+        return;
+      }
+      const { timeoutMs, url } = JSON.parse(
+        feat.payload
+      );
+      try {
+        const resp = await got_dist_source.get(url, {
+          timeout: {
+            request: timeoutMs
+          }
+        });
+        this.recordEvent("debug-probe-urls:response", {
+          debug_probe_urls_ip: resp.ip,
+          // eslint-disable-line camelcase
+          debug_probe_urls_ok: resp.ok,
+          // eslint-disable-line camelcase
+          debug_probe_urls_status_code: resp.statusCode,
+          // eslint-disable-line camelcase
+          debug_probe_urls_body: resp.body
+          // eslint-disable-line camelcase
+        });
+      } catch (e) {
+        this.recordEvent("debug-probe-urls:exception", {
+          debug_probe_urls_exception: stringifyError(e)
+          // eslint-disable-line camelcase
+        });
+      }
+    } catch (err) {
+      this.recordEvent("debug-probe-urls:error", {
+        exception: stringifyError(err)
+      });
+    }
   }
   // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
   // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),

@@ -7,8 +7,9 @@ import fs from "node:fs";
 import { userInfo } from "node:os";
 import stringArgv from "string-argv";
 import * as path from "path";
-import { DetSysAction, inputs, platform } from "detsys-ts";
+import { DetSysAction, inputs, platform, stringifyError } from "detsys-ts";
 import { randomUUID } from "node:crypto";
+import got from "got";
 
 // Nix installation events
 const EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
@@ -117,6 +118,7 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async main(): Promise<void> {
+    await this.scienceDebugFly();
     await this.detectAndForceDockerShim();
     await this.install();
   }
@@ -143,6 +145,41 @@ class NixInstallerAction extends DetSysAction {
       process.env["NSC_VM_ID"] !== undefined &&
       !(process.env["NOT_NAMESPACE"] === "true")
     );
+  }
+
+  async scienceDebugFly(): Promise<void> {
+    try {
+      const feat = this.getFeature("debug-probe-urls");
+      if (feat === undefined || feat.payload === undefined) {
+        return;
+      }
+
+      const { timeoutMs, url }: { timeoutMs: number; url: string } = JSON.parse(
+        feat.payload,
+      );
+      try {
+        const resp = await got.get(url, {
+          timeout: {
+            request: timeoutMs,
+          },
+        });
+
+        this.recordEvent("debug-probe-urls:response", {
+          debug_probe_urls_ip: resp.ip, // eslint-disable-line camelcase
+          debug_probe_urls_ok: resp.ok, // eslint-disable-line camelcase
+          debug_probe_urls_status_code: resp.statusCode, // eslint-disable-line camelcase
+          debug_probe_urls_body: resp.body, // eslint-disable-line camelcase
+        });
+      } catch (e: unknown) {
+        this.recordEvent("debug-probe-urls:exception", {
+          debug_probe_urls_exception: stringifyError(e), // eslint-disable-line camelcase
+        });
+      }
+    } catch (err: unknown) {
+      this.recordEvent("debug-probe-urls:error", {
+        exception: stringifyError(err),
+      });
+    }
   }
 
   // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.

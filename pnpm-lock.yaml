@@ -17,6 +17,9 @@ dependencies:
   detsys-ts:
     specifier: github:DeterminateSystems/detsys-ts
     version: github.com/DeterminateSystems/detsys-ts/fe64ba33b4bdeec0991bb65ae00420bf68b9954c
+  got:
+    specifier: ^14.2.1
+    version: 14.3.0
   string-argv:
     specifier: ^0.3.2
     version: 0.3.2

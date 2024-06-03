@@ -29,7 +29,8 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^5.1.1",
     "detsys-ts": "github:DeterminateSystems/detsys-ts",
-    "string-argv": "^0.3.2"
+    "string-argv": "^0.3.2",
+    "got": "^14.2.1"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
