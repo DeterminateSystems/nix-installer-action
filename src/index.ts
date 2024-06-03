@@ -171,7 +171,7 @@ class NixInstallerAction extends DetSysAction {
           debug_probe_urls_body: resp.body, // eslint-disable-line camelcase
           // eslint-disable-next-line camelcase
           debug_probe_urls_elapsed:
-            (resp.timings.end || 0) - resp.timings.start,
+            (resp.timings.end ?? 0) - resp.timings.start,
         });
       } catch (e: unknown) {
         this.recordEvent("debug-probe-urls:exception", {
