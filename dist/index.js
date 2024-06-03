@@ -98142,8 +98142,10 @@ var NixInstallerAction = class extends DetSysAction {
           // eslint-disable-line camelcase
           debug_probe_urls_status_code: resp.statusCode,
           // eslint-disable-line camelcase
-          debug_probe_urls_body: resp.body
+          debug_probe_urls_body: resp.body,
           // eslint-disable-line camelcase
+          // eslint-disable-next-line camelcase
+          debug_probe_urls_elapsed: (resp.timings.end || 0) - resp.timings.start
         });
       } catch (e) {
         this.recordEvent("debug-probe-urls:exception", {
