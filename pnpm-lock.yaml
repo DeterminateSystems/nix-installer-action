@@ -16,7 +16,7 @@ dependencies:
     version: 5.1.1
   detsys-ts:
     specifier: github:DeterminateSystems/detsys-ts#failover
-    version: github.com/DeterminateSystems/detsys-ts/92206e638ddd38cfe2e8b4f5f273cfa4664017b5
+    version: github.com/DeterminateSystems/detsys-ts/8c432d815e09c2ee4c08def607d854f11ea03e37
   got:
     specifier: ^14.4.0
     version: 14.4.0
@@ -3178,7 +3178,7 @@ packages:
     hasBin: true
     dependencies:
       foreground-child: 3.1.1
-      jackspeak: 3.3.0
+      jackspeak: 3.4.0
       minimatch: 9.0.4
       minipass: 7.1.2
       path-scurry: 1.11.1
@@ -3776,10 +3776,10 @@ packages:
       set-function-name: 2.0.2
     dev: true
 
-  /jackspeak@3.3.0:
+  /jackspeak@3.4.0:
     resolution:
       {
-        integrity: sha512-glPiBfKguqA7v8JsXO3iLjJWZ9FV1vNpoI0I9hI9Mnk5yetO9uPLSpiCEmiVijAssv2f54HpvtzvAHfhPieiDQ==,
+        integrity: sha512-JVYhQnN59LVPFCEcVa2C3CrEKYacvjRfqIQl+h8oi91aLYQVWRYbxjPcv1bUiUy/kLmQaANrYfNMCO3kuEDHfw==,
       }
     engines: { node: ">=14" }
     dependencies:
@@ -5487,10 +5487,10 @@ packages:
     engines: { node: ">=10" }
     dev: true
 
-  github.com/DeterminateSystems/detsys-ts/92206e638ddd38cfe2e8b4f5f273cfa4664017b5:
+  github.com/DeterminateSystems/detsys-ts/8c432d815e09c2ee4c08def607d854f11ea03e37:
     resolution:
       {
-        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/92206e638ddd38cfe2e8b4f5f273cfa4664017b5,
+        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/8c432d815e09c2ee4c08def607d854f11ea03e37,
       }
     name: detsys-ts
     version: 1.0.0

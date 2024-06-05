@@ -90093,7 +90093,7 @@ const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createReq
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
 // EXTERNAL MODULE: external "node:zlib"
 var external_node_zlib_ = __nccwpck_require__(5628);
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@92206e638ddd38cfe2e8b4f5f273cfa4664017b5_prmuiqdah2nqc6ytkllomnhmla/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@8c432d815e09c2ee4c08def607d854f11ea03e37_bxun2dzclfsosyehsgfpel4f4a/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -90456,9 +90456,13 @@ var IdsHost = class {
             async (options) => {
               const currentUrl = options.url;
               if (this.isUrlSubjectToDynamicUrls(currentUrl)) {
+                const newUrl = new URL(currentUrl);
                 const url = await this.getRootUrl();
-                currentUrl.host = url.host;
-                options.url = currentUrl;
+                newUrl.host = url.host;
+                options.url = newUrl;
+                core.debug(`Transmuted ${currentUrl} into ${newUrl}`);
+              } else {
+                core.debug(`No transmutations on ${currentUrl}`);
               }
             }
           ]
