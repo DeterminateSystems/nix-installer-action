@@ -16,7 +16,7 @@ dependencies:
     version: 5.1.1
   detsys-ts:
     specifier: github:DeterminateSystems/detsys-ts
-    version: github.com/DeterminateSystems/detsys-ts/7916bffbfacbe63ee24c4bf8649de649bd04f7b0
+    version: github.com/DeterminateSystems/detsys-ts/dd1509475ee7fee37677b858b67aa96ef37a7531
   got:
     specifier: ^14.3.0
     version: 14.3.0
@@ -3245,6 +3245,26 @@ packages:
       responselike: 3.0.0
     dev: false
 
+  /got@14.4.0:
+    resolution:
+      {
+        integrity: sha512-baa2HMfREJ9UQSXOPwWe0DNK+FT8Okcxe9kmTJvaetv2q/MUxq0qFzEnfSbxo+wj45/QioGcH5ZhuT9VBIPJ5Q==,
+      }
+    engines: { node: ">=20" }
+    dependencies:
+      "@sindresorhus/is": 6.3.1
+      "@szmarczak/http-timer": 5.0.1
+      cacheable-lookup: 7.0.0
+      cacheable-request: 12.0.1
+      decompress-response: 6.0.0
+      form-data-encoder: 4.0.2
+      get-stream: 8.0.1
+      http2-wrapper: 2.2.1
+      lowercase-keys: 3.0.0
+      p-cancelable: 4.0.1
+      responselike: 3.0.0
+    dev: false
+
   /graceful-fs@4.2.11:
     resolution:
       {
@@ -5114,6 +5134,14 @@ packages:
     engines: { node: ">=10" }
     dev: true
 
+  /type-fest@4.19.0:
+    resolution:
+      {
+        integrity: sha512-CN2l+hWACRiejlnr68vY0/7734Kzu+9+TOslUXbSCQ1ruY9XIHDBSceVXCcHm/oXrdzhtLMMdJEKfemf1yXiZQ==,
+      }
+    engines: { node: ">=16" }
+    dev: false
+
   /typed-array-buffer@1.0.2:
     resolution:
       {
@@ -5435,10 +5463,10 @@ packages:
     engines: { node: ">=10" }
     dev: true
 
-  github.com/DeterminateSystems/detsys-ts/7916bffbfacbe63ee24c4bf8649de649bd04f7b0:
+  github.com/DeterminateSystems/detsys-ts/dd1509475ee7fee37677b858b67aa96ef37a7531:
     resolution:
       {
-        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/7916bffbfacbe63ee24c4bf8649de649bd04f7b0,
+        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/dd1509475ee7fee37677b858b67aa96ef37a7531,
       }
     name: detsys-ts
     version: 1.0.0
@@ -5446,7 +5474,8 @@ packages:
       "@actions/cache": 3.2.4
       "@actions/core": 1.10.1
       "@actions/exec": 1.1.1
-      got: 14.3.0
+      got: 14.4.0
+      type-fest: 4.19.0
     transitivePeerDependencies:
       - encoding
     dev: false
