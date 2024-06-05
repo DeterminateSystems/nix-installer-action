@@ -90093,7 +90093,7 @@ const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createReq
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
 // EXTERNAL MODULE: external "node:zlib"
 var external_node_zlib_ = __nccwpck_require__(5628);
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@8c432d815e09c2ee4c08def607d854f11ea03e37_bxun2dzclfsosyehsgfpel4f4a/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@29491bff19b76ed55eaa5dc3fb6539cfbc951973_ueqhixrdgkfw5dvex7fu32pf7a/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -90430,7 +90430,6 @@ var IdsHost = class {
   async getGot(recordFailoverCallback) {
     if (this.client === void 0) {
       this.client = got_dist_source.extend({
-        prefixUrl: DEFAULT_IDS_HOST,
         timeout: {
           request: DEFAULT_TIMEOUT
         },
