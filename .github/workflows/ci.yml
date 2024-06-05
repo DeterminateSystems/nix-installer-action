@@ -56,6 +56,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    env:
+      IDS_LOOKUP: _detsys_ids._tcp.busted_install.determinate.systems
     steps:
       - uses: actions/checkout@v4
       - name: Install Nix
@@ -148,6 +150,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    env:
+      IDS_LOOKUP: _detsys_ids._tcp.busted_install.determinate.systems
     steps:
       - uses: actions/checkout@v4
       - name: Install Nix
