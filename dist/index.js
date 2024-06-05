@@ -90093,7 +90093,7 @@ const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createReq
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
 // EXTERNAL MODULE: external "node:zlib"
 var external_node_zlib_ = __nccwpck_require__(5628);
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@29491bff19b76ed55eaa5dc3fb6539cfbc951973_ueqhixrdgkfw5dvex7fu32pf7a/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@37aa6cb89ab2f822663a1d9e48af601d57008dd2_vtodt4zlqvxqzuf4tweutalod4/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -90467,8 +90467,8 @@ var IdsHost = class {
           ]
         }
       });
-      return this.client;
     }
+    return this.client;
   }
   markCurrentHostBroken() {
     this.prioritizedURLs?.shift();
