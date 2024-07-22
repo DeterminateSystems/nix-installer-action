@@ -688,6 +688,55 @@ class NixInstallerAction extends DetSysAction {
 
     {
       actionsCore.debug("Starting the Nix daemon through Docker...");
+
+      const candidateDirectories = [
+        {
+          dir: "/bin",
+          readOnly: true,
+        },
+        {
+          dir: "/etc",
+          readOnly: true,
+        },
+        {
+          dir: "/home",
+          readOnly: true,
+        },
+        {
+          dir: "/lib",
+          readOnly: true,
+        },
+        {
+          dir: "/lib64",
+          readOnly: true,
+        },
+        {
+          dir: "/tmp",
+          readOnly: false,
+        },
+        {
+          dir: "/nix",
+          readOnly: false,
+        },
+      ];
+
+      const mountArguments = [];
+
+      for (const { dir, readOnly } of candidateDirectories) {
+        try {
+          await access(dir);
+          actionsCore.debug(`Will mount ${dir} in the docker shim.`);
+          mountArguments.push("--mount");
+          mountArguments.push(
+            `type=bind,src=${dir},dst=${dir}${readOnly ? ",readonly" : ""}`,
+          );
+        } catch {
+          actionsCore.debug(
+            `Not mounting ${dir} in the docker shim: it doesn't appear to exist.`,
+          );
+        }
+      }
+
       this.recordEvent(EVENT_START_DOCKER_SHIM);
       const exitCode = await actionsExec.exec(
         "docker",
@@ -699,25 +748,14 @@ class NixInstallerAction extends DetSysAction {
           "--network=host",
           "--userns=host",
           "--pid=host",
-          "--mount",
-          "type=bind,src=/bin,dst=/bin,readonly",
-          "--mount",
-          "type=bind,src=/lib,dst=/lib,readonly",
-          "--mount",
-          "type=bind,src=/home,dst=/home,readonly",
-          "--mount",
-          "type=bind,src=/tmp,dst=/tmp",
-          "--mount",
-          "type=bind,src=/nix,dst=/nix",
-          "--mount",
-          "type=bind,src=/etc,dst=/etc,readonly",
           "--restart",
           "always",
           "--init",
           "--name",
           `determinate-nix-shim-${this.getUniqueId()}-${randomUUID()}`,
-          "determinate-nix-shim:latest",
-        ],
+        ]
+          .concat(mountArguments)
+          .concat(["determinate-nix-shim:latest"]),
         {
           silent: true,
           listeners: {
