@@ -102185,6 +102185,8 @@ ${stderrBuffer}`
           "--mount",
           "type=bind,src=/lib,dst=/lib,readonly",
           "--mount",
+          "type=bind,src=/lib64,dst=/lib64,readonly",
+          "--mount",
           "type=bind,src=/home,dst=/home,readonly",
           "--mount",
           "type=bind,src=/tmp,dst=/tmp",
