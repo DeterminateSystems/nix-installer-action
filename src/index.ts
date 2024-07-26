@@ -1,7 +1,7 @@
 import * as actionsCore from "@actions/core";
 import * as github from "@actions/github";
 import * as actionsExec from "@actions/exec";
-import { access, writeFile, readFile } from "node:fs/promises";
+import { access, writeFile, readFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import fs from "node:fs";
 import { userInfo } from "node:os";
@@ -854,9 +854,16 @@ class NixInstallerAction extends DetSysAction {
       netrcPath,
       [
         `machine api.flakehub.com login flakehub password ${jwt}`,
+        `machine cache.flakehub.com login flakehub password ${jwt}`,
         `machine flakehub.com login flakehub password ${jwt}`,
       ].join("\n"),
     );
+
+    const flakehubAuthDir = `${process.env["XDG_CONFIG_HOME"] || `${process.env["HOME"]}/.config`}/flakehub`;
+    await mkdir(flakehubAuthDir, { recursive: true });
+    const flakehubAuthPath = `${flakehubAuthDir}/auth`;
+
+    await writeFile(flakehubAuthPath, jwt);
 
     actionsCore.info("Logging in to FlakeHub.");
 

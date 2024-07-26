@@ -128,12 +128,6 @@ jobs:
           cat -n /etc/nix/nix.conf
           grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
           grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf
-      - name: Breakpoint if tests failed
-        if: failure()
-        uses: namespacelabs/breakpoint-action@v0
-        with:
-          duration: 5m
-          authorized-users: grahamc
 
   install-nix-macos:
     name: Run test suite for macOS systems
@@ -217,12 +211,6 @@ jobs:
           cat /etc/nix/nix.conf
           grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
           grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf
-      - name: Breakpoint if tests failed
-        if: failure()
-        uses: namespacelabs/breakpoint-action@v0
-        with:
-          duration: 5m
-          authorized-users: grahamc
 
   install-with-non-default-source-inputs:
     name: Install Nix using non-default source-${{ matrix.inputs.key }}
