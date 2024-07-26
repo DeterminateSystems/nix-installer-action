@@ -102316,9 +102316,14 @@ ${stderrBuffer}`
       netrcPath,
       [
         `machine api.flakehub.com login flakehub password ${jwt}`,
+        `machine cache.flakehub.com login flakehub password ${jwt}`,
         `machine flakehub.com login flakehub password ${jwt}`
       ].join("\n")
     );
+    const flakehubAuthDir = `${process.env["XDG_CONFIG_HOME"] || `${process.env["HOME"]}/.config`}/flakehub`;
+    await (0,promises_namespaceObject.mkdir)(flakehubAuthDir, { recursive: true });
+    const flakehubAuthPath = `${flakehubAuthDir}/auth`;
+    await (0,promises_namespaceObject.writeFile)(flakehubAuthPath, jwt);
     core.info("Logging in to FlakeHub.");
     if (this.extraConf?.join("\n").match(/^netrc-file/m)) {
       core.warning(
