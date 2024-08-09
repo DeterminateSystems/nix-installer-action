@@ -35,6 +35,9 @@ const FACT_IN_ACT = "in_act";
 const FACT_IN_NAMESPACE_SO = "in_namespace_so";
 const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 
+// Flags
+const FLAG_DETERMINATE = "--determinate";
+
 type WorkflowConclusion =
   | "success"
   | "failure"
@@ -43,6 +46,7 @@ type WorkflowConclusion =
   | "no-jobs";
 
 class NixInstallerAction extends DetSysAction {
+  determinate: boolean;
   platform: string;
   nixPackageUrl: string | null;
   backtrace: string | null;
@@ -84,6 +88,7 @@ class NixInstallerAction extends DetSysAction {
       diagnosticsSuffix: "diagnostic",
     });
 
+    this.determinate = inputs.getBool("determinate");
     this.platform = platform.getNixPlatform(platform.getArchOs());
     this.nixPackageUrl = inputs.getStringOrNull("nix-package-url");
     this.backtrace = inputs.getStringOrNull("backtrace");
@@ -553,13 +558,9 @@ class NixInstallerAction extends DetSysAction {
     return executionEnv;
   }
 
-  private async executeInstall(binaryPath: string): Promise<number> {
-    const executionEnv = await this.executionEnvironment();
-    actionsCore.debug(
-      `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`,
-    );
-
+  private get installerArgs(): string[] {
     const args = ["install"];
+
     if (this.planner) {
       this.addFact(FACT_NIX_INSTALLER_PLANNER, this.planner);
       args.push(this.planner);
@@ -571,10 +572,23 @@ class NixInstallerAction extends DetSysAction {
     if (this.extraArgs) {
       const extraArgs = stringArgv(this.extraArgs);
       args.push(...extraArgs);
+
+      if (this.determinate && !extraArgs.includes(FLAG_DETERMINATE)) {
+        args.push(FLAG_DETERMINATE);
+      }
     }
 
+    return args;
+  }
+
+  private async executeInstall(binaryPath: string): Promise<number> {
+    const executionEnv = await this.executionEnvironment();
+    actionsCore.debug(
+      `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`,
+    );
+
     this.recordEvent(EVENT_INSTALL_NIX_START);
-    const exitCode = await actionsExec.exec(binaryPath, args, {
+    const exitCode = await actionsExec.exec(binaryPath, this.installerArgs, {
       env: {
         ...executionEnv,
         ...process.env, // To get $PATH, etc
