@@ -570,7 +570,7 @@ class NixInstallerAction extends DetSysAction {
 
     if (this.extraArgs) {
       const extraArgs = stringArgv(this.extraArgs);
-      args.concat(extraArgs);
+      args.push(...extraArgs);
     }
 
     this.recordEvent(EVENT_INSTALL_NIX_START);

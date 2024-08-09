@@ -103364,7 +103364,7 @@ ${stderrBuffer}`
     }
     if (this.extraArgs) {
       const extraArgs = parseArgsStringToArgv(this.extraArgs);
-      args.concat(extraArgs);
+      args.push(...extraArgs);
     }
     this.recordEvent(EVENT_INSTALL_NIX_START);
     const exitCode = await exec.exec(binaryPath, args, {
