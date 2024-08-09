@@ -102933,6 +102933,7 @@ var EVENT_CLEAN_UP_DOCKER_SHIM = "clean_up_docker_shim";
 var EVENT_START_DOCKER_SHIM = "start_docker_shim";
 var EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 var EVENT_CONCLUDE_WORKFLOW = "conclude_workflow";
+var FACT_DETERMINATE_NIX = "determinate_nix";
 var FACT_HAS_DOCKER = "has_docker";
 var FACT_HAS_SYSTEMD = "has_systemd";
 var FACT_IN_ACT = "in_act";
@@ -103363,7 +103364,13 @@ ${stderrBuffer}`
     if (this.extraArgs) {
       const extraArgs = parseArgsStringToArgv(this.extraArgs);
       args.push(...extraArgs);
-      if (this.determinate && !extraArgs.includes(FLAG_DETERMINATE)) {
+    }
+    if (this.determinate) {
+      this.addFact(FACT_DETERMINATE_NIX, true);
+      core.info(
+        `Installing Determinate Nix using the ${FLAG_DETERMINATE} flag`
+      );
+      if (this.extraArgs && !this.extraArgs.includes(FLAG_DETERMINATE)) {
         args.push(FLAG_DETERMINATE);
       }
     }

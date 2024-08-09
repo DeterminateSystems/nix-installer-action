@@ -29,6 +29,7 @@ const EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 const EVENT_CONCLUDE_WORKFLOW = "conclude_workflow";
 
 // Facts
+const FACT_DETERMINATE_NIX = "determinate_nix";
 const FACT_HAS_DOCKER = "has_docker";
 const FACT_HAS_SYSTEMD = "has_systemd";
 const FACT_IN_ACT = "in_act";
@@ -572,8 +573,16 @@ class NixInstallerAction extends DetSysAction {
     if (this.extraArgs) {
       const extraArgs = stringArgv(this.extraArgs);
       args.push(...extraArgs);
+    }
 
-      if (this.determinate && !extraArgs.includes(FLAG_DETERMINATE)) {
+    if (this.determinate) {
+      this.addFact(FACT_DETERMINATE_NIX, true);
+
+      actionsCore.info(
+        `Installing Determinate Nix using the ${FLAG_DETERMINATE} flag`,
+      );
+
+      if (this.extraArgs && !this.extraArgs.includes(FLAG_DETERMINATE)) {
         args.push(FLAG_DETERMINATE);
       }
     }
