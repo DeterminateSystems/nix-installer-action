@@ -103370,6 +103370,9 @@ ${stderrBuffer}`
       core.info(
         `Installing Determinate Nix using the ${FLAG_DETERMINATE} flag`
       );
+      if (!this.extraArgs) {
+        args.push(FLAG_DETERMINATE);
+      }
       if (this.extraArgs && !this.extraArgs.includes(FLAG_DETERMINATE)) {
         args.push(FLAG_DETERMINATE);
       }
