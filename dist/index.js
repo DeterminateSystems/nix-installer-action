@@ -102938,6 +102938,7 @@ var FACT_HAS_SYSTEMD = "has_systemd";
 var FACT_IN_ACT = "in_act";
 var FACT_IN_NAMESPACE_SO = "in_namespace_so";
 var FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
+var FLAG_DETERMINATE = "--determinate";
 var NixInstallerAction = class extends DetSysAction {
   constructor() {
     super({
@@ -102947,6 +102948,7 @@ var NixInstallerAction = class extends DetSysAction {
       requireNix: "ignore",
       diagnosticsSuffix: "diagnostic"
     });
+    this.determinate = inputs_exports.getBool("determinate");
     this.platform = platform_exports.getNixPlatform(platform_exports.getArchOs());
     this.nixPackageUrl = inputs_exports.getStringOrNull("nix-package-url");
     this.backtrace = inputs_exports.getStringOrNull("backtrace");
@@ -103349,11 +103351,7 @@ ${stderrBuffer}`
     }
     return executionEnv;
   }
-  async executeInstall(binaryPath) {
-    const executionEnv = await this.executionEnvironment();
-    core.debug(
-      `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`
-    );
+  get installerArgs() {
     const args = ["install"];
     if (this.planner) {
       this.addFact(FACT_NIX_INSTALLER_PLANNER, this.planner);
@@ -103365,9 +103363,19 @@ ${stderrBuffer}`
     if (this.extraArgs) {
       const extraArgs = parseArgsStringToArgv(this.extraArgs);
       args.push(...extraArgs);
+      if (this.determinate && !extraArgs.includes(FLAG_DETERMINATE)) {
+        args.push(FLAG_DETERMINATE);
+      }
     }
+    return args;
+  }
+  async executeInstall(binaryPath) {
+    const executionEnv = await this.executionEnvironment();
+    core.debug(
+      `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`
+    );
     this.recordEvent(EVENT_INSTALL_NIX_START);
-    const exitCode = await exec.exec(binaryPath, args, {
+    const exitCode = await exec.exec(binaryPath, this.installerArgs, {
       env: {
         ...executionEnv,
         ...process.env
