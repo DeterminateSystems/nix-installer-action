@@ -6246,7 +6246,7 @@ exports.AbortSignal = AbortSignal;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 var coreRestPipeline = __nccwpck_require__(7314);
-var tslib = __nccwpck_require__(6928);
+var tslib = __nccwpck_require__(9236);
 var coreAuth = __nccwpck_require__(9334);
 var coreUtil = __nccwpck_require__(8143);
 var coreHttpCompat = __nccwpck_require__(7050);
@@ -46427,7 +46427,7 @@ module.exports.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
 
 /***/ }),
 
-/***/ 6928:
+/***/ 9236:
 /***/ ((module) => {
 
 /******************************************************************************
@@ -46444,7 +46444,7 @@ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
-/* global global, define, Symbol, Reflect, Promise, SuppressedError */
+/* global global, define, Symbol, Reflect, Promise, SuppressedError, Iterator */
 var __extends;
 var __assign;
 var __rest;
@@ -46603,8 +46603,8 @@ var __disposeResources;
     };
 
     __generator = function (thisArg, body) {
-        var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-        return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+        var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+        return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
         function verb(n) { return function (v) { return step([n, v]); }; }
         function step(op) {
             if (f) throw new TypeError("Generator is already executing.");
@@ -46708,7 +46708,7 @@ var __disposeResources;
     __asyncGenerator = function (thisArg, _arguments, generator) {
         if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
         var g = generator.apply(thisArg, _arguments || []), i, q = [];
-        return i = {}, verb("next"), verb("throw"), verb("return", awaitReturn), i[Symbol.asyncIterator] = function () { return this; }, i;
+        return i = Object.create((typeof AsyncIterator === "function" ? AsyncIterator : Object).prototype), verb("next"), verb("throw"), verb("return", awaitReturn), i[Symbol.asyncIterator] = function () { return this; }, i;
         function awaitReturn(f) { return function (v) { return Promise.resolve(v).then(f, reject); }; }
         function verb(n, f) { if (g[n]) { i[n] = function (v) { return new Promise(function (a, b) { q.push([n, v, a, b]) > 1 || resume(n, v); }); }; if (f) i[n] = f(i[n]); } }
         function resume(n, v) { try { step(g[n](v)); } catch (e) { settle(q[0][3], e); } }
@@ -46806,17 +46806,22 @@ var __disposeResources;
             env.error = env.hasError ? new _SuppressedError(e, env.error, "An error was suppressed during disposal.") : e;
             env.hasError = true;
         }
+        var r, s = 0;
         function next() {
-            while (env.stack.length) {
-                var rec = env.stack.pop();
+            while (r = env.stack.pop()) {
                 try {
-                    var result = rec.dispose && rec.dispose.call(rec.value);
-                    if (rec.async) return Promise.resolve(result).then(next, function(e) { fail(e); return next(); });
+                    if (!r.async && s === 1) return s = 0, env.stack.push(r), Promise.resolve().then(next);
+                    if (r.dispose) {
+                        var result = r.dispose.call(r.value);
+                        if (r.async) return s |= 2, Promise.resolve(result).then(next, function(e) { fail(e); return next(); });
+                    }
+                    else s |= 1;
                 }
                 catch (e) {
                     fail(e);
                 }
             }
+            if (s === 1) return env.hasError ? Promise.reject(env.error) : Promise.resolve();
             if (env.hasError) throw env.error;
         }
         return next();
@@ -73610,7 +73615,7 @@ function prepareXMLRootList(obj, elementName, xmlNamespaceKey, xmlNamespace) {
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MapperTypeNames = exports.createSerializer = void 0;
-const tslib_1 = __nccwpck_require__(6928);
+const tslib_1 = __nccwpck_require__(9236);
 const base64 = tslib_1.__importStar(__nccwpck_require__(447));
 const interfaces_js_1 = __nccwpck_require__(5915);
 const utils_js_1 = __nccwpck_require__(382);
@@ -75998,7 +76003,7 @@ exports.createHttpPoller = createHttpPoller;
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createHttpPoller = void 0;
-const tslib_1 = __nccwpck_require__(6928);
+const tslib_1 = __nccwpck_require__(9236);
 var poller_js_1 = __nccwpck_require__(8969);
 Object.defineProperty(exports, "createHttpPoller", ({ enumerable: true, get: function () { return poller_js_1.createHttpPoller; } }));
 /**
@@ -77276,7 +77281,7 @@ exports.logger = (0, logger_1.createClientLogger)("core-rest-pipeline");
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getBodyLength = getBodyLength;
 exports.createNodeHttpClient = createNodeHttpClient;
-const tslib_1 = __nccwpck_require__(6928);
+const tslib_1 = __nccwpck_require__(9236);
 const http = tslib_1.__importStar(__nccwpck_require__(8849));
 const https = tslib_1.__importStar(__nccwpck_require__(2286));
 const zlib = tslib_1.__importStar(__nccwpck_require__(5628));
@@ -79457,7 +79462,7 @@ function throttlingRetryStrategy() {
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.concat = concat;
-const tslib_1 = __nccwpck_require__(6928);
+const tslib_1 = __nccwpck_require__(9236);
 const node_stream_1 = __nccwpck_require__(4492);
 const typeGuards_js_1 = __nccwpck_require__(7734);
 const file_js_1 = __nccwpck_require__(8990);
@@ -80129,7 +80134,7 @@ async function getUserAgentValue(prefix) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getHeaderName = getHeaderName;
 exports.setPlatformSpecificData = setPlatformSpecificData;
-const tslib_1 = __nccwpck_require__(6928);
+const tslib_1 = __nccwpck_require__(9236);
 const os = tslib_1.__importStar(__nccwpck_require__(612));
 const process = tslib_1.__importStar(__nccwpck_require__(7742));
 /**
@@ -81087,7 +81092,7 @@ exports.AzureLogger = void 0;
 exports.setLogLevel = setLogLevel;
 exports.getLogLevel = getLogLevel;
 exports.createClientLogger = createClientLogger;
-const tslib_1 = __nccwpck_require__(6928);
+const tslib_1 = __nccwpck_require__(9236);
 const debug_js_1 = tslib_1.__importDefault(__nccwpck_require__(8630));
 const registeredLoggers = new Set();
 const logLevelFromEnv = (typeof process !== "undefined" && process.env && process.env.AZURE_LOG_LEVEL) || undefined;
@@ -81195,7 +81200,7 @@ function isAzureLogLevel(logLevel) {
 // Licensed under the MIT license.
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.log = log;
-const tslib_1 = __nccwpck_require__(6928);
+const tslib_1 = __nccwpck_require__(9236);
 const node_os_1 = __nccwpck_require__(612);
 const node_util_1 = tslib_1.__importDefault(__nccwpck_require__(7261));
 const process = tslib_1.__importStar(__nccwpck_require__(7742));
@@ -90017,7 +90022,7 @@ var cache = __nccwpck_require__(6878);
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
 ;// CONCATENATED MODULE: external "node:stream/promises"
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@dc9db210bf997e0265ddb67892cafec89a76f25a_6kpxqm42ugq4jvfwr3tysxzbly/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@c985ebf9ec62787c770c928f9f679a82b43bdfea_hiurxrwfap4l67x56wkrjk4msm/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -90258,9 +90263,9 @@ async function collectBacktraces(prefixes) {
   return /* @__PURE__ */ new Map();
 }
 async function collectBacktracesMacOS(prefixes) {
-  const dir = process.env["HOME"];
-  const fileNames = (await (0,promises_namespaceObject.readdir)(`${dir}/Library/Logs/DiagnosticReports/`)).filter((fileName) => {
-    return prefixes.some((prefix) => fileName.startsWith(`${prefix}_`));
+  const dir = `${process.env["HOME"]}/Library/Logs/DiagnosticReports/`;
+  const fileNames = (await (0,promises_namespaceObject.readdir)(dir)).filter((fileName) => {
+    return prefixes.some((prefix) => fileName.startsWith(prefix));
   });
   const backtraces = /* @__PURE__ */ new Map();
   const doGzip = (0,external_node_util_.promisify)(external_node_zlib_.gzip);
@@ -91049,6 +91054,7 @@ var DetSysAction = class {
             this.actionOptions.binaryNamePrefixes
           );
           if (backtraces.size > 0) {
+            core.debug(`backtraces identified: ${backtraces.size}`);
             this.recordEvent(EVENT_BACKTRACES, Object.fromEntries(backtraces));
           }
         } catch (innerError) {

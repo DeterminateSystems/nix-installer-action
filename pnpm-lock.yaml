@@ -16,7 +16,7 @@ dependencies:
     version: 5.1.1
   detsys-ts:
     specifier: github:DeterminateSystems/detsys-ts#collect-crash-logs
-    version: github.com/DeterminateSystems/detsys-ts/dc9db210bf997e0265ddb67892cafec89a76f25a
+    version: github.com/DeterminateSystems/detsys-ts/c985ebf9ec62787c770c928f9f679a82b43bdfea
   got:
     specifier: ^14.4.2
     version: 14.4.2
@@ -154,7 +154,7 @@ packages:
       }
     engines: { node: ">=12.0.0" }
     dependencies:
-      tslib: 2.6.3
+      tslib: 2.7.0
     dev: false
 
   /@azure/abort-controller@2.1.2:
@@ -164,7 +164,7 @@ packages:
       }
     engines: { node: ">=18.0.0" }
     dependencies:
-      tslib: 2.6.3
+      tslib: 2.7.0
     dev: false
 
   /@azure/core-auth@1.7.2:
@@ -176,7 +176,7 @@ packages:
     dependencies:
       "@azure/abort-controller": 2.1.2
       "@azure/core-util": 1.9.2
-      tslib: 2.6.3
+      tslib: 2.7.0
     dev: false
 
   /@azure/core-client@1.9.2:
@@ -192,7 +192,7 @@ packages:
       "@azure/core-tracing": 1.1.2
       "@azure/core-util": 1.9.2
       "@azure/logger": 1.1.4
-      tslib: 2.6.3
+      tslib: 2.7.0
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -221,7 +221,7 @@ packages:
       "@azure/abort-controller": 2.1.2
       "@azure/core-util": 1.9.2
       "@azure/logger": 1.1.4
-      tslib: 2.6.3
+      tslib: 2.7.0
     dev: false
 
   /@azure/core-paging@1.6.2:
@@ -231,7 +231,7 @@ packages:
       }
     engines: { node: ">=18.0.0" }
     dependencies:
-      tslib: 2.6.3
+      tslib: 2.7.0
     dev: false
 
   /@azure/core-rest-pipeline@1.16.3:
@@ -248,7 +248,7 @@ packages:
       "@azure/logger": 1.1.4
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.5
-      tslib: 2.6.3
+      tslib: 2.7.0
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -260,7 +260,7 @@ packages:
       }
     engines: { node: ">=18.0.0" }
     dependencies:
-      tslib: 2.6.3
+      tslib: 2.7.0
     dev: false
 
   /@azure/core-util@1.9.2:
@@ -271,7 +271,7 @@ packages:
     engines: { node: ">=18.0.0" }
     dependencies:
       "@azure/abort-controller": 2.1.2
-      tslib: 2.6.3
+      tslib: 2.7.0
     dev: false
 
   /@azure/core-xml@1.4.3:
@@ -282,7 +282,7 @@ packages:
     engines: { node: ">=18.0.0" }
     dependencies:
       fast-xml-parser: 4.4.1
-      tslib: 2.6.3
+      tslib: 2.7.0
     dev: false
 
   /@azure/logger@1.1.4:
@@ -292,7 +292,7 @@ packages:
       }
     engines: { node: ">=18.0.0" }
     dependencies:
-      tslib: 2.6.3
+      tslib: 2.7.0
     dev: false
 
   /@azure/ms-rest-js@2.7.0:
@@ -332,7 +332,7 @@ packages:
       "@azure/core-xml": 1.4.3
       "@azure/logger": 1.1.4
       events: 3.3.0
-      tslib: 2.6.3
+      tslib: 2.7.0
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -5067,7 +5067,7 @@ packages:
     engines: { node: ^14.18.0 || >=16.0.0 }
     dependencies:
       "@pkgr/core": 0.1.1
-      tslib: 2.6.3
+      tslib: 2.7.0
     dev: true
 
   /tapable@2.2.1:
@@ -5184,10 +5184,10 @@ packages:
       }
     dev: false
 
-  /tslib@2.6.3:
+  /tslib@2.7.0:
     resolution:
       {
-        integrity: sha512-xNvxJEOUiWPGhUuUdQgAJPKOOJfGnIyKySOc09XkKsgdUV/3E2zvwZYdejjmRgPCgcym1juLH3226yA7sEFJKQ==,
+        integrity: sha512-gLXCKdN1/j47AiHiOkJN69hJmcbGTHI0ImLmbYLHykhgeN0jVGola9yVjFgzCUklsZQMW55o+dW7IXv3RCXDzA==,
       }
 
   /tsup@8.2.4(typescript@5.5.4):
@@ -5583,10 +5583,10 @@ packages:
     engines: { node: ">=10" }
     dev: true
 
-  github.com/DeterminateSystems/detsys-ts/dc9db210bf997e0265ddb67892cafec89a76f25a:
+  github.com/DeterminateSystems/detsys-ts/c985ebf9ec62787c770c928f9f679a82b43bdfea:
     resolution:
       {
-        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/dc9db210bf997e0265ddb67892cafec89a76f25a,
+        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/c985ebf9ec62787c770c928f9f679a82b43bdfea,
       }
     name: detsys-ts
     version: 1.0.0
