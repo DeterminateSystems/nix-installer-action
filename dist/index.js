@@ -90022,7 +90022,7 @@ var cache = __nccwpck_require__(6878);
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
 ;// CONCATENATED MODULE: external "node:stream/promises"
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@fe32be8093bc61b1f7aef5d7f9b44c619e0d08f1_bpsi7e6nuhr5edeo3e5bigq7km/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@ef360e9bfcebe97d11650d5db7d33521dd1ab94e_iva342yxzg57uverumolhjpt7i/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -91037,7 +91037,6 @@ var DetSysAction = class {
         await this.main();
       } else if (this.isPost) {
         await this.post();
-        await this.collectBacktraces();
       }
       this.addFact(FACT_ENDED_WITH_EXCEPTION, false);
     } catch (e) {
@@ -91068,6 +91067,9 @@ var DetSysAction = class {
       }
       this.recordEvent(EVENT_EXCEPTION, Object.fromEntries(exceptionContext));
     } finally {
+      if (this.isPost) {
+        await this.collectBacktraces();
+      }
       await this.complete();
     }
   }

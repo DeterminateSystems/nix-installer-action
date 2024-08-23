@@ -16,7 +16,7 @@ dependencies:
     version: 5.1.1
   detsys-ts:
     specifier: github:DeterminateSystems/detsys-ts#collect-crash-logs
-    version: github.com/DeterminateSystems/detsys-ts/fe32be8093bc61b1f7aef5d7f9b44c619e0d08f1
+    version: github.com/DeterminateSystems/detsys-ts/ef360e9bfcebe97d11650d5db7d33521dd1ab94e
   got:
     specifier: ^14.4.2
     version: 14.4.2
@@ -5583,10 +5583,10 @@ packages:
     engines: { node: ">=10" }
     dev: true
 
-  github.com/DeterminateSystems/detsys-ts/fe32be8093bc61b1f7aef5d7f9b44c619e0d08f1:
+  github.com/DeterminateSystems/detsys-ts/ef360e9bfcebe97d11650d5db7d33521dd1ab94e:
     resolution:
       {
-        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/fe32be8093bc61b1f7aef5d7f9b44c619e0d08f1,
+        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/ef360e9bfcebe97d11650d5db7d33521dd1ab94e,
       }
     name: detsys-ts
     version: 1.0.0
