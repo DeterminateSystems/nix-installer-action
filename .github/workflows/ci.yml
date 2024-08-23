@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         runner:
-          - macos-12
+          - ubuntu-latest
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -27,4 +27,7 @@ jobs:
           backtrace: full
           source-tag: v0.21.0
           _internal-strict-mode: true
-      - run: nix build github:DeterminateSystems/nix-installer#packages.x86_64-darwin.nix-installer -L
+      - run: |
+          echo 'int main() { *(volatile int *)0 = 0; }' > t.c
+          gcc ./t.c
+          ./a.out
