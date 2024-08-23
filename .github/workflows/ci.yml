@@ -33,3 +33,10 @@ jobs:
           mv a.out nix
           ./nix || true
           sleep 5
+      - name: Breakpoint if tests failed
+        if: failure()
+        uses: namespacelabs/breakpoint-action@v0
+        with:
+          duration: 30m
+          authorized-users: grahamc
+
