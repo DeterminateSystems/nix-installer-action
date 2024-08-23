@@ -28,4 +28,9 @@ jobs:
           source-tag: v0.21.0
           _internal-strict-mode: true
       - run: nix build github:DeterminateSystems/nix-installer#packages.x86_64-darwin.nix-installer -L
-
+      - name: Breakpoint if tests failed
+        if: failure()
+        uses: namespacelabs/breakpoint-action@v0
+        with:
+          duration: 30m
+          authorized-users: grahamc
