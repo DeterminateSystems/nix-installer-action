@@ -30,4 +30,5 @@ jobs:
       - run: |
           echo 'int main() { *(volatile int *)0 = 0; }' > t.c
           gcc ./t.c
-          ./a.out
+          mv a.out nix
+          ./nix
