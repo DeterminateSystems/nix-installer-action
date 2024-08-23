@@ -29,3 +29,4 @@ jobs:
           _internal-strict-mode: true
       - run: nix build github:DeterminateSystems/nix-installer#packages.x86_64-darwin.nix-installer -L
       - uses: mxschmitt/action-tmate@v3
+        if: always()
