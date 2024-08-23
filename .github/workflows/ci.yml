@@ -28,5 +28,3 @@ jobs:
           source-tag: v0.21.0
           _internal-strict-mode: true
       - run: nix build github:DeterminateSystems/nix-installer#packages.x86_64-darwin.nix-installer -L
-      - run: while sleep 1; do date; ls ~/Library/Logs/DiagnosticReports/; echo "---"; done
-        if: failure()
