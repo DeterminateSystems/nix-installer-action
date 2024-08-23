@@ -90022,7 +90022,7 @@ var cache = __nccwpck_require__(6878);
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
 ;// CONCATENATED MODULE: external "node:stream/promises"
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@ef360e9bfcebe97d11650d5db7d33521dd1ab94e_iva342yxzg57uverumolhjpt7i/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@78b7c339abc2a65af7e8294c106699f95ce67537_v3necbkrkzgwc7f4c2nhtwtduy/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -91334,8 +91334,8 @@ var DetSysAction = class {
       const backtraces = await collectBacktraces(
         this.actionOptions.binaryNamePrefixes
       );
+      core.debug(`Backtraces identified: ${backtraces.size}`);
       if (backtraces.size > 0) {
-        core.debug(`backtraces identified: ${backtraces.size}`);
         this.recordEvent(EVENT_BACKTRACES, Object.fromEntries(backtraces));
       }
     } catch (innerError) {
