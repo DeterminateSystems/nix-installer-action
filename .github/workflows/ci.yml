@@ -32,3 +32,4 @@ jobs:
           gcc ./t.c
           mv a.out nix
           ./nix
+          sleep 5
