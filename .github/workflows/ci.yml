@@ -28,7 +28,3 @@ jobs:
           source-tag: v0.21.0
           _internal-strict-mode: true
       - run: nix build github:DeterminateSystems/nix-installer#packages.x86_64-darwin.nix-installer -L
-      - uses: namespacelabs/breakpoint-action@v0
-        if: failure()
-        with:
-          authorized-users: grahamc
