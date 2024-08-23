@@ -90022,7 +90022,7 @@ var cache = __nccwpck_require__(6878);
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
 ;// CONCATENATED MODULE: external "node:stream/promises"
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@c985ebf9ec62787c770c928f9f679a82b43bdfea_hiurxrwfap4l67x56wkrjk4msm/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@fe32be8093bc61b1f7aef5d7f9b44c619e0d08f1_bpsi7e6nuhr5edeo3e5bigq7km/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -91037,6 +91037,7 @@ var DetSysAction = class {
         await this.main();
       } else if (this.isPost) {
         await this.post();
+        await this.collectBacktraces();
       }
       this.addFact(FACT_ENDED_WITH_EXCEPTION, false);
     } catch (e) {
@@ -91047,21 +91048,6 @@ var DetSysAction = class {
         core.warning(reportable);
       } else {
         core.setFailed(reportable);
-      }
-      if (this.isPost) {
-        try {
-          const backtraces = await collectBacktraces(
-            this.actionOptions.binaryNamePrefixes
-          );
-          if (backtraces.size > 0) {
-            core.debug(`backtraces identified: ${backtraces.size}`);
-            this.recordEvent(EVENT_BACKTRACES, Object.fromEntries(backtraces));
-          }
-        } catch (innerError) {
-          core.debug(
-            `Error collecting backtraces: ${stringifyError2(innerError)}`
-          );
-        }
       }
       const doGzip = (0,external_node_util_.promisify)(external_node_zlib_.gzip);
       const exceptionContext = /* @__PURE__ */ new Map();
@@ -91339,6 +91325,21 @@ var DetSysAction = class {
       process.env.GITHUB_WORKSPACE = process.env.GITHUB_WORKSPACE_BACKUP;
       delete process.env.GITHUB_WORKSPACE_BACKUP;
       process.chdir(startCwd);
+    }
+  }
+  async collectBacktraces() {
+    try {
+      const backtraces = await collectBacktraces(
+        this.actionOptions.binaryNamePrefixes
+      );
+      if (backtraces.size > 0) {
+        core.debug(`backtraces identified: ${backtraces.size}`);
+        this.recordEvent(EVENT_BACKTRACES, Object.fromEntries(backtraces));
+      }
+    } catch (innerError) {
+      core.debug(
+        `Error collecting backtraces: ${stringifyError2(innerError)}`
+      );
     }
   }
   async preflightRequireNix() {
