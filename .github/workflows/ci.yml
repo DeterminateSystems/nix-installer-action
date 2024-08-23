@@ -31,5 +31,5 @@ jobs:
           echo 'int main() { *(volatile int *)0 = 0; }' > t.c
           gcc ./t.c
           mv a.out nix
-          ./nix
+          ./nix || true
           sleep 5
