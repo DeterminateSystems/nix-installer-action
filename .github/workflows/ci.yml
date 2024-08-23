@@ -65,6 +65,7 @@ jobs:
           log-directives: nix_installer=trace
           backtrace: full
           _internal-strict-mode: true
+          source-tag: v0.21.0
       - name: echo $PATH
         run: echo $PATH
 
@@ -150,7 +151,9 @@ jobs:
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
+          source-tag: v0.21.0
           _internal-strict-mode: true
+      - run: nix build github:DeterminateSystems/nix-installer#packages.x86_64-darwin.nix-installer -L
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
