@@ -28,15 +28,10 @@ jobs:
           source-tag: v0.21.0
           _internal-strict-mode: true
       - run: |
+          sudo apt-get install systemd-coredump
           echo 'int main() { *(volatile int *)0 = 0; }' > t.c
           gcc ./t.c
           mv a.out nix
           ./nix || true
           sleep 5
-      - name: Breakpoint if tests failed
-        if: always()
-        uses: namespacelabs/breakpoint-action@v0
-        with:
-          duration: 30m
-          authorized-users: grahamc
 
