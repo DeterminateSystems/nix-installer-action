@@ -96405,7 +96405,7 @@ var cache = __nccwpck_require__(6878);
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
 ;// CONCATENATED MODULE: external "node:stream/promises"
 const external_node_stream_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:stream/promises");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@cf1897a891edc164a8240f469cd56d14364e6be1_fq5hfjh622jf54cg4vepqdc2u4/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@e8f6e8f54d85aa0fd3d0b694dd3279a21497a33b_my6t2hapzhbardj4d5wtrx4lzm/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -97894,7 +97894,11 @@ function makeOptionsConfident(actionOptions) {
     fetchStyle: actionOptions.fetchStyle,
     legacySourcePrefix: actionOptions.legacySourcePrefix,
     requireNix: actionOptions.requireNix,
-    binaryNamePrefixes: actionOptions.binaryNamePrefixes || ["nix"]
+    binaryNamePrefixes: actionOptions.binaryNamePrefixes ?? [
+      "nix",
+      "determinate-nixd",
+      actionOptions.name
+    ]
   };
   core.debug("idslib options:");
   core.debug(JSON.stringify(finalOpts, void 0, 2));
