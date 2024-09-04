@@ -96403,7 +96403,7 @@ const external_node_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequ
 var cache = __nccwpck_require__(6878);
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@b32eaff5853519dc6c92a63bac86f5169bc07112_yhfhaezty374j2ssralz6bnlie/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@4d0e2c8ed44e4347573f7cd88fb9f51a3f688b1c_hjqxpokvb4p3rcxhd2fluho574/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -97664,7 +97664,10 @@ var DetSysAction = class {
         `No match from the cache, re-fetching from the redirect: ${versionCheckup.url}`
       );
       const destFile = this.getTemporaryName();
-      const fetchStream = await this.downloadFile(destFile, versionCheckup.url);
+      const fetchStream = await this.downloadFile(
+        new URL(versionCheckup.url),
+        destFile
+      );
       if (fetchStream.response?.headers.etag) {
         const v = fetchStream.response.headers.etag;
         try {
