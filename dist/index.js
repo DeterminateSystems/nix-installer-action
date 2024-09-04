@@ -96403,7 +96403,7 @@ const external_node_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequ
 var cache = __nccwpck_require__(6878);
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@fda3a6fa4f2a0b59a2883e622efbb4f436bcf519_gffdeucnlubwru3j2mmwcetiyq/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@ea83acf8006fc1263b0f938e570a61e3fbf0cd8a_joe566rr7fdnkaxml45twusmwe/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -97614,11 +97614,16 @@ var DetSysAction = class {
   }
   recordPlausibleTimeout(e) {
     if (e instanceof TimeoutError && "timings" in e && "request" in e) {
-      this.recordEvent("timeout", {
-        timings: e.timings,
-        url: e.request.requestUrl,
+      const reportContext = {
+        url: e.request.requestUrl?.toString(),
         retry_count: e.request.retryCount
-      });
+      };
+      for (const [key, value] of Object.entries(e.timings.phases)) {
+        if (Number.isFinite(value)) {
+          reportContext[`timing_phase_${key}`] = value;
+        }
+      }
+      this.recordEvent("timeout", reportContext);
     }
   }
   /**
