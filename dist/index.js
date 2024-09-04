@@ -96403,7 +96403,7 @@ const external_node_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequ
 var cache = __nccwpck_require__(6878);
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@648f69e289639f26128ca776eef39347290b6166_7fe5lgv62becucu5juebhtz2jm/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@fda3a6fa4f2a0b59a2883e622efbb4f436bcf519_gffdeucnlubwru3j2mmwcetiyq/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -97613,7 +97613,7 @@ var DetSysAction = class {
     return void 0;
   }
   recordPlausibleTimeout(e) {
-    if (e instanceof TimeoutError && Object.hasOwn(e, "timings") && Object.hasOwn(e, "request")) {
+    if (e instanceof TimeoutError && "timings" in e && "request" in e) {
       this.recordEvent("timeout", {
         timings: e.timings,
         url: e.request.requestUrl,
