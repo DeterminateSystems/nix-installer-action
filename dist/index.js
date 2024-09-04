@@ -96403,7 +96403,7 @@ const external_node_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequ
 var cache = __nccwpck_require__(6878);
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@4d0e2c8ed44e4347573f7cd88fb9f51a3f688b1c_hjqxpokvb4p3rcxhd2fluho574/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@e8e2112b827010190c298bcc2ea48845fab8c152_7zu4grzejqt6onoxzro546c3ra/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -96877,7 +96877,7 @@ var ALLOWED_SUFFIXES = [
 ];
 var DEFAULT_IDS_HOST = "https://install.determinate.systems";
 var LOOKUP = process.env["IDS_LOOKUP"] ?? DEFAULT_LOOKUP;
-var DEFAULT_TIMEOUT = 1e4;
+var DEFAULT_TIMEOUT = 5;
 var IdsHost = class {
   constructor(idsProjectName, diagnosticsSuffix, runtimeDiagnosticsUrl) {
     this.idsProjectName = idsProjectName;
@@ -97288,8 +97288,8 @@ var STATE_KEY_NIX_NOT_FOUND = "detsys_action_nix_not_found";
 var STATE_NOT_FOUND = "not-found";
 var STATE_KEY_CROSS_PHASE_ID = "detsys_cross_phase_id";
 var STATE_BACKTRACE_START_TIMESTAMP = "detsys_backtrace_start_timestamp";
-var DIAGNOSTIC_ENDPOINT_TIMEOUT_MS = 1e3;
-var CHECK_IN_ENDPOINT_TIMEOUT_MS = 1e3;
+var DIAGNOSTIC_ENDPOINT_TIMEOUT_MS = 5;
+var CHECK_IN_ENDPOINT_TIMEOUT_MS = 5;
 var DetSysAction = class {
   determineExecutionPhase() {
     const currentPhase = core.getState(STATE_KEY_EXECUTION_PHASE);
