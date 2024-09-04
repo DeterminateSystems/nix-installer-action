@@ -96403,7 +96403,7 @@ const external_node_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequ
 var cache = __nccwpck_require__(6878);
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@4800d265cfff5c47c45845b65733fcafcded7eea_v2lfxkeeetmkknz4j2u64ejmsy/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@1532a6159b2638375f87ebd882f26acb497742a9_bnkspnpqb24d6ofiipxikbs6xy/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -96877,7 +96877,7 @@ var ALLOWED_SUFFIXES = [
 ];
 var DEFAULT_IDS_HOST = "https://install.determinate.systems";
 var LOOKUP = process.env["IDS_LOOKUP"] ?? DEFAULT_LOOKUP;
-var DEFAULT_TIMEOUT = 5;
+var DEFAULT_TIMEOUT = 1e4;
 var IdsHost = class {
   constructor(idsProjectName, diagnosticsSuffix, runtimeDiagnosticsUrl) {
     this.idsProjectName = idsProjectName;
