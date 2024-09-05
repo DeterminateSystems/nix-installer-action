@@ -90887,7 +90887,7 @@ const external_node_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequ
 var cache = __nccwpck_require__(6878);
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@2e8b52ef6f516caef4c88593cd71aee68fc5e4ae_xjnerncbz5oexhjk6ww5y6g6n4/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@569dbd7c2ae47f6506e3436cfd72d744af40ad9c_t2bjxwoge7chrgxuvjsev567yu/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -91748,7 +91748,7 @@ async function verifyEtag(filename, quotedExpectedEtag) {
       core.info(
         `Verifying etag failed: etag did not parse: ${expectedEtag}`
       );
-      return "corrupt";
+      return "corrupt" /* Corrupt */;
     }
     const fd = await (0,promises_namespaceObject.open)(filename, "r");
     let actualEtag;
@@ -91761,16 +91761,16 @@ async function verifyEtag(filename, quotedExpectedEtag) {
     }
     await fd.close();
     if (expectedEtag === actualEtag) {
-      return "valid";
+      return "valid" /* Valid */;
     } else {
       core.info(
         `Verifying etag failed: etag mismatch. Wanted ${expectedEtag}, got ${actualEtag}`
       );
-      return "corrupt";
+      return "corrupt" /* Corrupt */;
     }
   } catch (e) {
     core.debug(`Verifying etag failed: ${stringifyError(e)}`);
-    return "corrupt";
+    return "corrupt" /* Corrupt */;
   }
 }
 async function calculateMd5Etag(fd) {
@@ -92232,7 +92232,7 @@ var DetSysAction = class {
         JSON.stringify(this.identity)
       );
       const versionCheckup = await (await this.getClient()).head(correlatedUrl);
-      if (versionCheckup.headers.etag) {
+      if ((versionCheckup.headers.server ?? "") === "AmazonS3" && versionCheckup.headers.etag) {
         const v = versionCheckup.headers.etag;
         this.addFact(FACT_SOURCE_URL_ETAG, v);
         core.debug(
@@ -92254,7 +92254,7 @@ var DetSysAction = class {
         new URL(versionCheckup.url),
         destFile
       );
-      if (fetchStream.response?.headers.etag) {
+      if ((fetchStream.response?.headers.server ?? "") === "AmazonS3" && fetchStream.response?.headers.etag) {
         const v = fetchStream.response.headers.etag;
         try {
           await this.saveCachedVersion(v, destFile);
@@ -92309,9 +92309,9 @@ var DetSysAction = class {
       retry(client.stream(url));
     });
     const fetchStream = await downloadPromise;
-    if (fetchStream.response?.headers.etag) {
+    if ((fetchStream.response?.headers.server ?? "") === "AmazonS3" && fetchStream.response?.headers.etag) {
       const etag = fetchStream.response.headers.etag;
-      if (await verifyEtag(destination, etag) !== "valid") {
+      if (await verifyEtag(destination, etag) === "corrupt" /* Corrupt */) {
         throw new Error("download failed: etag mismatch");
       }
     }
@@ -92372,7 +92372,7 @@ var DetSysAction = class {
         true
       )) {
         const filename = `${tempDir}/${this.actionOptions.name}`;
-        if (await verifyEtag(filename, etag) === "valid") {
+        if (await verifyEtag(filename, etag) === "valid" /* Valid */) {
           this.recordEvent(EVENT_ARTIFACT_CACHE_HIT);
           return `${tempDir}/${this.actionOptions.name}`;
         } else {
