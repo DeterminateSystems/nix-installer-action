@@ -90887,7 +90887,7 @@ const external_node_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequ
 var cache = __nccwpck_require__(6878);
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@587b7693c9842add262f500274f83458ca5ce770_6sj4em4j5br4ek4v5n2gpc224m/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@2e8b52ef6f516caef4c88593cd71aee68fc5e4ae_xjnerncbz5oexhjk6ww5y6g6n4/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -91730,8 +91730,19 @@ function parseEtag(etag) {
     chunks
   };
 }
-async function verifyEtag(filename, expectedEtag) {
+function cleanEtag(inputEtag) {
+  let etag = inputEtag;
+  if (etag.startsWith("W/")) {
+    etag = etag.substring(2);
+  }
+  if (etag.startsWith('"') && etag.endsWith('"')) {
+    etag = etag.substring(1, etag.length - 1);
+  }
+  return etag;
+}
+async function verifyEtag(filename, quotedExpectedEtag) {
   try {
+    const expectedEtag = cleanEtag(quotedExpectedEtag);
     const parsedEtag = parseEtag(expectedEtag);
     if (parsedEtag === void 0) {
       core.info(
