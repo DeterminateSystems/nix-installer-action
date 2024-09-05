@@ -90887,7 +90887,7 @@ const external_node_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequ
 var cache = __nccwpck_require__(6878);
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@ba6925e6787ee975f5102b50fa7c9350bfd6b3f4_ck2sk6yei7uoqbpevv6lntwyfm/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@587b7693c9842add262f500274f83458ca5ce770_6sj4em4j5br4ek4v5n2gpc224m/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -91734,18 +91734,27 @@ async function verifyEtag(filename, expectedEtag) {
   try {
     const parsedEtag = parseEtag(expectedEtag);
     if (parsedEtag === void 0) {
+      core.info(
+        `Verifying etag failed: etag did not parse: ${expectedEtag}`
+      );
       return "corrupt";
     }
     const fd = await (0,promises_namespaceObject.open)(filename, "r");
     let actualEtag;
     if (parsedEtag.chunks === void 0) {
+      core.debug(`Verifying etag with a simple md5`);
       actualEtag = await calculateMd5Etag(fd);
     } else {
+      core.debug(`Verifying etag with a chunked md5 from s3`);
       actualEtag = await calculateS3ChunkedEtag(fd, parsedEtag.chunks);
     }
+    await fd.close();
     if (expectedEtag === actualEtag) {
       return "valid";
     } else {
+      core.info(
+        `Verifying etag failed: etag mismatch. Wanted ${expectedEtag}, got ${actualEtag}`
+      );
       return "corrupt";
     }
   } catch (e) {
