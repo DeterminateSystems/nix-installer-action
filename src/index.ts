@@ -737,6 +737,10 @@ class NixInstallerAction extends DetSysAction {
           readOnly: false,
         },
         {
+          dir: "/usr",
+          readOnly: true,
+        },
+        {
           dir: "/nix",
           readOnly: false,
         },
@@ -759,6 +763,14 @@ class NixInstallerAction extends DetSysAction {
         }
       }
 
+      const plausibleDeterminateOptions = [];
+      const plausibleDeterminateArguments = [];
+      if (this.determinate) {
+        plausibleDeterminateOptions.push("--entrypoint");
+        plausibleDeterminateOptions.push("/usr/local/bin/determinate-nixd");
+        plausibleDeterminateArguments.push("daemon");
+      }
+
       this.recordEvent(EVENT_START_DOCKER_SHIM);
       const exitCode = await actionsExec.exec(
         "docker",
@@ -776,8 +788,10 @@ class NixInstallerAction extends DetSysAction {
           "--name",
           `determinate-nix-shim-${this.getUniqueId()}-${randomUUID()}`,
         ]
+          .concat(plausibleDeterminateOptions)
           .concat(mountArguments)
-          .concat(["determinate-nix-shim:latest"]),
+          .concat(["determinate-nix-shim:latest"])
+          .concat(plausibleDeterminateArguments),
         {
           silent: true,
           listeners: {

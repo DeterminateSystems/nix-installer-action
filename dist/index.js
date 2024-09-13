@@ -103749,6 +103749,10 @@ ${stderrBuffer}`
           readOnly: false
         },
         {
+          dir: "/usr",
+          readOnly: true
+        },
+        {
           dir: "/nix",
           readOnly: false
         }
@@ -103768,6 +103772,13 @@ ${stderrBuffer}`
           );
         }
       }
+      const plausibleDeterminateOptions = [];
+      const plausibleDeterminateArguments = [];
+      if (this.determinate) {
+        plausibleDeterminateOptions.push("--entrypoint");
+        plausibleDeterminateOptions.push("/usr/local/bin/determinate-nixd");
+        plausibleDeterminateArguments.push("daemon");
+      }
       this.recordEvent(EVENT_START_DOCKER_SHIM);
       const exitCode = await exec.exec(
         "docker",
@@ -103784,7 +103795,7 @@ ${stderrBuffer}`
           "--init",
           "--name",
           `determinate-nix-shim-${this.getUniqueId()}-${(0,external_node_crypto_namespaceObject.randomUUID)()}`
-        ].concat(mountArguments).concat(["determinate-nix-shim:latest"]),
+        ].concat(plausibleDeterminateOptions).concat(mountArguments).concat(["determinate-nix-shim:latest"]).concat(plausibleDeterminateArguments),
         {
           silent: true,
           listeners: {
