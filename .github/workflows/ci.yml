@@ -52,6 +52,9 @@ jobs:
           - ubuntu-latest
           - nscloud-ubuntu-22.04-amd64-4x16
           - namespace-profile-default-arm64
+        determinate:
+          - true
+          - false
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -61,6 +64,8 @@ jobs:
       - name: Install Nix
         uses: ./
         with:
+          determinate: ${ matrix.determinate }
+          source-tag: v0.26.0
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
