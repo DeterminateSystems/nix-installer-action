@@ -143,6 +143,9 @@ jobs:
           - macos-12
           # aarch64-darwin
           - macos-latest-xlarge
+        determinate:
+          - true
+          - false
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -156,6 +159,8 @@ jobs:
           log-directives: nix_installer=trace
           backtrace: full
           _internal-strict-mode: true
+          source-tag: v0.26.0
+          determinate: ${{ matrix.determinate }}
       - name: echo $PATH
         run: echo $PATH
       - name: Test `nix` with `$GITHUB_PATH`
