@@ -45,7 +45,7 @@ jobs:
         run: git diff --exit-code
 
   install-nix:
-    name: "Test: ${{ matrix.runner }} ${{ matrix.determinate && 'with' || 'without' }} determinate-nixd"
+    name: "Test: ${{ matrix.runner }}${{ matrix.determinate && ' with determinate' }}"
     strategy:
       matrix:
         runner:
