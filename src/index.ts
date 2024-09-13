@@ -650,9 +650,7 @@ class NixInstallerAction extends DetSysAction {
     }
 
     if (this.determinate) {
-      actionsCore.startGroup("Logging in to FlakeHub");
       await this.flakehubLogin();
-      actionsCore.endGroup();
     }
 
     await this.setGithubPath();
@@ -886,8 +884,16 @@ class NixInstallerAction extends DetSysAction {
       process.env["ACTIONS_ID_TOKEN_REQUEST_URL"] &&
       process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]
     ) {
+      actionsCore.startGroup("Logging in to FlakeHub");
       this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
-      await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
+      try {
+        await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
+      } catch (e: unknown) {
+        this.recordEvent("flakehub-login:failure", {
+          exception: stringifyError(e),
+        });
+      }
+      actionsCore.endGroup();
     }
   }
 
