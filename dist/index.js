@@ -103665,13 +103665,13 @@ ${stderrBuffer}`
     const binaryPath = await this.fetchBinary();
     await this.executeInstall(binaryPath);
     core.endGroup();
+    if (this.forceDockerShim) {
+      await this.spawnDockerShim();
+    }
     if (this.determinate) {
       core.startGroup("Logging in to FlakeHub");
       await this.flakehubLogin();
       core.endGroup();
-    }
-    if (this.forceDockerShim) {
-      await this.spawnDockerShim();
     }
     await this.setGithubPath();
   }

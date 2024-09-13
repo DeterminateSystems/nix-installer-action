@@ -645,15 +645,16 @@ class NixInstallerAction extends DetSysAction {
     await this.executeInstall(binaryPath);
     actionsCore.endGroup();
 
+    if (this.forceDockerShim) {
+      await this.spawnDockerShim();
+    }
+
     if (this.determinate) {
       actionsCore.startGroup("Logging in to FlakeHub");
       await this.flakehubLogin();
       actionsCore.endGroup();
     }
 
-    if (this.forceDockerShim) {
-      await this.spawnDockerShim();
-    }
     await this.setGithubPath();
   }
 
