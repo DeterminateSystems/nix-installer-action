@@ -138,9 +138,10 @@ jobs:
           nix run nixpkgs#hello
       - name: Verify the generated nix.conf
         run: |
+          nix config show
           cat -n /etc/nix/nix.conf
-          grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
-          grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf
+          nix config show | grep -E "^trusted-users = .*$USER"
+          nix config show | grep -E "^use-sqlite-wal = true"
 
   install-with-non-default-source-inputs:
     name: Install Nix using non-default source-${{ matrix.inputs.key }}
