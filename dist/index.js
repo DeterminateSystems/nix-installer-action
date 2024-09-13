@@ -103177,11 +103177,13 @@ var EVENT_CLEAN_UP_DOCKER_SHIM = "clean_up_docker_shim";
 var EVENT_START_DOCKER_SHIM = "start_docker_shim";
 var EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 var EVENT_CONCLUDE_WORKFLOW = "conclude_workflow";
+var FACT_DETERMINATE_NIX = "determinate_nix";
 var FACT_HAS_DOCKER = "has_docker";
 var FACT_HAS_SYSTEMD = "has_systemd";
 var FACT_IN_ACT = "in_act";
 var FACT_IN_NAMESPACE_SO = "in_namespace_so";
 var FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
+var FLAG_DETERMINATE = "--determinate";
 var NixInstallerAction = class extends DetSysAction {
   constructor() {
     super({
@@ -103191,12 +103193,12 @@ var NixInstallerAction = class extends DetSysAction {
       requireNix: "ignore",
       diagnosticsSuffix: "diagnostic"
     });
+    this.determinate = inputs_exports.getBool("determinate") || inputs_exports.getBool("flakehub");
     this.platform = platform_exports.getNixPlatform(platform_exports.getArchOs());
     this.nixPackageUrl = inputs_exports.getStringOrNull("nix-package-url");
     this.backtrace = inputs_exports.getStringOrNull("backtrace");
     this.extraArgs = inputs_exports.getStringOrNull("extra-args");
     this.extraConf = inputs_exports.getMultilineStringOrNull("extra-conf");
-    this.flakehub = inputs_exports.getBool("flakehub");
     this.kvm = inputs_exports.getBool("kvm");
     this.forceDockerShim = inputs_exports.getBool("force-docker-shim");
     this.githubToken = inputs_exports.getStringOrNull("github-token");
@@ -103563,15 +103565,6 @@ ${stderrBuffer}`
       }
       extraConf += "\n";
     }
-    if (this.flakehub) {
-      try {
-        const flakeHubNetrcFile = await this.flakehubLogin();
-        extraConf += `netrc-file = ${flakeHubNetrcFile}`;
-        extraConf += "\n";
-      } catch (e) {
-        core.warning(`Failed to set up FlakeHub: ${e}`);
-      }
-    }
     if (this.extraConf !== null && this.extraConf.length !== 0) {
       extraConf += this.extraConf.join("\n");
       extraConf += "\n";
@@ -103593,11 +103586,7 @@ ${stderrBuffer}`
     }
     return executionEnv;
   }
-  async executeInstall(binaryPath) {
-    const executionEnv = await this.executionEnvironment();
-    core.debug(
-      `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`
-    );
+  get installerArgs() {
     const args = ["install"];
     if (this.planner) {
       this.addFact(FACT_NIX_INSTALLER_PLANNER, this.planner);
@@ -103610,8 +103599,27 @@ ${stderrBuffer}`
       const extraArgs = parseArgsStringToArgv(this.extraArgs);
       args.push(...extraArgs);
     }
+    if (this.determinate) {
+      this.addFact(FACT_DETERMINATE_NIX, true);
+      core.info(
+        `Installing Determinate Nix using the ${FLAG_DETERMINATE} flag`
+      );
+      if (!this.extraArgs) {
+        args.push(FLAG_DETERMINATE);
+      }
+      if (this.extraArgs && !this.extraArgs.includes(FLAG_DETERMINATE)) {
+        args.push(FLAG_DETERMINATE);
+      }
+    }
+    return args;
+  }
+  async executeInstall(binaryPath) {
+    const executionEnv = await this.executionEnvironment();
+    core.debug(
+      `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`
+    );
     this.recordEvent(EVENT_INSTALL_NIX_START);
-    const exitCode = await exec.exec(binaryPath, args, {
+    const exitCode = await exec.exec(binaryPath, this.installerArgs, {
       env: {
         ...executionEnv,
         ...process.env
@@ -103659,6 +103667,9 @@ ${stderrBuffer}`
     core.endGroup();
     if (this.forceDockerShim) {
       await this.spawnDockerShim();
+    }
+    if (this.determinate) {
+      await this.flakehubLogin();
     }
     await this.setGithubPath();
   }
@@ -103736,6 +103747,10 @@ ${stderrBuffer}`
           readOnly: false
         },
         {
+          dir: "/usr",
+          readOnly: true
+        },
+        {
           dir: "/nix",
           readOnly: false
         }
@@ -103755,6 +103770,13 @@ ${stderrBuffer}`
           );
         }
       }
+      const plausibleDeterminateOptions = [];
+      const plausibleDeterminateArguments = [];
+      if (this.determinate) {
+        plausibleDeterminateOptions.push("--entrypoint");
+        plausibleDeterminateOptions.push("/usr/local/bin/determinate-nixd");
+        plausibleDeterminateArguments.push("daemon");
+      }
       this.recordEvent(EVENT_START_DOCKER_SHIM);
       const exitCode = await exec.exec(
         "docker",
@@ -103771,7 +103793,7 @@ ${stderrBuffer}`
           "--init",
           "--name",
           `determinate-nix-shim-${this.getUniqueId()}-${(0,external_node_crypto_namespaceObject.randomUUID)()}`
-        ].concat(mountArguments).concat(["determinate-nix-shim:latest"]),
+        ].concat(plausibleDeterminateOptions).concat(mountArguments).concat(["determinate-nix-shim:latest"]).concat(plausibleDeterminateArguments),
         {
           silent: true,
           listeners: {
@@ -103850,28 +103872,18 @@ ${stderrBuffer}`
     }
   }
   async flakehubLogin() {
-    this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
-    const netrcPath = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
-    const jwt = await core.getIDToken("api.flakehub.com");
-    await (0,promises_namespaceObject.writeFile)(
-      netrcPath,
-      [
-        `machine api.flakehub.com login flakehub password ${jwt}`,
-        `machine cache.flakehub.com login flakehub password ${jwt}`,
-        `machine flakehub.com login flakehub password ${jwt}`
-      ].join("\n")
-    );
-    const flakehubAuthDir = `${process.env["XDG_CONFIG_HOME"] || `${process.env["HOME"]}/.config`}/flakehub`;
-    await (0,promises_namespaceObject.mkdir)(flakehubAuthDir, { recursive: true });
-    const flakehubAuthPath = `${flakehubAuthDir}/auth`;
-    await (0,promises_namespaceObject.writeFile)(flakehubAuthPath, jwt);
-    core.info("Logging in to FlakeHub.");
-    if (this.extraConf?.join("\n").match(/^netrc-file/m)) {
-      core.warning(
-        "Logging in to FlakeHub conflicts with the Nix option `netrc-file`."
-      );
+    if (process.env["ACTIONS_ID_TOKEN_REQUEST_URL"] && process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]) {
+      core.startGroup("Logging in to FlakeHub");
+      this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
+      try {
+        await exec.exec(`determinate-nixd`, ["login", "github-action"]);
+      } catch (e) {
+        this.recordEvent("flakehub-login:failure", {
+          exception: stringifyError(e)
+        });
+      }
+      core.endGroup();
     }
-    return netrcPath;
   }
   async executeUninstall() {
     this.recordEvent(EVENT_UNINSTALL_NIX);

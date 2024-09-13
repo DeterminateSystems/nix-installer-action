@@ -1,7 +1,7 @@
 import * as actionsCore from "@actions/core";
 import * as github from "@actions/github";
 import * as actionsExec from "@actions/exec";
-import { access, writeFile, readFile, mkdir } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import fs from "node:fs";
 import { userInfo } from "node:os";
@@ -29,11 +29,15 @@ const EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 const EVENT_CONCLUDE_WORKFLOW = "conclude_workflow";
 
 // Facts
+const FACT_DETERMINATE_NIX = "determinate_nix";
 const FACT_HAS_DOCKER = "has_docker";
 const FACT_HAS_SYSTEMD = "has_systemd";
 const FACT_IN_ACT = "in_act";
 const FACT_IN_NAMESPACE_SO = "in_namespace_so";
 const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
+
+// Flags
+const FLAG_DETERMINATE = "--determinate";
 
 type WorkflowConclusion =
   | "success"
@@ -43,12 +47,12 @@ type WorkflowConclusion =
   | "no-jobs";
 
 class NixInstallerAction extends DetSysAction {
+  determinate: boolean;
   platform: string;
   nixPackageUrl: string | null;
   backtrace: string | null;
   extraArgs: string | null;
   extraConf: string[] | null;
-  flakehub: boolean;
   kvm: boolean;
   githubServerUrl: string | null;
   githubToken: string | null;
@@ -84,12 +88,13 @@ class NixInstallerAction extends DetSysAction {
       diagnosticsSuffix: "diagnostic",
     });
 
+    this.determinate =
+      inputs.getBool("determinate") || inputs.getBool("flakehub");
     this.platform = platform.getNixPlatform(platform.getArchOs());
     this.nixPackageUrl = inputs.getStringOrNull("nix-package-url");
     this.backtrace = inputs.getStringOrNull("backtrace");
     this.extraArgs = inputs.getStringOrNull("extra-args");
     this.extraConf = inputs.getMultilineStringOrNull("extra-conf");
-    this.flakehub = inputs.getBool("flakehub");
     this.kvm = inputs.getBool("kvm");
     this.forceDockerShim = inputs.getBool("force-docker-shim");
     this.githubToken = inputs.getStringOrNull("github-token");
@@ -519,15 +524,6 @@ class NixInstallerAction extends DetSysAction {
       }
       extraConf += "\n";
     }
-    if (this.flakehub) {
-      try {
-        const flakeHubNetrcFile = await this.flakehubLogin();
-        extraConf += `netrc-file = ${flakeHubNetrcFile}`;
-        extraConf += "\n";
-      } catch (e) {
-        actionsCore.warning(`Failed to set up FlakeHub: ${e}`);
-      }
-    }
     if (this.extraConf !== null && this.extraConf.length !== 0) {
       extraConf += this.extraConf.join("\n");
       extraConf += "\n";
@@ -553,13 +549,9 @@ class NixInstallerAction extends DetSysAction {
     return executionEnv;
   }
 
-  private async executeInstall(binaryPath: string): Promise<number> {
-    const executionEnv = await this.executionEnvironment();
-    actionsCore.debug(
-      `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`,
-    );
-
+  private get installerArgs(): string[] {
     const args = ["install"];
+
     if (this.planner) {
       this.addFact(FACT_NIX_INSTALLER_PLANNER, this.planner);
       args.push(this.planner);
@@ -573,8 +565,33 @@ class NixInstallerAction extends DetSysAction {
       args.push(...extraArgs);
     }
 
+    if (this.determinate) {
+      this.addFact(FACT_DETERMINATE_NIX, true);
+
+      actionsCore.info(
+        `Installing Determinate Nix using the ${FLAG_DETERMINATE} flag`,
+      );
+
+      if (!this.extraArgs) {
+        args.push(FLAG_DETERMINATE);
+      }
+
+      if (this.extraArgs && !this.extraArgs.includes(FLAG_DETERMINATE)) {
+        args.push(FLAG_DETERMINATE);
+      }
+    }
+
+    return args;
+  }
+
+  private async executeInstall(binaryPath: string): Promise<number> {
+    const executionEnv = await this.executionEnvironment();
+    actionsCore.debug(
+      `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`,
+    );
+
     this.recordEvent(EVENT_INSTALL_NIX_START);
-    const exitCode = await actionsExec.exec(binaryPath, args, {
+    const exitCode = await actionsExec.exec(binaryPath, this.installerArgs, {
       env: {
         ...executionEnv,
         ...process.env, // To get $PATH, etc
@@ -623,7 +640,6 @@ class NixInstallerAction extends DetSysAction {
       }
     }
 
-    // Normal just doing of the install
     actionsCore.startGroup("Installing Nix");
     const binaryPath = await this.fetchBinary();
     await this.executeInstall(binaryPath);
@@ -632,6 +648,11 @@ class NixInstallerAction extends DetSysAction {
     if (this.forceDockerShim) {
       await this.spawnDockerShim();
     }
+
+    if (this.determinate) {
+      await this.flakehubLogin();
+    }
+
     await this.setGithubPath();
   }
 
@@ -715,6 +736,10 @@ class NixInstallerAction extends DetSysAction {
           readOnly: false,
         },
         {
+          dir: "/usr",
+          readOnly: true,
+        },
+        {
           dir: "/nix",
           readOnly: false,
         },
@@ -737,6 +762,14 @@ class NixInstallerAction extends DetSysAction {
         }
       }
 
+      const plausibleDeterminateOptions = [];
+      const plausibleDeterminateArguments = [];
+      if (this.determinate) {
+        plausibleDeterminateOptions.push("--entrypoint");
+        plausibleDeterminateOptions.push("/usr/local/bin/determinate-nixd");
+        plausibleDeterminateArguments.push("daemon");
+      }
+
       this.recordEvent(EVENT_START_DOCKER_SHIM);
       const exitCode = await actionsExec.exec(
         "docker",
@@ -754,8 +787,10 @@ class NixInstallerAction extends DetSysAction {
           "--name",
           `determinate-nix-shim-${this.getUniqueId()}-${randomUUID()}`,
         ]
+          .concat(plausibleDeterminateOptions)
           .concat(mountArguments)
-          .concat(["determinate-nix-shim:latest"]),
+          .concat(["determinate-nix-shim:latest"])
+          .concat(plausibleDeterminateArguments),
         {
           silent: true,
           listeners: {
@@ -844,38 +879,22 @@ class NixInstallerAction extends DetSysAction {
     }
   }
 
-  async flakehubLogin(): Promise<string> {
-    this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
-    const netrcPath = `${process.env["RUNNER_TEMP"]}/determinate-nix-installer-netrc`;
-
-    const jwt = await actionsCore.getIDToken("api.flakehub.com");
-
-    await writeFile(
-      netrcPath,
-      [
-        `machine api.flakehub.com login flakehub password ${jwt}`,
-        `machine cache.flakehub.com login flakehub password ${jwt}`,
-        `machine flakehub.com login flakehub password ${jwt}`,
-      ].join("\n"),
-    );
-
-    const flakehubAuthDir = `${process.env["XDG_CONFIG_HOME"] || `${process.env["HOME"]}/.config`}/flakehub`;
-    await mkdir(flakehubAuthDir, { recursive: true });
-    const flakehubAuthPath = `${flakehubAuthDir}/auth`;
-
-    await writeFile(flakehubAuthPath, jwt);
-
-    actionsCore.info("Logging in to FlakeHub.");
-
-    // the join followed by a match on ^... looks silly, but extra_config
-    // could contain multi-line values
-    if (this.extraConf?.join("\n").match(/^netrc-file/m)) {
-      actionsCore.warning(
-        "Logging in to FlakeHub conflicts with the Nix option `netrc-file`.",
-      );
+  async flakehubLogin(): Promise<void> {
+    if (
+      process.env["ACTIONS_ID_TOKEN_REQUEST_URL"] &&
+      process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]
+    ) {
+      actionsCore.startGroup("Logging in to FlakeHub");
+      this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
+      try {
+        await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
+      } catch (e: unknown) {
+        this.recordEvent("flakehub-login:failure", {
+          exception: stringifyError(e),
+        });
+      }
+      actionsCore.endGroup();
     }
-
-    return netrcPath;
   }
 
   async executeUninstall(): Promise<number> {

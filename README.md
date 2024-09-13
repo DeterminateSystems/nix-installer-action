@@ -34,7 +34,7 @@ jobs:
 
 ### With FlakeHub
 
-To fetch private flakes from FlakeHub, update the `permissions` block and pass `flakehub: true`:
+To fetch private flakes from FlakeHub and Nix builds from FlakeHub Cache, update the `permissions` block and pass `determinate: true`:
 
 ```yaml
 on:
@@ -53,7 +53,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
         with:
-          flakehub: true
+          determinate: true
       - run: nix build .
 ```
 
@@ -85,9 +85,10 @@ Differing from the upstream [Nix](https://github.com/NixOS/nix) installer script
 | Parameter               | Description                                                                                                                                                                                                                                                                    | Type                                       | Default                                                        |
 | :---------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------- | :------------------------------------------------------------- |
 | `backtrace`             | The setting for [`RUST_BACKTRACE`][backtrace]                                                                                                                                                                                                                                  | string                                     |                                                                |
+| `determinate`           | Whether to install [Determinate Nix](https://determinate.systems/enterprise) and log in to FlakeHub for private Flakes and binary caches.                                                                                                                                      | Boolean                                    | `false`                                                        |
 | `extra-args`            | Extra arguments to pass to the planner (prefer using structured `with:` arguments unless using a custom [planner]!)                                                                                                                                                            | string                                     |                                                                |
 | `extra-conf`            | Extra configuration lines for `/etc/nix/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)                                                                                                                                | string                                     |                                                                |
-| `flakehub`              | Log in to FlakeHub to pull private flakes using the GitHub Actions [JSON Web Token](https://jwt.io) (JWT), which is bound to the `api.flakehub.com` audience.                                                                                                                  | Boolean                                    | `false`                                                        |
+| `flakehub`              | Deprecated. Implies `determinate`.                                                                                                                                                                                                                                             | Boolean                                    | `false`                                                        |
 | `force-docker-shim`     | Force the use of Docker as a process supervisor. This setting is automatically enabled when necessary.                                                                                                                                                                         | Boolean                                    | `false`                                                        |
 | `github-token`          | A [GitHub token] for making authenticated requests (which have a higher rate-limit quota than unauthenticated requests)                                                                                                                                                        | string                                     | `${{ github.token }}`                                          |
 | `github-server-url`     | The URL for the GitHub server, to use with the `github-token` token. Defaults to the current GitHub server, supporting GitHub Enterprise Server automatically. Only change this value if the provided `github-token` is for a different GitHub server than the current server. | string                                     | `${{ github.server }}`                                         |

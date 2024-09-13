@@ -7,6 +7,10 @@ inputs:
   backtrace:
     description: The setting for `RUST_BACKTRACE` (see https://doc.rust-lang.org/std/backtrace/index.html#environment-variables)
     required: false
+  determinate:
+    description: |
+      Whether to install [Determinate Nix](https://determinate.systems/enterprise) and log in to FlakeHub for private Flakes and binary caches.
+    default: false
   extra-args:
     description: Extra args to pass to the planner (prefer using structured `with:` arguments unless using a custom planner!)
     required: false
@@ -14,7 +18,7 @@ inputs:
     description: Extra configuration lines for `/etc/nix/nix.conf` (includes `access-tokens` with `secrets.GITHUB_TOKEN` automatically if `github-token` is set)
     required: false
   flakehub:
-    description: Automatically log in to your [FlakeHub](https://flakehub.com) account, for accessing private flakes.
+    description: Deprecated. Implies `determinate`.
     required: false
     default: false
   force-docker-shim:
