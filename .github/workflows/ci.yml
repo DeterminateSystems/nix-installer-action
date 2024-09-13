@@ -64,7 +64,7 @@ jobs:
       - name: Install Nix
         uses: ./
         with:
-          determinate: ${ matrix.determinate }
+          determinate: ${{ matrix.determinate }}
           source-tag: v0.26.0
           logger: pretty
           log-directives: nix_installer=trace
