@@ -11,8 +11,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
       - check-dist-up-to-date
-      - install-nix-linux
-      - install-nix-macos
+      - install-nix
       - install-with-non-default-source-inputs
     # NOTE(cole-h): GitHub treats "skipped" as "OK" for the purposes of required checks on branch
     # protection, so we take advantage of this fact and fail if any of the dependent actions failed,
@@ -44,14 +43,18 @@ jobs:
       - name: Ensure no staged changes
         run: git diff --exit-code
 
-  install-nix-linux:
-    name: Run test suite for Linux systems
+  install-nix:
+    name: "Test: ${{ matrix.runner }} ${{ matrix.determinate && 'with' || 'without' }} determinate-nixd"
     strategy:
       matrix:
         runner:
           - ubuntu-latest
           - nscloud-ubuntu-22.04-amd64-4x16
           - namespace-profile-default-arm64
+          # - macos-12-large # determinate-nixd is broken on macos-12
+          - macos-13-large
+          - macos-14-large
+          - macos-14-xlarge # arm64
         determinate:
           - true
           - false
@@ -64,12 +67,12 @@ jobs:
       - name: Install Nix
         uses: ./
         with:
-          determinate: ${{ matrix.determinate }}
-          source-tag: v0.26.0
           logger: pretty
           log-directives: nix_installer=trace
           backtrace: full
           _internal-strict-mode: true
+          source-tag: v0.26.0
+          determinate: ${{ matrix.determinate }}
       - name: echo $PATH
         run: echo $PATH
 
@@ -135,94 +138,6 @@ jobs:
       - name: Verify the generated nix.conf
         run: |
           cat -n /etc/nix/nix.conf
-          grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
-          grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf
-
-  install-nix-macos:
-    name: Run test suite for macOS systems
-    strategy:
-      matrix:
-        runner:
-          #- macos-12-large
-          - macos-13-large
-          - macos-14-large
-          - macos-14-xlarge # arm64
-        determinate:
-          - true
-          - false
-    runs-on: ${{ matrix.runner }}
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Nix
-        uses: ./
-        with:
-          logger: pretty
-          log-directives: nix_installer=trace
-          backtrace: full
-          _internal-strict-mode: true
-          source-tag: v0.26.0
-          determinate: ${{ matrix.determinate }}
-      - name: echo $PATH
-        run: echo $PATH
-      - name: Test `nix` with `$GITHUB_PATH`
-        if: success() || failure()
-        run: |
-          nix run nixpkgs#hello
-          nix profile install nixpkgs#hello
-          hello
-          nix store gc
-          nix run nixpkgs#hello
-      - name: Test bash
-        run: nix-instantiate -E 'builtins.currentTime' --eval
-        if: success() || failure()
-        shell: bash --login {0}
-      - name: Test sh
-        run: nix-instantiate -E 'builtins.currentTime' --eval
-        if: success() || failure()
-        shell: sh -l {0}
-      - name: Test zsh
-        run: nix-instantiate -E 'builtins.currentTime' --eval
-        if: success() || failure()
-        shell: zsh --login --interactive {0}
-      - name: Install Nix again (noop)
-        uses: ./
-        with:
-          logger: pretty
-          log-directives: nix_installer=trace
-          backtrace: full
-          _internal-strict-mode: true
-      - name: Test `nix` with `$GITHUB_PATH`
-        if: success() || failure()
-        run: |
-          nix run nixpkgs#hello
-          nix profile install nixpkgs#hello
-          hello
-          nix store gc
-          nix run nixpkgs#hello
-      - name: Reinstall Nix
-        uses: ./
-        with:
-          logger: pretty
-          log-directives: nix_installer=trace
-          backtrace: full
-          reinstall: true
-          extra-conf: |
-            use-sqlite-wal = true
-          _internal-strict-mode: true
-      - name: Test `nix` with `$GITHUB_PATH`
-        if: success() || failure()
-        run: |
-          nix run nixpkgs#hello
-          nix profile install nixpkgs#hello
-          hello
-          nix store gc
-          nix run nixpkgs#hello
-      - name: Verify the generated nix.conf
-        run: |
-          cat /etc/nix/nix.conf
           grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
           grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf
 
