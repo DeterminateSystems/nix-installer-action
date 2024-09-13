@@ -12,6 +12,8 @@ jobs:
     needs:
       - check-dist-up-to-date
       - install-nix-linux
+      - install-nix-macos
+      - install-with-non-default-source-inputs
     # NOTE(cole-h): GitHub treats "skipped" as "OK" for the purposes of required checks on branch
     # protection, so we take advantage of this fact and fail if any of the dependent actions failed,
     # or "skip" (which is a success for GHA's purposes) if none of them did.
@@ -47,8 +49,9 @@ jobs:
     strategy:
       matrix:
         runner:
+          - ubuntu-latest
           - nscloud-ubuntu-22.04-amd64-4x16
-          #- namespace-profile-default-arm64
+          - namespace-profile-default-arm64
         determinate:
           - true
           - false
@@ -130,3 +133,116 @@ jobs:
           cat -n /etc/nix/nix.conf
           grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
           grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf
+
+  install-nix-macos:
+    name: Run test suite for macOS systems
+    strategy:
+      matrix:
+        runner:
+          #- macos-12-large
+          - macos-13-large
+          - macos-14-large
+          - macos-14-xlarge # arm64
+        determinate:
+          - true
+          - false
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Nix
+        uses: ./
+        with:
+          logger: pretty
+          log-directives: nix_installer=trace
+          backtrace: full
+          _internal-strict-mode: true
+          source-tag: v0.26.0
+          determinate: ${{ matrix.determinate }}
+      - name: echo $PATH
+        run: echo $PATH
+      - name: Test `nix` with `$GITHUB_PATH`
+        if: success() || failure()
+        run: |
+          nix run nixpkgs#hello
+          nix profile install nixpkgs#hello
+          hello
+          nix store gc
+          nix run nixpkgs#hello
+      - name: Test bash
+        run: nix-instantiate -E 'builtins.currentTime' --eval
+        if: success() || failure()
+        shell: bash --login {0}
+      - name: Test sh
+        run: nix-instantiate -E 'builtins.currentTime' --eval
+        if: success() || failure()
+        shell: sh -l {0}
+      - name: Test zsh
+        run: nix-instantiate -E 'builtins.currentTime' --eval
+        if: success() || failure()
+        shell: zsh --login --interactive {0}
+      - name: Install Nix again (noop)
+        uses: ./
+        with:
+          logger: pretty
+          log-directives: nix_installer=trace
+          backtrace: full
+          _internal-strict-mode: true
+      - name: Test `nix` with `$GITHUB_PATH`
+        if: success() || failure()
+        run: |
+          nix run nixpkgs#hello
+          nix profile install nixpkgs#hello
+          hello
+          nix store gc
+          nix run nixpkgs#hello
+      - name: Reinstall Nix
+        uses: ./
+        with:
+          logger: pretty
+          log-directives: nix_installer=trace
+          backtrace: full
+          reinstall: true
+          extra-conf: |
+            use-sqlite-wal = true
+          _internal-strict-mode: true
+      - name: Test `nix` with `$GITHUB_PATH`
+        if: success() || failure()
+        run: |
+          nix run nixpkgs#hello
+          nix profile install nixpkgs#hello
+          hello
+          nix store gc
+          nix run nixpkgs#hello
+      - name: Verify the generated nix.conf
+        run: |
+          cat /etc/nix/nix.conf
+          grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
+          grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf
+
+  install-with-non-default-source-inputs:
+    name: Install Nix using non-default source-${{ matrix.inputs.key }}
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        inputs:
+          # https://github.com/DeterminateSystems/nix-installer/blob/v0.18.0
+          - key: url
+            value: https://github.com/DeterminateSystems/nix-installer/releases/download/v0.18.0/nix-installer-x86_64-linux
+            nix-version: "2.21.2"
+          # https://github.com/DeterminateSystems/nix-installer/tree/7011c077ec491da410fbc39f68676b0908b9ce7e
+          - key: revision
+            value: 7011c077ec491da410fbc39f68676b0908b9ce7e
+            nix-version: "2.19.2"
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install with alternative source-${{ matrix.inputs.key }}
+        uses: ./
+        with:
+          source-${{ matrix.inputs.key }}: ${{ matrix.inputs.value }}
+          _internal-strict-mode: true
+      - name: Ensure that the expected Nix version ${{ matrix.inputs.nix-version }} is installed via alternative source-${{ matrix.inputs.key }}
+        run: .github/verify-version.sh ${{ matrix.inputs.nix-version }}
