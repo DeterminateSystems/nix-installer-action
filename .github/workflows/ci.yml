@@ -130,3 +130,8 @@ jobs:
           cat -n /etc/nix/nix.conf
           grep -E "^trusted-users = .*$USER" /etc/nix/nix.conf
           grep -E "^use-sqlite-wal = true" /etc/nix/nix.conf
+      - uses: namespacelabs/breakpoint-action@v0
+        if: failure()
+        with:
+          duration: 30m
+          authorized-users: grahamc
