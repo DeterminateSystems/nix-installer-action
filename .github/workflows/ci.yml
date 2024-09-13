@@ -139,7 +139,7 @@ jobs:
     strategy:
       matrix:
         runner:
-          - macos-12-large
+          #- macos-12-large
           - macos-13-large
           - macos-14-large
           - macos-14-xlarge # arm64
