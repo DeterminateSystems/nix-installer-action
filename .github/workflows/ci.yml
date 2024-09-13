@@ -101,7 +101,7 @@ jobs:
       - name: Test zsh
         run: nix-instantiate -E 'builtins.currentTime' --eval
         if: success() || failure()
-        shell: hash zsh && zsh --login --interactive {0}
+        shell: (zsh --help > /dev/null) && zsh --login --interactive {0}
       - name: Install Nix again (noop)
         uses: ./
         with:
