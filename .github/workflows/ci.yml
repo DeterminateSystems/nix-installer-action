@@ -100,7 +100,7 @@ jobs:
         if: success() || failure()
         shell: sh -l {0}
       - name: Test zsh
-        run: (zsh --help > /dev/null) && zsh --login --interactive -c "nix-instantiate -E 'builtins.currentTime' --eval"
+        run: if (zsh --help > /dev/null); then zsh --login --interactive -c "nix-instantiate -E 'builtins.currentTime' --eval"; fi
         if: success() || failure()
       - name: Install Nix again (noop)
         uses: ./

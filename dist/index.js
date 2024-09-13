@@ -103874,8 +103874,10 @@ ${stderrBuffer}`
     }
   }
   async flakehubLogin() {
-    this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
-    await exec.exec(`determinate-nixd`, ["login", "github-action"]);
+    if (process.env["ACTIONS_ID_TOKEN_REQUEST_URL"] && process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]) {
+      this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
+      await exec.exec(`determinate-nixd`, ["login", "github-action"]);
+    }
   }
   async executeUninstall() {
     this.recordEvent(EVENT_UNINSTALL_NIX);

@@ -882,8 +882,13 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async flakehubLogin(): Promise<void> {
-    this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
-    await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
+    if (
+      process.env["ACTIONS_ID_TOKEN_REQUEST_URL"] &&
+      process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]
+    ) {
+      this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
+      await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
+    }
   }
 
   async executeUninstall(): Promise<number> {
