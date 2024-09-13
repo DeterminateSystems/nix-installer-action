@@ -34,7 +34,7 @@ jobs:
 
 ### With FlakeHub
 
-To fetch private flakes and FlakeHub and Nix builds from FlakeHub Cache, update the `permissions` block and pass `determinate: true`:
+To fetch private flakes from FlakeHub and Nix builds from FlakeHub Cache, update the `permissions` block and pass `determinate: true`:
 
 ```yaml
 on:
