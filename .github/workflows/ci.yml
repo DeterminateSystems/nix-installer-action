@@ -13,6 +13,7 @@ jobs:
       - check-dist-up-to-date
       - install-nix
       - install-with-non-default-source-inputs
+      - install-no-id-token
     # NOTE(cole-h): GitHub treats "skipped" as "OK" for the purposes of required checks on branch
     # protection, so we take advantage of this fact and fail if any of the dependent actions failed,
     # or "skip" (which is a success for GHA's purposes) if none of them did.
@@ -164,3 +165,13 @@ jobs:
           _internal-strict-mode: true
       - name: Ensure that the expected Nix version ${{ matrix.inputs.nix-version }} is installed via alternative source-${{ matrix.inputs.key }}
         run: .github/verify-version.sh ${{ matrix.inputs.nix-version }}
+
+  install-no-id-token:
+    name: Install Nix without an ID token
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          _internal-strict-mode: true
+          determinate: true
