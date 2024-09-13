@@ -139,10 +139,10 @@ jobs:
     strategy:
       matrix:
         runner:
-          # x86_64-darwin
-          - macos-12
-          # aarch64-darwin
-          - macos-latest-xlarge
+          - macos-12-large
+          - macos-13-large
+          - macos-14-large
+          - macos-14-xlarge # arm64
         determinate:
           - true
           - false
