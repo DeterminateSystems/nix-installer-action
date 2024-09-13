@@ -72,7 +72,6 @@ jobs:
           log-directives: nix_installer=trace
           backtrace: full
           _internal-strict-mode: true
-          source-tag: v0.26.0
           determinate: ${{ matrix.determinate }}
       - name: echo $PATH
         run: echo $PATH
@@ -109,6 +108,7 @@ jobs:
           log-directives: nix_installer=trace
           backtrace: full
           _internal-strict-mode: true
+          determinate: ${{ matrix.determinate }}
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
@@ -127,6 +127,7 @@ jobs:
           extra-conf: |
             use-sqlite-wal = true
           _internal-strict-mode: true
+          determinate: ${{ matrix.determinate }}
       - name: Test `nix` with `$GITHUB_PATH`
         if: success() || failure()
         run: |
