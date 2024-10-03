@@ -34,6 +34,9 @@ inputs:
   init:
     description: "The init system to configure, requires `planner: linux-multi` (allowing the choice between `none` or `systemd`)"
     required: false
+  job-status:
+    description: The overall status of the job. Set automatically, for aggregate analysis of Nix stability.
+    default: ${{ job.status }}
   kvm:
     description: Automatically configure the GitHub Actions Runner for NixOS test supports, if the host supports it.
     required: false
