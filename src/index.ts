@@ -1,5 +1,4 @@
 import * as actionsCore from "@actions/core";
-import * as github from "@actions/github";
 import * as actionsExec from "@actions/exec";
 import { access, readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -26,7 +25,7 @@ const EVENT_START_DOCKER_SHIM = "start_docker_shim";
 const EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 
 // Other events
-const EVENT_CONCLUDE_WORKFLOW = "conclude_workflow";
+const EVENT_CONCLUDE_JOB = "conclude_job";
 
 // Facts
 const FACT_DETERMINATE_NIX = "determinate_nix";
@@ -38,13 +37,6 @@ const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 
 // Flags
 const FLAG_DETERMINATE = "--determinate";
-
-type WorkflowConclusion =
-  | "success"
-  | "failure"
-  | "cancelled"
-  | "unavailable"
-  | "no-jobs";
 
 class NixInstallerAction extends DetSysAction {
   determinate: boolean;
@@ -58,6 +50,7 @@ class NixInstallerAction extends DetSysAction {
   githubToken: string | null;
   forceDockerShim: boolean;
   init: string | null;
+  jobConclusion: string | null;
   localRoot: string | null;
   logDirectives: string | null;
   logger: string | null;
@@ -100,6 +93,7 @@ class NixInstallerAction extends DetSysAction {
     this.githubToken = inputs.getStringOrNull("github-token");
     this.githubServerUrl = inputs.getStringOrNull("github-server-url");
     this.init = inputs.getStringOrNull("init");
+    this.jobConclusion = inputs.getStringOrNull("job-status");
     this.localRoot = inputs.getStringOrNull("local-root");
     this.logDirectives = inputs.getStringOrNull("log-directives");
     this.logger = inputs.getStringOrNull("logger");
@@ -1036,60 +1030,11 @@ class NixInstallerAction extends DetSysAction {
 
   async reportOverall(): Promise<void> {
     try {
-      this.recordEvent(EVENT_CONCLUDE_WORKFLOW, {
-        conclusion: await this.getWorkflowConclusion(),
+      this.recordEvent(EVENT_CONCLUDE_JOB, {
+        conclusion: this.jobConclusion ?? "unknown",
       });
     } catch (e) {
       actionsCore.debug(`Error submitting post-run diagnostics report: ${e}`);
-    }
-  }
-
-  private async getWorkflowConclusion(): Promise<
-    undefined | WorkflowConclusion
-  > {
-    if (this.githubToken == null) {
-      return undefined;
-    }
-
-    try {
-      const octokit = github.getOctokit(this.githubToken);
-      const jobs = await octokit.paginate(
-        octokit.rest.actions.listJobsForWorkflowRun,
-        {
-          owner: github.context.repo.owner,
-          repo: github.context.repo.repo,
-          /* eslint-disable camelcase */
-          run_id: github.context.runId,
-        },
-      );
-
-      actionsCore.debug(`awaited jobs: ${jobs}`);
-      const job = jobs
-        .filter((candidate) => candidate.name === github.context.job)
-        .at(0);
-      if (job === undefined) {
-        return "no-jobs";
-      }
-
-      const outcomes = (job.steps ?? []).map((j) => j.conclusion ?? "unknown");
-
-      // Possible values: success, failure, cancelled, or skipped
-      // from: https://docs.github.com/en/actions/learn-github-actions/contexts
-
-      if (outcomes.includes("failure")) {
-        // Any failures fails the job
-        return "failure";
-      }
-      if (outcomes.includes("cancelled")) {
-        // Any cancellations cancels the job
-        return "cancelled";
-      }
-
-      // Assume success if no jobs failed or were canceled
-      return "success";
-    } catch (e) {
-      actionsCore.debug(`Error determining final disposition: ${e}`);
-      return "unavailable";
     }
   }
 
