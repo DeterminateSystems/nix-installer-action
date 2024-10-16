@@ -16,7 +16,7 @@ dependencies:
     version: 5.1.1
   detsys-ts:
     specifier: github:DeterminateSystems/detsys-ts
-    version: github.com/DeterminateSystems/detsys-ts/65dd73c562ac60a068340f8e0c040bdcf2c59afe
+    version: github.com/DeterminateSystems/detsys-ts/d5db891a9d01bb57b70fbc05cf9ac2b6c45359be
   got:
     specifier: ^14.3.0
     version: 14.3.0
@@ -96,6 +96,16 @@ packages:
       uuid: 8.3.2
     dev: false
 
+  /@actions/core@1.11.1:
+    resolution:
+      {
+        integrity: sha512-hXJCSrkwfA46Vd9Z3q4cpEpHB1rL5NG04+/rbqW9d3+CSvtB1tYe8UTpAlixa1vj0m/ULglfEK2UKxMGxCxv5A==,
+      }
+    dependencies:
+      "@actions/exec": 1.1.1
+      "@actions/http-client": 2.2.3
+    dev: false
+
   /@actions/exec@1.1.1:
     resolution:
       {
@@ -133,6 +143,16 @@ packages:
     resolution:
       {
         integrity: sha512-KhC/cZsq7f8I4LfZSJKgCvEwfkE8o1538VoBeoGzokVLLnbFDEAdFD3UhoMklxo2un9NJVBdANOresx7vTHlHw==,
+      }
+    dependencies:
+      tunnel: 0.0.6
+      undici: 5.28.4
+    dev: false
+
+  /@actions/http-client@2.2.3:
+    resolution:
+      {
+        integrity: sha512-mx8hyJi/hjFvbPokCg4uRd4ZX78t+YyRPtnKWwIl+RzNaVuFpQHfmlGVfsKEJN8LwTCvL+DfVgAM04XaHkm6bA==,
       }
     dependencies:
       tunnel: 0.0.6
@@ -1270,10 +1290,10 @@ packages:
     engines: { node: ">=16" }
     dev: false
 
-  /@sindresorhus/is@7.0.0:
+  /@sindresorhus/is@7.0.1:
     resolution:
       {
-        integrity: sha512-WDTlVTyvFivSOuyvMeedzg2hdoBLZ3f1uNVuEida2Rl9BrfjrIRjWA/VZIrMRLvSwJYCAlCRA3usDt1THytxWQ==,
+        integrity: sha512-QWLl2P+rsCJeofkDNIT3WFmb6NrRud1SUYW8dIhXK/46XFV8Q/g7Bsvib0Askb0reRLe+WYPeeE+l5cH7SlkuQ==,
       }
     engines: { node: ">=18" }
     dev: false
@@ -1467,7 +1487,7 @@ packages:
       "@typescript-eslint/types": 7.18.0
       "@typescript-eslint/typescript-estree": 7.18.0(typescript@5.4.5)
       "@typescript-eslint/visitor-keys": 7.18.0
-      debug: 4.3.6
+      debug: 4.3.7
       eslint: 8.57.0
       typescript: 5.4.5
     transitivePeerDependencies:
@@ -1574,7 +1594,7 @@ packages:
     dependencies:
       "@typescript-eslint/types": 7.18.0
       "@typescript-eslint/visitor-keys": 7.18.0
-      debug: 4.3.6
+      debug: 4.3.7
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.5
@@ -2213,10 +2233,10 @@ packages:
       ms: 2.1.2
     dev: true
 
-  /debug@4.3.6:
+  /debug@4.3.7:
     resolution:
       {
-        integrity: sha512-O/09Bd4Z1fBrU4VzkhFqVgpPzaGbw6Sm9FEkBT1A/YBXQFGuuSxa1dN2nxgxS34JmKXqYx8CZAwEVoJFImUXIg==,
+        integrity: sha512-Er2nc/H7RrMXZBFCEim6TCmMk02Z8vLC2Rbi1KEBggpo0fS6l0S1nnapwmIi3yW/+GOJap1Krg4w0Hg80oCqgQ==,
       }
     engines: { node: ">=6.0" }
     peerDependencies:
@@ -2225,7 +2245,7 @@ packages:
       supports-color:
         optional: true
     dependencies:
-      ms: 2.1.2
+      ms: 2.1.3
     dev: true
 
   /decompress-response@6.0.0:
@@ -3448,14 +3468,14 @@ packages:
       responselike: 3.0.0
     dev: false
 
-  /got@14.4.2:
+  /got@14.4.3:
     resolution:
       {
-        integrity: sha512-+Te/qEZ6hr7i+f0FNgXx/6WQteSM/QqueGvxeYQQFm0GDfoxLVJ/oiwUKYMTeioColWUTdewZ06hmrBjw6F7tw==,
+        integrity: sha512-iTC0Z87yxSijWTh/IpvGpwOhIQK7+GgWkYrMRoN/hB9qeRj9RPuLGODwevs0p5idUf7nrxCVa5IlOmK3b8z+KA==,
       }
     engines: { node: ">=20" }
     dependencies:
-      "@sindresorhus/is": 7.0.0
+      "@sindresorhus/is": 7.0.1
       "@szmarczak/http-timer": 5.0.1
       cacheable-lookup: 7.0.0
       cacheable-request: 12.0.1
@@ -3465,7 +3485,7 @@ packages:
       lowercase-keys: 3.0.0
       p-cancelable: 4.0.1
       responselike: 3.0.0
-      type-fest: 4.23.0
+      type-fest: 4.26.1
     dev: false
 
   /graceful-fs@4.2.11:
@@ -5356,10 +5376,10 @@ packages:
     engines: { node: ">=10" }
     dev: true
 
-  /type-fest@4.23.0:
+  /type-fest@4.26.1:
     resolution:
       {
-        integrity: sha512-ZiBujro2ohr5+Z/hZWHESLz3g08BBdrdLMieYFULJO+tWc437sn8kQsWLJoZErY8alNhxre9K4p3GURAG11n+w==,
+        integrity: sha512-yOGpmOAL7CkKe/91I5O3gPICmJNLJ1G4zFYVAsRHg7M64biSnPtRj0WNQt++bRkjYOqjWXrhnUw1utzmVErAdg==,
       }
     engines: { node: ">=16" }
     dev: false
@@ -5685,19 +5705,19 @@ packages:
     engines: { node: ">=10" }
     dev: true
 
-  github.com/DeterminateSystems/detsys-ts/65dd73c562ac60a068340f8e0c040bdcf2c59afe:
+  github.com/DeterminateSystems/detsys-ts/d5db891a9d01bb57b70fbc05cf9ac2b6c45359be:
     resolution:
       {
-        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/65dd73c562ac60a068340f8e0c040bdcf2c59afe,
+        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/d5db891a9d01bb57b70fbc05cf9ac2b6c45359be,
       }
     name: detsys-ts
     version: 1.0.0
     dependencies:
       "@actions/cache": 3.2.4
-      "@actions/core": 1.10.1
+      "@actions/core": 1.11.1
       "@actions/exec": 1.1.1
-      got: 14.4.2
-      type-fest: 4.23.0
+      got: 14.4.3
+      type-fest: 4.26.1
     transitivePeerDependencies:
       - encoding
     dev: false
