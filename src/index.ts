@@ -614,7 +614,11 @@ class NixInstallerAction extends DetSysAction {
         );
         await this.executeUninstall();
       } else {
-        // We're already installed, and not reinstalling, just set GITHUB_PATH and finish early
+        // We're already installed, and not reinstalling, just log in to FlakeHub, set GITHUB_PATH and finish early
+        if (this.determinate) {
+          await this.flakehubLogin();
+        }
+
         await this.setGithubPath();
         actionsCore.info("Nix was already installed, using existing install");
         return;
@@ -859,13 +863,19 @@ class NixInstallerAction extends DetSysAction {
   async setGithubPath(): Promise<void> {
     // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
     try {
-      const nixVarNixProfilePath = "/nix/var/nix/profiles/default/bin";
-      const homeNixProfilePath = `${process.env["HOME"]}/.nix-profile/bin`;
-      actionsCore.addPath(nixVarNixProfilePath);
-      actionsCore.addPath(homeNixProfilePath);
-      actionsCore.info(
-        `Added \`${nixVarNixProfilePath}\` and \`${homeNixProfilePath}\` to \`$GITHUB_PATH\``,
-      );
+      const paths = [
+        "/nix/var/nix/profiles/default/bin",
+        `${process.env["HOME"]}/.nix-profile/bin`,
+      ];
+
+      if (this.determinate) {
+        paths.push("/usr/local/bin");
+      }
+
+      for (const p of paths) {
+        actionsCore.addPath(p);
+        actionsCore.debug(`Added \`${p}\` to \`$GITHUB_PATH\``);
+      }
     } catch {
       actionsCore.info(
         "Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is done in the action. Prior to 0.11.0, this was only done in the `nix-installer` binary.",
