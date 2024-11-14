@@ -102680,6 +102680,9 @@ ${stderrBuffer}`
         await this.executeUninstall();
       } else {
         await this.setGithubPath();
+        if (this.determinate) {
+          await this.flakehubLogin();
+        }
         core.info("Nix was already installed, using existing install");
         return;
       }
@@ -102703,10 +102706,10 @@ ${stderrBuffer}`
     if (this.forceDockerShim) {
       await this.spawnDockerShim();
     }
+    await this.setGithubPath();
     if (this.determinate) {
       await this.flakehubLogin();
     }
-    await this.setGithubPath();
   }
   async spawnDockerShim() {
     core.startGroup(
@@ -102893,13 +102896,16 @@ ${stderrBuffer}`
   }
   async setGithubPath() {
     try {
-      const nixVarNixProfilePath = "/nix/var/nix/profiles/default/bin";
-      const homeNixProfilePath = `${process.env["HOME"]}/.nix-profile/bin`;
-      core.addPath(nixVarNixProfilePath);
-      core.addPath(homeNixProfilePath);
-      core.info(
-        `Added \`${nixVarNixProfilePath}\` and \`${homeNixProfilePath}\` to \`$GITHUB_PATH\``
-      );
+      const paths = [];
+      if (this.determinate) {
+        paths.push("/usr/local/bin");
+      }
+      paths.push("/nix/var/nix/profiles/default/bin");
+      paths.push(`${process.env["HOME"]}/.nix-profile/bin`);
+      for (const p of paths) {
+        core.addPath(p);
+        core.debug(`Added \`${p}\` to \`$GITHUB_PATH\``);
+      }
     } catch {
       core.info(
         "Skipping setting $GITHUB_PATH in action, the `nix-installer` crate seems to have done this already. From `nix-installer` version 0.11.0 and up, this step is done in the action. Prior to 0.11.0, this was only done in the `nix-installer` binary."
@@ -102913,6 +102919,7 @@ ${stderrBuffer}`
       try {
         await exec.exec(`determinate-nixd`, ["login", "github-action"]);
       } catch (e) {
+        core.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
         this.recordEvent("flakehub-login:failure", {
           exception: stringifyError(e)
         });
