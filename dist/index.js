@@ -102896,13 +102896,12 @@ ${stderrBuffer}`
   }
   async setGithubPath() {
     try {
-      const paths = [
-        "/nix/var/nix/profiles/default/bin",
-        `${process.env["HOME"]}/.nix-profile/bin`
-      ];
+      const paths = [];
       if (this.determinate) {
         paths.push("/usr/local/bin");
       }
+      paths.push("/nix/var/nix/profiles/default/bin");
+      paths.push(`${process.env["HOME"]}/.nix-profile/bin`);
       for (const p of paths) {
         core.addPath(p);
         core.debug(`Added \`${p}\` to \`$GITHUB_PATH\``);

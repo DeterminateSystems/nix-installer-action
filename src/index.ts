@@ -863,14 +863,14 @@ class NixInstallerAction extends DetSysAction {
   async setGithubPath(): Promise<void> {
     // Interim versions of the `nix-installer` crate may have already manipulated `$GITHUB_PATH`, as root even! Accessing that will be an error.
     try {
-      const paths = [
-        "/nix/var/nix/profiles/default/bin",
-        `${process.env["HOME"]}/.nix-profile/bin`,
-      ];
+      const paths = [];
 
       if (this.determinate) {
         paths.push("/usr/local/bin");
       }
+
+      paths.push("/nix/var/nix/profiles/default/bin");
+      paths.push(`${process.env["HOME"]}/.nix-profile/bin`);
 
       for (const p of paths) {
         actionsCore.addPath(p);
