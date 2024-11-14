@@ -615,11 +615,12 @@ class NixInstallerAction extends DetSysAction {
         await this.executeUninstall();
       } else {
         // We're already installed, and not reinstalling, just log in to FlakeHub, set GITHUB_PATH and finish early
+        await this.setGithubPath();
+
         if (this.determinate) {
           await this.flakehubLogin();
         }
 
-        await this.setGithubPath();
         actionsCore.info("Nix was already installed, using existing install");
         return;
       }
@@ -647,11 +648,11 @@ class NixInstallerAction extends DetSysAction {
       await this.spawnDockerShim();
     }
 
+    await this.setGithubPath();
+
     if (this.determinate) {
       await this.flakehubLogin();
     }
-
-    await this.setGithubPath();
   }
 
   async spawnDockerShim(): Promise<void> {

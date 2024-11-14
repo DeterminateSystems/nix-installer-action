@@ -102679,10 +102679,10 @@ ${stderrBuffer}`
         );
         await this.executeUninstall();
       } else {
+        await this.setGithubPath();
         if (this.determinate) {
           await this.flakehubLogin();
         }
-        await this.setGithubPath();
         core.info("Nix was already installed, using existing install");
         return;
       }
@@ -102706,10 +102706,10 @@ ${stderrBuffer}`
     if (this.forceDockerShim) {
       await this.spawnDockerShim();
     }
+    await this.setGithubPath();
     if (this.determinate) {
       await this.flakehubLogin();
     }
-    await this.setGithubPath();
   }
   async spawnDockerShim() {
     core.startGroup(
