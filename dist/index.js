@@ -102919,6 +102919,7 @@ ${stderrBuffer}`
       try {
         await exec.exec(`determinate-nixd`, ["login", "github-action"]);
       } catch (e) {
+        core.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
         this.recordEvent("flakehub-login:failure", {
           exception: stringifyError(e)
         });

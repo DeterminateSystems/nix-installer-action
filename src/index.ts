@@ -894,6 +894,7 @@ class NixInstallerAction extends DetSysAction {
       try {
         await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
       } catch (e: unknown) {
+        actionsCore.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
         this.recordEvent("flakehub-login:failure", {
           exception: stringifyError(e),
         });
