@@ -605,6 +605,7 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async install(): Promise<void> {
+    actionsCore.startGroup("Detecting Nix");
     const existingInstall = await this.detectExisting();
     if (existingInstall) {
       if (this.reinstall) {
@@ -928,11 +929,30 @@ class NixInstallerAction extends DetSysAction {
     try {
       await access(receiptPath);
       // There is a /nix/receipt.json
+      actionsCore.info("\u001b[32m Found /nix/receipt.json \u001b[33m");
       return true;
     } catch {
       // No /nix/receipt.json
-      return false;
     }
+
+    try {
+      const exitCode = await actionsExec.exec("nix", ["--version"], {});
+
+      if (exitCode === 0) {
+        actionsCore.info(
+          "\u001b[32m Found existing Nix installation \u001b[33m",
+        );
+        // Working existing installation of `nix` available, possibly a self-hosted runner
+        return true;
+      }
+    } catch {
+      // No /nix/receipt.json
+    }
+
+    actionsCore.info(
+      "\u001b[32m Did not detect existing Nix installation \u001b[33m",
+    );
+    return false;
   }
 
   private async setupKvm(): Promise<boolean> {

@@ -84924,6 +84924,7 @@ ${stderrBuffer}`
     return exitCode;
   }
   async install() {
+    core.startGroup("Detecting Nix");
     const existingInstall = await this.detectExisting();
     if (existingInstall) {
       if (this.reinstall) {
@@ -85202,10 +85203,24 @@ ${stderrBuffer}`
     const receiptPath = "/nix/receipt.json";
     try {
       await (0,promises_namespaceObject.access)(receiptPath);
+      core.info("\x1B[32m Found /nix/receipt.json \x1B[33m");
       return true;
     } catch {
-      return false;
     }
+    try {
+      const exitCode = await exec.exec("nix", ["--version"], {});
+      if (exitCode === 0) {
+        core.info(
+          "\x1B[32m Found existing Nix installation \x1B[33m"
+        );
+        return true;
+      }
+    } catch {
+    }
+    core.info(
+      "\x1B[32m Did not detect existing Nix installation \x1B[33m"
+    );
+    return false;
   }
   async setupKvm() {
     this.recordEvent(EVENT_SETUP_KVM);
