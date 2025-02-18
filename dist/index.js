@@ -85207,11 +85207,22 @@ ${stderrBuffer}`
       return false;
     }
   }
+  async canAccessKvm() {
+    try {
+      await (0,promises_namespaceObject.access)("/dev/kvm", external_node_fs_namespaceObject.constants.R_OK | external_node_fs_namespaceObject.constants.W_OK);
+      return true;
+    } catch {
+      return false;
+    }
+  }
   async setupKvm() {
     this.recordEvent(EVENT_SETUP_KVM);
     const currentUser = (0,external_node_os_.userInfo)();
     const isRoot = currentUser.uid === 0;
     const maybeSudo = isRoot ? "" : "sudo";
+    if (await this.canAccessKvm()) {
+      return true;
+    }
     const kvmRules = "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
     try {
       const writeFileExitCode = await exec.exec(
