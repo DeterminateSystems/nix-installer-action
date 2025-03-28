@@ -47,6 +47,7 @@ jobs:
   install-nix:
     name: "Test: ${{ matrix.runner }}${{ matrix.determinate && ' with determinate' || '' }}"
     strategy:
+      fail-fast: false
       matrix:
         runner:
           - ubuntu-latest
