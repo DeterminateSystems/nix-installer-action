@@ -89801,13 +89801,16 @@ ${stderrBuffer}`
     const logfile = this.getTemporaryName();
     core.saveState(STATE_EVENT_LOG, logfile);
     const output = await (0,promises_namespaceObject.open)(logfile, "a");
+    const stderr = await (0,promises_namespaceObject.open)(`${logfile}.stderr`, "a");
+    core.debug(`Event log: ${logfile}`);
     const opts = {
-      stdio: ["ignore", output.fd, "ignore"],
+      stdio: ["ignore", output.fd, stderr.fd],
       detached: true
     };
     const daemon = (0,external_node_child_process_namespaceObject.spawn)(
       "curl",
       [
+        "-v",
         "--unix-socket",
         "/nix/var/determinate/determinate-nixd.socket",
         "http://localhost/events"
