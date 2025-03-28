@@ -88959,11 +88959,12 @@ var NixInstallerAction = class extends DetSysAction {
     await this.scienceDebugFly();
     await this.detectAndForceDockerShim();
     await this.install();
-    await this.slurpEventLog();
+    await this.spewEventLog();
   }
   async post() {
     await this.cleanupDockerShim();
     await this.reportOverall();
+    await this.slurpEventLog();
   }
   get isMacOS() {
     return this.runnerOs === "macOS";
@@ -89577,18 +89578,18 @@ ${stderrBuffer}`
     try {
       await (0,promises_namespaceObject.stat)(socketPath);
       return true;
-    } catch (error) {
-      if (error.code === "ENOENT") {
+    } catch (error2) {
+      if (error2.code === "ENOENT") {
         core.debug(`Socket '${socketPath}' does not exist yet`);
         return false;
       }
       core.warning(
-        `Error waiting for the Nix Daemon socket: ${stringifyError(error)}`
+        `Error waiting for the Nix Daemon socket: ${stringifyError(error2)}`
       );
       this.recordEvent("docker-shim:wait-for-socket", {
-        exception: stringifyError(error)
+        exception: stringifyError(error2)
       });
-      throw error;
+      throw error2;
     }
   }
   async cleanupDockerShim() {
@@ -89794,7 +89795,7 @@ ${stderrBuffer}`
       );
     }
   }
-  async slurpEventLog() {
+  async spewEventLog() {
     if (!this.determinate) {
       return;
     }
@@ -89820,7 +89821,92 @@ ${stderrBuffer}`
     core.saveState(STATE_EVENT_PID, daemon.pid);
     daemon.unref();
   }
+  async slurpEventLog() {
+    if (!this.determinate) {
+      return;
+    }
+    try {
+      const logPath = core.getState(STATE_EVENT_LOG);
+      const events = await readMismatchEvents(logPath);
+      if (events.length === 0) {
+        core.debug("No hash mismatches found.");
+        return;
+      }
+      const listing = await getFileListing();
+      for (const file of listing) {
+        const text = await (0,promises_namespaceObject.readFile)(file, "utf-8");
+        const lines = text.split("\n");
+        for (const [index, line] of lines.entries()) {
+          const lineNumber = index + 1;
+          for (const event of events) {
+            const match = line.match(event.search);
+            if (!match) {
+              continue;
+            }
+            const column = (match.index ?? 0) + 1;
+            core.error(`This derivation's hash is ${event.good}`, {
+              title: "Outdated hash",
+              file,
+              startLine: lineNumber,
+              startColumn: column
+            });
+          }
+        }
+      }
+    } catch (error2) {
+      core.warning(`Could not consume hash mismatch logs: ${error2}`);
+    }
+  }
 };
+async function readMismatchEvents(logPath) {
+  const prefix = "data: ";
+  const memo = /* @__PURE__ */ new Set();
+  const events = (await (0,promises_namespaceObject.readFile)(logPath, "utf-8")).split(/\n/).filter((line) => line.startsWith(prefix)).map((line) => {
+    const json = line.slice(prefix.length);
+    const source = JSON.parse(json);
+    const search = new RegExp(
+      source.bad.map((s) => s.replace(/[+]/, (ch) => `\\${ch}`)).join("|")
+    );
+    return {
+      ...source,
+      search
+    };
+  }).filter((event) => {
+    const key = [event.drv, ...event.bad].join("\0");
+    if (memo.has(key)) {
+      false;
+    }
+    memo.add(key);
+    return true;
+  });
+  return events;
+}
+async function getFileListing() {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let length = 0;
+    const child = (0,external_node_child_process_namespaceObject.spawn)("git", ["ls-files", "*.nix", "*.json", "*.toml"], {
+      stdio: ["ignore", "pipe", "inherit"]
+    });
+    child.stdout.on("data", (chunk) => {
+      chunks.push(chunk);
+      length += chunk.length;
+    });
+    child.stdout.on("end", () => {
+      const lines = Buffer.concat(chunks, length).toString("utf-8").split(/\n/);
+      resolve(lines);
+    });
+    child.stdout.on("error", reject);
+    child.on("error", reject);
+    child.on("exit", (code, signal) => {
+      if (code !== 0) {
+        core.warning(
+          `git ls-files exited suspiciously code=${code}; signal=${signal}`
+        );
+      }
+    });
+  });
+}
 function main() {
   new NixInstallerAction().execute();
 }
