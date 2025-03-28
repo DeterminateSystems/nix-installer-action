@@ -1132,7 +1132,7 @@ class NixInstallerAction extends DetSysAction {
     const daemon = spawn(
       "curl",
       [
-        "-v",
+        "--no-buffer",
         "--unix-socket",
         "/nix/var/determinate/determinate-nixd.socket",
         "http://localhost/events",
