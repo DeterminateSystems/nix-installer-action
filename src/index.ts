@@ -1265,9 +1265,13 @@ async function getFileListing(): Promise<readonly string[]> {
     const chunks: Buffer[] = [];
     let length = 0;
 
-    const child = spawn("git", ["ls-files", "*.nix", "*.json", "*.toml"], {
-      stdio: ["ignore", "pipe", "inherit"],
-    });
+    const child = spawn(
+      "git",
+      ["ls-files", "-z", "*.nix", "*.json", "*.toml"],
+      {
+        stdio: ["ignore", "pipe", "inherit"],
+      },
+    );
 
     child.stdout.on("data", (chunk: Buffer) => {
       chunks.push(chunk);
@@ -1275,7 +1279,11 @@ async function getFileListing(): Promise<readonly string[]> {
     });
 
     child.stdout.on("end", () => {
-      const lines = Buffer.concat(chunks, length).toString("utf-8").split(/\n/);
+      const lines = Buffer.concat(chunks, length)
+        .toString("utf-8")
+        .replace(/\0$/, "")
+        .split(/\0/);
+
       resolve(lines);
     });
 
