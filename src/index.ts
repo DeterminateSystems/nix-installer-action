@@ -126,6 +126,7 @@ class NixInstallerAction extends DetSysAction {
     await this.scienceDebugFly();
     await this.detectAndForceDockerShim();
     await this.install();
+    await this.slurpEventLog();
   }
 
   async post(): Promise<void> {
