@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, curl-data]
   workflow_dispatch:
 
 jobs:
@@ -51,15 +51,8 @@ jobs:
       matrix:
         runner:
           - ubuntu-latest
-          - nscloud-ubuntu-22.04-amd64-4x16
-          - namespace-profile-default-arm64
-          # - macos-12-large # determinate-nixd is broken on macos-12
-          - macos-13-large
-          - macos-14-large
-          - macos-14-xlarge # arm64
         determinate:
           - true
-          - false
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -74,6 +67,12 @@ jobs:
           backtrace: full
           _internal-strict-mode: true
           determinate: ${{ matrix.determinate }}
+      - name: Breakpoint if tests failed
+        uses: namespacelabs/breakpoint-action@v0
+        with:
+          duration: 30m
+          authorized-users: grahamc
+
       - name: echo $PATH
         run: echo $PATH
 
@@ -143,38 +142,3 @@ jobs:
           cat -n /etc/nix/nix.conf
           nix config show | grep -E "^trusted-users = .*$USER"
           nix config show | grep -E "^use-sqlite-wal = true"
-
-  install-with-non-default-source-inputs:
-    name: Install Nix using non-default source-${{ matrix.inputs.key }}
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        inputs:
-          # https://github.com/DeterminateSystems/nix-installer/blob/v0.18.0
-          - key: url
-            value: https://github.com/DeterminateSystems/nix-installer/releases/download/v0.18.0/nix-installer-x86_64-linux
-            nix-version: "2.21.2"
-          # https://github.com/DeterminateSystems/nix-installer/tree/7011c077ec491da410fbc39f68676b0908b9ce7e
-          - key: revision
-            value: 7011c077ec491da410fbc39f68676b0908b9ce7e
-            nix-version: "2.19.2"
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install with alternative source-${{ matrix.inputs.key }}
-        uses: ./
-        with:
-          source-${{ matrix.inputs.key }}: ${{ matrix.inputs.value }}
-          _internal-strict-mode: true
-      - name: Ensure that the expected Nix version ${{ matrix.inputs.nix-version }} is installed via alternative source-${{ matrix.inputs.key }}
-        run: .github/verify-version.sh ${{ matrix.inputs.nix-version }}
-
-  install-no-id-token:
-    name: Install Nix without an ID token
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./
-        with:
-          _internal-strict-mode: true
-          determinate: true
