@@ -88894,6 +88894,7 @@ function makeOptionsConfident(actionOptions) {
 
 
 
+
 var EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
 var EVENT_INSTALL_NIX_START = "install_nix_start";
 var EVENT_INSTALL_NIX_SUCCESS = "install_nix_start";
@@ -88910,6 +88911,8 @@ var FACT_IN_ACT = "in_act";
 var FACT_IN_NAMESPACE_SO = "in_namespace_so";
 var FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 var FLAG_DETERMINATE = "--determinate";
+var STATE_EVENT_LOG = "DETERMINATE_NIXD_EVENT_LOG";
+var STATE_EVENT_PID = "DETERMINATE_NIXD_EVENT_PID";
 var NixInstallerAction = class extends DetSysAction {
   constructor() {
     super({
@@ -89789,6 +89792,29 @@ ${stderrBuffer}`
         `Unsupported \`RUNNER_OS\` (currently \`${this.runnerOs}\`)`
       );
     }
+  }
+  async slurpEventLog() {
+    if (!this.determinate) {
+      return;
+    }
+    const logfile = this.getTemporaryName();
+    core.saveState(STATE_EVENT_LOG, logfile);
+    const output = await (0,promises_namespaceObject.open)(logfile, "a");
+    const opts = {
+      stdio: ["ignore", output.fd, "ignore"],
+      detached: true
+    };
+    const daemon = (0,external_node_child_process_namespaceObject.spawn)(
+      "curl",
+      [
+        "--unix-socket",
+        "/nix/var/determinate/determinate-nixd.socket",
+        "http://localhost/events"
+      ],
+      opts
+    );
+    core.saveState(STATE_EVENT_PID, daemon.pid);
+    daemon.unref();
   }
 };
 function main() {

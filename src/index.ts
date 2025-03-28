@@ -1,6 +1,6 @@
 import * as actionsCore from "@actions/core";
 import * as actionsExec from "@actions/exec";
-import { access, readFile, stat } from "node:fs/promises";
+import { access, open, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import fs from "node:fs";
 import { userInfo } from "node:os";
@@ -10,6 +10,7 @@ import { DetSysAction, inputs, platform, stringifyError } from "detsys-ts";
 import { randomUUID } from "node:crypto";
 import got from "got";
 import { setTimeout } from "node:timers/promises";
+import { SpawnOptions, spawn } from "node:child_process";
 
 // Nix installation events
 const EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
@@ -38,6 +39,10 @@ const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 
 // Flags
 const FLAG_DETERMINATE = "--determinate";
+
+// Pre/post state keys
+const STATE_EVENT_LOG = "DETERMINATE_NIXD_EVENT_LOG";
+const STATE_EVENT_PID = "DETERMINATE_NIXD_EVENT_PID";
 
 class NixInstallerAction extends DetSysAction {
   determinate: boolean;
@@ -1103,6 +1108,36 @@ class NixInstallerAction extends DetSysAction {
         `Unsupported \`RUNNER_OS\` (currently \`${this.runnerOs}\`)`,
       );
     }
+  }
+
+  private async slurpEventLog(): Promise<void> {
+    if (!this.determinate) {
+      return;
+    }
+
+    const logfile = this.getTemporaryName();
+    actionsCore.saveState(STATE_EVENT_LOG, logfile);
+    const output = await open(logfile, "a");
+
+    const opts: SpawnOptions = {
+      stdio: ["ignore", output.fd, "ignore"],
+      detached: true,
+    };
+
+    // Start the server. Once it is ready, it will notify us via the notification server.
+    const daemon = spawn(
+      "curl",
+      [
+        "--unix-socket",
+        "/nix/var/determinate/determinate-nixd.socket",
+        "http://localhost/events",
+      ],
+      opts,
+    );
+
+    actionsCore.saveState(STATE_EVENT_PID, daemon.pid);
+
+    daemon.unref();
   }
 }
 
