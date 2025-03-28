@@ -1203,7 +1203,7 @@ class NixInstallerAction extends DetSysAction {
     try {
       process.kill(pid);
     } catch (error) {
-      actionsCore.warning(`Could not kill pid ${rawPid}: ${error}`);
+      actionsCore.info(`Could not kill pid ${rawPid}: ${error}`);
     }
   }
 }
