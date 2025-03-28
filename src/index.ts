@@ -1,6 +1,6 @@
 import * as actionsCore from "@actions/core";
 import * as actionsExec from "@actions/exec";
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import fs from "node:fs";
 import { userInfo } from "node:os";
@@ -9,6 +9,7 @@ import * as path from "path";
 import { DetSysAction, inputs, platform, stringifyError } from "detsys-ts";
 import { randomUUID } from "node:crypto";
 import got from "got";
+import { setTimeout } from "node:timers/promises";
 
 // Nix installation events
 const EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
@@ -819,10 +820,52 @@ class NixInstallerAction extends DetSysAction {
       }
     }
 
+    const maxDurationSeconds = 120;
+    const delayPerAttemptInMiliseconds = 50;
+    const maxAttempts =
+      (maxDurationSeconds * 1000) / delayPerAttemptInMiliseconds;
+    let didSucceed = false;
+
+    for (let attempt = 0; attempt <= maxAttempts; attempt += 1) {
+      if (await this.doesTheSocketExistYet()) {
+        didSucceed = true;
+        break;
+      }
+
+      await setTimeout(50);
+    }
+
+    if (!didSucceed) {
+      throw new Error("Timed out waiting for the Nix Daemon");
+    }
+
     actionsCore.endGroup();
 
     return;
   }
+
+  async doesTheSocketExistYet(): Promise<boolean> {
+    const socketPath = "/nix/var/nix/daemon-socket/socket";
+    try {
+      await stat(socketPath);
+      return true;
+    } catch (error: unknown) {
+      // eslint-disable-next-line no-undef
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        actionsCore.debug(`Socket '${socketPath}' does not exist yet`);
+        return false;
+      }
+
+      actionsCore.warning(
+        `Error waiting for the Nix Daemon socket: ${stringifyError(error)}`,
+      );
+      this.recordEvent("docker-shim:wait-for-socket", {
+        exception: stringifyError(error),
+      });
+      throw error;
+    }
+  }
+
   async cleanupDockerShim(): Promise<void> {
     const containerId = actionsCore.getState("docker_shim_container_id");
 

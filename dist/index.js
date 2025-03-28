@@ -87259,7 +87259,7 @@ const external_node_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequ
 var cache = __nccwpck_require__(7389);
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@03533d37dcd46f34d9e99385e665615b221a30d9_b5pw57rm3cyajl6hbsaouss3oa/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@07c7fc924119a8d9879c1c164ae593049d47f648_fqzregs55b5c7gstiytpiaimke/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -87548,7 +87548,7 @@ async function collectBacktracesMacOS(prefixes, programNameDenyList, startTimest
       return prefixes.some((prefix) => fileName.startsWith(prefix));
     }).filter((fileName) => {
       return !programNameDenyList.some(
-        (programName) => fileName.startsWith(`${programName}_${(/* @__PURE__ */ new Date()).getFullYear()}`)
+        (programName) => fileName.startsWith(programName)
       );
     }).filter((fileName) => {
       return !fileName.endsWith(".diag");
@@ -88893,6 +88893,7 @@ function makeOptionsConfident(actionOptions) {
 
 
 
+
 var EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
 var EVENT_INSTALL_NIX_START = "install_nix_start";
 var EVENT_INSTALL_NIX_SUCCESS = "install_nix_start";
@@ -89550,8 +89551,41 @@ ${stderrBuffer}`
         );
       }
     }
+    const maxDurationSeconds = 120;
+    const delayPerAttemptInMiliseconds = 50;
+    const maxAttempts = maxDurationSeconds * 1e3 / delayPerAttemptInMiliseconds;
+    let didSucceed = false;
+    for (let attempt = 0; attempt <= maxAttempts; attempt += 1) {
+      if (await this.doesTheSocketExistYet()) {
+        didSucceed = true;
+        break;
+      }
+      await (0,external_node_timers_promises_namespaceObject.setTimeout)(50);
+    }
+    if (!didSucceed) {
+      throw new Error("Timed out waiting for the Nix Daemon");
+    }
     core.endGroup();
     return;
+  }
+  async doesTheSocketExistYet() {
+    const socketPath = "/nix/var/nix/daemon-socket/socket";
+    try {
+      await (0,promises_namespaceObject.stat)(socketPath);
+      return true;
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        core.debug(`Socket '${socketPath}' does not exist yet`);
+        return false;
+      }
+      core.warning(
+        `Error waiting for the Nix Daemon socket: ${stringifyError(error)}`
+      );
+      this.recordEvent("docker-shim:wait-for-socket", {
+        exception: stringifyError(error)
+      });
+      throw error;
+    }
   }
   async cleanupDockerShim() {
     const containerId = core.getState("docker_shim_container_id");
