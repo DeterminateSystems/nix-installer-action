@@ -88965,6 +88965,7 @@ var NixInstallerAction = class extends DetSysAction {
     await this.cleanupDockerShim();
     await this.reportOverall();
     await this.slurpEventLog();
+    await this.cleanupLogger();
   }
   get isMacOS() {
     return this.runnerOs === "macOS";
@@ -89844,8 +89845,8 @@ ${stderrBuffer}`
               continue;
             }
             const column = (match.index ?? 0) + 1;
-            core.error(`This derivation's hash is ${event.good}`, {
-              title: "Outdated hash",
+            core.error(`This derivation's hash is \`${event.good}\``, {
+              title: "Determinate Nix detected an incorrect dependency hash.",
               file,
               startLine: lineNumber,
               startColumn: column
@@ -89857,6 +89858,15 @@ ${stderrBuffer}`
       core.warning(`Could not consume hash mismatch logs: ${error2}`);
     }
   }
+  async cleanupLogger() {
+    const rawPid = core.getState(STATE_EVENT_PID);
+    const pid = Number(rawPid);
+    try {
+      process.kill(pid);
+    } catch (error2) {
+      core.info(`Could not kill pid ${rawPid}: ${error2}`);
+    }
+  }
 };
 async function readMismatchEvents(logPath) {
   const prefix = "data: ";
@@ -89865,7 +89875,7 @@ async function readMismatchEvents(logPath) {
     const json = line.slice(prefix.length);
     const source = JSON.parse(json);
     const search = new RegExp(
-      source.bad.map((s) => s.replace(/[+]/, (ch) => `\\${ch}`)).join("|")
+      source.bad.map((s) => s.replace(/[+]/g, (ch) => `\\${ch}`)).join("|")
     );
     return {
       ...source,
@@ -89885,15 +89895,19 @@ async function getFileListing() {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let length = 0;
-    const child = (0,external_node_child_process_namespaceObject.spawn)("git", ["ls-files", "*.nix", "*.json", "*.toml"], {
-      stdio: ["ignore", "pipe", "inherit"]
-    });
+    const child = (0,external_node_child_process_namespaceObject.spawn)(
+      "git",
+      ["ls-files", "-z", "*.nix", "*.json", "*.toml"],
+      {
+        stdio: ["ignore", "pipe", "inherit"]
+      }
+    );
     child.stdout.on("data", (chunk) => {
       chunks.push(chunk);
       length += chunk.length;
     });
     child.stdout.on("end", () => {
-      const lines = Buffer.concat(chunks, length).toString("utf-8").split(/\n/);
+      const lines = Buffer.concat(chunks, length).toString("utf-8").replace(/\0$/, "").split(/\0/);
       resolve(lines);
     });
     child.stdout.on("error", reject);
