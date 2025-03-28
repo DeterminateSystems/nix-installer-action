@@ -133,6 +133,7 @@ class NixInstallerAction extends DetSysAction {
     await this.cleanupDockerShim();
     await this.reportOverall();
     await this.slurpEventLog();
+    await this.cleanupLogger();
   }
 
   private get isMacOS(): boolean {
@@ -1192,6 +1193,17 @@ class NixInstallerAction extends DetSysAction {
     } catch (error) {
       // Don't hard fail the action if something exploded; this feature is only a nice-to-have
       actionsCore.warning(`Could not consume hash mismatch logs: ${error}`);
+    }
+  }
+
+  async cleanupLogger(): Promise<void> {
+    const rawPid = actionsCore.getState(STATE_EVENT_PID);
+    const pid = Number(rawPid);
+
+    try {
+      process.kill(pid);
+    } catch (error) {
+      actionsCore.warning(`Could not kill pid ${rawPid}: ${error}`);
     }
   }
 }
