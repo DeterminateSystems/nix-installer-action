@@ -1120,13 +1120,13 @@ class NixInstallerAction extends DetSysAction {
 
     const logfile = this.getTemporaryName();
     actionsCore.saveState(STATE_EVENT_LOG, logfile);
-    const output = await open(logfile, "a");
+    const stdout = await open(logfile, "a");
     const stderr = await open(`${logfile}.stderr`, "a");
 
     actionsCore.debug(`Event log: ${logfile}`);
 
     const opts: SpawnOptions = {
-      stdio: ["ignore", output.fd, stderr.fd],
+      stdio: ["ignore", stdout.fd, stderr.fd],
       detached: true,
     };
 
@@ -1143,8 +1143,22 @@ class NixInstallerAction extends DetSysAction {
     );
 
     actionsCore.saveState(STATE_EVENT_PID, daemon.pid);
-
     daemon.unref();
+
+    // Wait a tick in the event loop in order for curl to actually be running
+    await Promise.resolve();
+
+    try {
+      await stdout.close();
+    } catch (error) {
+      actionsCore.info(`Could not close curl's stdout: ${error}`);
+    }
+
+    try {
+      await stderr.close();
+    } catch (error) {
+      actionsCore.info(`Could not close curl's stderr: ${error}`);
+    }
   }
 
   private async slurpEventLog(): Promise<void> {
