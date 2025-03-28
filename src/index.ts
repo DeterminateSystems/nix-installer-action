@@ -126,12 +126,13 @@ class NixInstallerAction extends DetSysAction {
     await this.scienceDebugFly();
     await this.detectAndForceDockerShim();
     await this.install();
-    await this.slurpEventLog();
+    await this.spewEventLog();
   }
 
   async post(): Promise<void> {
     await this.cleanupDockerShim();
     await this.reportOverall();
+    await this.slurpEventLog();
   }
 
   private get isMacOS(): boolean {
@@ -1111,7 +1112,7 @@ class NixInstallerAction extends DetSysAction {
     }
   }
 
-  private async slurpEventLog(): Promise<void> {
+  private async spewEventLog(): Promise<void> {
     if (!this.determinate) {
       return;
     }
@@ -1144,6 +1145,140 @@ class NixInstallerAction extends DetSysAction {
 
     daemon.unref();
   }
+
+  private async slurpEventLog(): Promise<void> {
+    if (!this.determinate) {
+      return;
+    }
+
+    try {
+      const logPath = actionsCore.getState(STATE_EVENT_LOG);
+      const events = await readMismatchEvents(logPath);
+
+      // No point doing any more work if there are no mismatch events
+      if (events.length === 0) {
+        actionsCore.debug("No hash mismatches found.");
+        return;
+      }
+
+      const listing = await getFileListing();
+
+      // For each file, search for potentially bad hashes
+      for (const file of listing) {
+        const text = await readFile(file, "utf-8");
+        const lines = text.split("\n");
+
+        for (const [index, line] of lines.entries()) {
+          const lineNumber = index + 1;
+
+          for (const event of events) {
+            const match = line.match(event.search);
+            if (!match) {
+              continue;
+            }
+
+            // Allegedly, match.index is optional, so default to 0
+            const column = (match.index ?? 0) + 1;
+
+            actionsCore.error(`This derivation's hash is ${event.good}`, {
+              title: "Outdated hash",
+              file,
+              startLine: lineNumber,
+              startColumn: column,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      // Don't hard fail the action if something exploded; this feature is only a nice-to-have
+      actionsCore.warning(`Could not consume hash mismatch logs: ${error}`);
+    }
+  }
+}
+
+// Fields we're interested in from the source event
+interface MismatchSourceEvent {
+  readonly drv: string;
+  readonly good: string;
+  readonly bad: readonly string[];
+}
+
+// Our augmented event with the RegExp to match against the bad hashes
+interface MismatchEvent extends MismatchSourceEvent {
+  readonly search: RegExp;
+}
+
+async function readMismatchEvents(logPath: string): Promise<MismatchEvent[]> {
+  const prefix = "data: ";
+
+  // Used to deduplicate events (see below)
+  const memo = new Set<string>();
+
+  const events = (await readFile(logPath, "utf-8"))
+    .split(/\n/)
+    .filter((line) => line.startsWith(prefix))
+    .map((line) => {
+      // Note: this currently assumes that all events being ingested are mismatches
+      const json = line.slice(prefix.length);
+      const source = JSON.parse(json) as MismatchSourceEvent;
+
+      // Construct a regular expression to search for any of the hash patterns
+      // (do it here to avoid creating RegExp objects in a loop below)
+      const search = new RegExp(
+        source.bad.map((s) => s.replace(/[+]/, (ch) => `\\${ch}`)).join("|"),
+      );
+
+      return {
+        ...source,
+        search,
+      } satisfies MismatchEvent;
+    })
+    .filter((event) => {
+      // Deduplicate based on the derivation's store path and list of bad hashes.
+      const key = [event.drv, ...event.bad].join("\0");
+      if (memo.has(key)) {
+        false;
+      }
+
+      memo.add(key);
+      return true;
+    });
+
+  return events;
+}
+
+// Get the list of files with potential hash mismatches (limited currently to *.{nix,json,toml})
+async function getFileListing(): Promise<readonly string[]> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let length = 0;
+
+    const child = spawn("git", ["ls-files", "*.nix", "*.json", "*.toml"], {
+      stdio: ["ignore", "pipe", "inherit"],
+    });
+
+    child.stdout.on("data", (chunk: Buffer) => {
+      chunks.push(chunk);
+      length += chunk.length;
+    });
+
+    child.stdout.on("end", () => {
+      const lines = Buffer.concat(chunks, length).toString("utf-8").split(/\n/);
+      resolve(lines);
+    });
+
+    child.stdout.on("error", reject);
+
+    child.on("error", reject);
+    child.on("exit", (code, signal) => {
+      // We should consider rejecting the promise here
+      if (code !== 0) {
+        actionsCore.warning(
+          `git ls-files exited suspiciously code=${code}; signal=${signal}`,
+        );
+      }
+    });
+  });
 }
 
 type ExecuteEnvironment = {
