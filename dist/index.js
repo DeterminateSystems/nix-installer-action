@@ -89810,7 +89810,7 @@ ${stderrBuffer}`
     const daemon = (0,external_node_child_process_namespaceObject.spawn)(
       "curl",
       [
-        "-v",
+        "--no-buffer",
         "--unix-socket",
         "/nix/var/determinate/determinate-nixd.socket",
         "http://localhost/events"
