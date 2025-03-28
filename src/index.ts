@@ -1225,7 +1225,7 @@ async function readMismatchEvents(logPath: string): Promise<MismatchEvent[]> {
       // Construct a regular expression to search for any of the hash patterns
       // (do it here to avoid creating RegExp objects in a loop below)
       const search = new RegExp(
-        source.bad.map((s) => s.replace(/[+]/, (ch) => `\\${ch}`)).join("|"),
+        source.bad.map((s) => s.replace(/[+]/g, (ch) => `\\${ch}`)).join("|"),
       );
 
       return {
