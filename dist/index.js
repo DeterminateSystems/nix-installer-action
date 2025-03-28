@@ -89802,11 +89802,11 @@ ${stderrBuffer}`
     }
     const logfile = this.getTemporaryName();
     core.saveState(STATE_EVENT_LOG, logfile);
-    const output = await (0,promises_namespaceObject.open)(logfile, "a");
+    const stdout = await (0,promises_namespaceObject.open)(logfile, "a");
     const stderr = await (0,promises_namespaceObject.open)(`${logfile}.stderr`, "a");
     core.debug(`Event log: ${logfile}`);
     const opts = {
-      stdio: ["ignore", output.fd, stderr.fd],
+      stdio: ["ignore", stdout.fd, stderr.fd],
       detached: true
     };
     const daemon = (0,external_node_child_process_namespaceObject.spawn)(
@@ -89821,6 +89821,17 @@ ${stderrBuffer}`
     );
     core.saveState(STATE_EVENT_PID, daemon.pid);
     daemon.unref();
+    await Promise.resolve();
+    try {
+      await stdout.close();
+    } catch (error2) {
+      core.info(`Could not close curl's stdout: ${error2}`);
+    }
+    try {
+      await stderr.close();
+    } catch (error2) {
+      core.info(`Could not close curl's stderr: ${error2}`);
+    }
   }
   async slurpEventLog() {
     if (!this.determinate) {
