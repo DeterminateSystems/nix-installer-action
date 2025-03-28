@@ -1119,9 +1119,12 @@ class NixInstallerAction extends DetSysAction {
     const logfile = this.getTemporaryName();
     actionsCore.saveState(STATE_EVENT_LOG, logfile);
     const output = await open(logfile, "a");
+    const stderr = await open(`${logfile}.stderr`, "a");
+
+    actionsCore.debug(`Event log: ${logfile}`);
 
     const opts: SpawnOptions = {
-      stdio: ["ignore", output.fd, "ignore"],
+      stdio: ["ignore", output.fd, stderr.fd],
       detached: true,
     };
 
@@ -1129,6 +1132,7 @@ class NixInstallerAction extends DetSysAction {
     const daemon = spawn(
       "curl",
       [
+        "-v",
         "--unix-socket",
         "/nix/var/determinate/determinate-nixd.socket",
         "http://localhost/events",
