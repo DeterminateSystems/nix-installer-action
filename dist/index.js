@@ -89870,8 +89870,17 @@ ${stderrBuffer}`
     }
   }
   async cleanupLogger() {
+    if (!this.determinate) {
+      return;
+    }
     const rawPid = core.getState(STATE_EVENT_PID);
     const pid = Number(rawPid);
+    if (!Number.isSafeInteger(pid) || pid <= 0) {
+      core.info(
+        `Refusing to send signal to '${rawPid}' because it isn't safe`
+      );
+      return;
+    }
     try {
       process.kill(pid);
     } catch (error2) {

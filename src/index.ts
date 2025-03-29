@@ -1211,8 +1211,19 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async cleanupLogger(): Promise<void> {
+    if (!this.determinate) {
+      return;
+    }
+
     const rawPid = actionsCore.getState(STATE_EVENT_PID);
     const pid = Number(rawPid);
+
+    if (!Number.isSafeInteger(pid) || pid <= 0) {
+      actionsCore.info(
+        `Refusing to send signal to '${rawPid}' because it isn't safe`,
+      );
+      return;
+    }
 
     try {
       process.kill(pid);
