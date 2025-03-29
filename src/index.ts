@@ -1196,7 +1196,7 @@ class NixInstallerAction extends DetSysAction {
             const column = (match.index ?? 0) + 1;
 
             actionsCore.error(`This derivation's hash is \`${event.good}\``, {
-              title: "Determinate Nix detected an incorrect dependency hash.",
+              title: "Determinate Nix detected an incorrect dependency hash",
               file,
               startLine: lineNumber,
               startColumn: column,
