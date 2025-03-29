@@ -1233,15 +1233,21 @@ class NixInstallerAction extends DetSysAction {
   }
 }
 
+interface DaemonEvent<V extends number, C extends string> {
+  readonly v: V;
+  readonly c: C;
+}
+
 // Fields we're interested in from the source event
-interface MismatchSourceEvent {
+interface MismatchDaemonEvent
+  extends DaemonEvent<1, "HashMismatchResponseEventV1"> {
   readonly drv: string;
   readonly good: string;
   readonly bad: readonly string[];
 }
 
 // Our augmented event with the RegExp to match against the bad hashes
-interface MismatchEvent extends MismatchSourceEvent {
+interface MismatchEvent extends MismatchDaemonEvent {
   readonly search: RegExp;
 }
 
@@ -1255,10 +1261,14 @@ async function readMismatchEvents(logPath: string): Promise<MismatchEvent[]> {
     .split(/\n/)
     .filter((line) => line.startsWith(prefix))
     .map((line) => {
-      // Note: this currently assumes that all events being ingested are mismatches
       const json = line.slice(prefix.length);
-      const source = JSON.parse(json) as MismatchSourceEvent;
-
+      return JSON.parse(json) as DaemonEvent<number, string>;
+    })
+    .filter(
+      (event): event is MismatchDaemonEvent =>
+        event.v === 1 && event.c === "HashMismatchResponseEventV1",
+    )
+    .map((source) => {
       // Construct a regular expression to search for any of the hash patterns
       // (do it here to avoid creating RegExp objects in a loop below)
       const search = new RegExp(

@@ -89893,7 +89893,10 @@ async function readMismatchEvents(logPath) {
   const memo = /* @__PURE__ */ new Set();
   const events = (await (0,promises_namespaceObject.readFile)(logPath, "utf-8")).split(/\n/).filter((line) => line.startsWith(prefix)).map((line) => {
     const json = line.slice(prefix.length);
-    const source = JSON.parse(json);
+    return JSON.parse(json);
+  }).filter(
+    (event) => event.v === 1 && event.c === "HashMismatchResponseEventV1"
+  ).map((source) => {
     const search = new RegExp(
       source.bad.map((s) => s.replace(/[+]/g, (ch) => `\\${ch}`)).join("|")
     );
