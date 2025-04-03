@@ -893,9 +893,7 @@ class NixInstallerAction extends DetSysAction {
         const drv = event.drv;
 
         actionsCore.startGroup(`Failed build: ${drv}`);
-        await actionsExec.exec("nix", ["log", drv], {
-          silent: true,
-        });
+        await actionsExec.exec("nix", ["log", drv]);
         actionsCore.endGroup();
       }
     }
