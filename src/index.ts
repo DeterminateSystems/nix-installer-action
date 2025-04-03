@@ -873,7 +873,7 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async summarizeErrors(): Promise<void> {
-    const startDate = actionsCore.getState(STATE_START_DATETIME);
+    // const startDate = actionsCore.getState(STATE_START_DATETIME);
 
     const resp: { [key: string]: unknown }[] = await got
       .get(
