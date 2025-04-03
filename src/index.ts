@@ -883,18 +883,25 @@ class NixInstallerAction extends DetSysAction {
         },
       )
       .json();
-    for (const event of resp) {
-      if (
-        (event.v ?? "") === "1" &&
-        (event.c ?? "") === "BuildFailureResponseEventV1" &&
-        event.hasOwnProperty("drv") &&
-        typeof event.drv === "string"
-      ) {
-        const drv = event.drv;
 
-        actionsCore.startGroup(`Failed build: ${drv}`);
-        await actionsExec.exec("nix", ["log", drv]);
-        actionsCore.endGroup();
+    if (resp.length > 0) {
+      actionsCore.info(
+        `\u001b[38;2;255;0;0mBuild logs from ${resp.length} failure${resp.length === 1 ? "" : "s"}`,
+      );
+
+      for (const event of resp) {
+        if (
+          (event.v ?? "") === "1" &&
+          (event.c ?? "") === "BuildFailureResponseEventV1" &&
+          event.hasOwnProperty("drv") &&
+          typeof event.drv === "string"
+        ) {
+          const drv = event.drv;
+
+          actionsCore.startGroup(`Failed build: ${drv}`);
+          await actionsExec.exec("nix", ["log", drv]);
+          actionsCore.endGroup();
+        }
       }
     }
   }

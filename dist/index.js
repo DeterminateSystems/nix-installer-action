@@ -89597,12 +89597,17 @@ ${stderrBuffer}`
         enableUnixSockets: true
       }
     ).json();
-    for (const event of resp) {
-      if ((event.v ?? "") === "1" && (event.c ?? "") === "BuildFailureResponseEventV1" && event.hasOwnProperty("drv") && typeof event.drv === "string") {
-        const drv = event.drv;
-        core.startGroup(`Failed build: ${drv}`);
-        await exec.exec("nix", ["log", drv]);
-        core.endGroup();
+    if (resp.length > 0) {
+      core.info(
+        `\x1B[38;2;255;0;0mBuild logs from ${resp.length} failure${resp.length === 1 ? "" : "s"}`
+      );
+      for (const event of resp) {
+        if ((event.v ?? "") === "1" && (event.c ?? "") === "BuildFailureResponseEventV1" && event.hasOwnProperty("drv") && typeof event.drv === "string") {
+          const drv = event.drv;
+          core.startGroup(`Failed build: ${drv}`);
+          await exec.exec("nix", ["log", drv]);
+          core.endGroup();
+        }
       }
     }
   }
