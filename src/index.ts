@@ -909,8 +909,8 @@ class NixInstallerAction extends DetSysAction {
           actionsCore.info(output.stdout);
           actionsCore.endGroup();
           actionsCore.summary.addDetails(
-            `Failed build: \n\n\`${drv}\`\n\n`,
-            `\n\n\`\`\`\n${output.stdout}\n\`\`\`\n\n`,
+            `Failed build: \n\n\`${drv}\`\n\n.`,
+            `.\n\n\`\`\`\n${output.stdout}\n\`\`\`\n\n.`,
           );
         }
 

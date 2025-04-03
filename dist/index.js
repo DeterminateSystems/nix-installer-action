@@ -89618,14 +89618,14 @@ ${stderrBuffer}`
 
 \`${drv}\`
 
-`,
-            `
+.`,
+            `.
 
 \`\`\`
 ${output.stdout}
 \`\`\`
 
-`
+.`
           );
         }
         await core.summary.write();
