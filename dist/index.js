@@ -89591,9 +89591,8 @@ ${stderrBuffer}`
     }
   }
   async summarizeErrors() {
-    const startDate = core.getState(STATE_START_DATETIME);
     const resp = await got_dist_source.get(
-      `http://unix:/nix/var/determinate/determinate-nixd.socket:/events/recent?since=${startDate}`,
+      `http://unix:/nix/var/determinate/determinate-nixd.socket:/events/recent`,
       {
         enableUnixSockets: true
       }
