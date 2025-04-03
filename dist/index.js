@@ -89618,6 +89618,7 @@ ${stderrBuffer}`
             output.stdout
           );
         }
+        await core.summary.write();
       }
     }
   }

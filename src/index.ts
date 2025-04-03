@@ -913,6 +913,8 @@ class NixInstallerAction extends DetSysAction {
             output.stdout,
           );
         }
+
+        await actionsCore.summary.write();
       }
     }
   }
