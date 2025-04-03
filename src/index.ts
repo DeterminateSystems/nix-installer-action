@@ -885,7 +885,7 @@ class NixInstallerAction extends DetSysAction {
       .json();
     for (const event of resp) {
       if (
-        (event.v ?? 0) === 1 &&
+        (event.v ?? "") === "1" &&
         (event.c ?? "") === "BuildFailureResponseEventV1" &&
         event.hasOwnProperty("drv") &&
         typeof event.drv === "string"

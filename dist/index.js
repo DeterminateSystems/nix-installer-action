@@ -89598,7 +89598,7 @@ ${stderrBuffer}`
       }
     ).json();
     for (const event of resp) {
-      if ((event.v ?? 0) === 1 && (event.c ?? "") === "BuildFailureResponseEventV1" && event.hasOwnProperty("drv") && typeof event.drv === "string") {
+      if ((event.v ?? "") === "1" && (event.c ?? "") === "BuildFailureResponseEventV1" && event.hasOwnProperty("drv") && typeof event.drv === "string") {
         const drv = event.drv;
         core.startGroup(`Failed build: ${drv}`);
         await exec.exec("nix", ["log", drv], {
