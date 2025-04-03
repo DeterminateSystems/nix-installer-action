@@ -89614,18 +89614,9 @@ ${stderrBuffer}`
           core.info(output.stdout);
           core.endGroup();
           core.summary.addDetails(
-            `Failed build: 
-
-\`${drv}\`
-
-.`,
-            `.
-
-\`\`\`
-${output.stdout}
-\`\`\`
-
-.`
+            `Failed build: <code>${drv}</code>`,
+            `<pre>
+${output.stdout}</pre>`
           );
         }
         await core.summary.write();
