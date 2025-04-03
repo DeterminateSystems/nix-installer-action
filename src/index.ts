@@ -39,6 +39,9 @@ const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 // Flags
 const FLAG_DETERMINATE = "--determinate";
 
+// Pre/post state keys
+const STATE_START_DATETIME = "DETERMINATE_NIXD_START_DATETIME";
+
 class NixInstallerAction extends DetSysAction {
   determinate: boolean;
   platform: string;
@@ -118,12 +121,15 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async main(): Promise<void> {
+    actionsCore.saveState(STATE_START_DATETIME, new Date().toISOString());
+
     await this.scienceDebugFly();
     await this.detectAndForceDockerShim();
     await this.install();
   }
 
   async post(): Promise<void> {
+    await this.summarizeErrors();
     await this.cleanupDockerShim();
     await this.reportOverall();
   }
@@ -863,6 +869,35 @@ class NixInstallerAction extends DetSysAction {
         exception: stringifyError(error),
       });
       throw error;
+    }
+  }
+
+  async summarizeErrors(): Promise<void> {
+    const startDate = actionsCore.getState(STATE_START_DATETIME);
+
+    const resp: { [key: string]: unknown }[] = await got
+      .get(
+        `http://unix:/nix/var/determinate/determinate-nixd.socket:/events/recent?since=${startDate}`,
+        {
+          enableUnixSockets: true,
+        },
+      )
+      .json();
+    for (const event of resp) {
+      if (
+        (event.v ?? 0) === 1 &&
+        (event.c ?? "") === "BuildFailureResponseEventV1" &&
+        event.hasOwnProperty("drv") &&
+        typeof event.drv === "string"
+      ) {
+        const drv = event.drv;
+
+        actionsCore.startGroup(`Failed build: ${drv}`);
+        await actionsExec.exec("nix", ["log", drv], {
+          silent: true,
+        });
+        actionsCore.endGroup();
+      }
     }
   }
 
