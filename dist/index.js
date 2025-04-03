@@ -87053,7 +87053,7 @@ const external_node_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequ
 var cache = __nccwpck_require__(7389);
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@f42f6003b4044fede4681778f76342e523671e8f_ztduxs73v5crsmxlizmk53q2zq/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@e31aa55518cae49b58723c152c6d0e46ee223ec1_clxouqyv3ojvdnrowtbr5o57nq/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -88750,6 +88750,169 @@ function annotateMismatches(output) {
   return count;
 }
 
+// src/events.ts
+
+function parseEvents(data) {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+  const events = data.flatMap((event) => {
+    if (event.v === "1" && (event.c === "BuildFailureResponseEventV1" || event.c === "BuiltPathResponseEventV1") && Object.hasOwn(event, "drv") && typeof event.drv === "string" && Object.hasOwn(event, "timing") && typeof event.timing === "object" && event.timing !== null) {
+      const timing = event.timing;
+      if (Object.hasOwn(timing, "startTime") && typeof timing.startTime === "string" && Object.hasOwn(timing, "durationSeconds") && typeof timing.durationSeconds === "number") {
+        const date = Date.parse(timing.startTime);
+        if (!Number.isNaN(date)) {
+          return [
+            {
+              v: event.v,
+              c: event.c,
+              drv: event.drv,
+              timing: {
+                startTime: new Date(date),
+                durationSeconds: timing.durationSeconds
+              }
+            }
+          ];
+        }
+      }
+    }
+    return [];
+  });
+  return events;
+}
+async function getRecentEvents(since) {
+  const queryParam = encodeURIComponent(since.toISOString());
+  const resp = await got_dist_source.get(
+    `http://unix:/nix/var/determinate/determinate-nixd.socket:/events/recent?since=${queryParam}`,
+    {
+      enableUnixSockets: true
+    }
+  ).json();
+  return parseEvents(resp);
+}
+
+// src/mermaid.ts
+function makeMermaidReport(events) {
+  let mermaid;
+  let pruneLevel = -2;
+  do {
+    pruneLevel += 1;
+    mermaid = mermaidify(events, pruneLevel);
+  } while ((mermaid?.length ?? 0) > 49900);
+  if (mermaid === void 0) {
+    return void 0;
+  }
+  const lines = [
+    "<details open><summary><strong>Build timeline</strong> :hourglass_flowing_sand:</summary>",
+    "",
+    // load bearing whitespace, deleting it breaks the details expander / markdown
+    mermaid,
+    ""
+    // load bearing whitespace, deleting it breaks the details expander / markdown
+  ];
+  if (pruneLevel === 0) {
+    lines.push("> [!NOTE]");
+    lines.push(
+      "> `/nix/store/[hash]` and the `.drv` suffixes have been removed to make the graph small enough to render."
+    );
+  } else if (pruneLevel > 0) {
+    lines.push("> [!NOTE]");
+    lines.push(
+      `> \`/nix/store/[hash]\`, the \`.drv\` suffix, and builds that took less than ${pruneLevel}s have been removed to make the graph small enough to render.`
+    );
+  }
+  lines.push("");
+  lines.push("</details>");
+  return lines.join("\n");
+}
+function mermaidify(events, pruneLevel) {
+  events = events.filter(
+    (event) => event.c === "BuiltPathResponseEventV1" || event.c === "BuildFailureResponseEventV1"
+  );
+  events.sort(function(a, b) {
+    return a.timing.startTime.getTime() - b.timing.startTime.getTime();
+  });
+  const firstEvent = events.at(0);
+  if (firstEvent === void 0) {
+    return void 0;
+  }
+  const zeroMoment = firstEvent.timing.startTime.getTime();
+  const lines = [
+    "```mermaid",
+    "gantt",
+    "    dateFormat X",
+    "    axisFormat %Mm%Ss"
+  ];
+  for (const event of events) {
+    const duration = event.timing.durationSeconds;
+    if (duration < pruneLevel) {
+      continue;
+    }
+    const label = pruneLevel >= 0 ? event.drv.replace(/^\/nix\/store\/[a-z0-9]+-/, "").replace(/\.drv$/, "") : event.drv;
+    const tag = event.c === "BuildFailureResponseEventV1" ? "crit" : "d";
+    const relativeStartTime = (event.timing.startTime.getTime() - zeroMoment) / 1e3;
+    lines.push(
+      `${label} (${duration}s):${tag}, ${relativeStartTime}, ${duration}s`
+    );
+  }
+  lines.push("```");
+  return lines.join("\n");
+}
+
+// src/failuresummary.ts
+
+
+function getBuildFailures(events) {
+  return events.filter((event) => {
+    return event.c === "BuildFailureResponseEventV1";
+  });
+}
+async function summarizeFailures(events, getLog) {
+  const failures = getBuildFailures(events);
+  if (failures.length === 0) {
+    return void 0;
+  }
+  const ret = {
+    logLines: [],
+    markdownLines: []
+  };
+  ret.logLines.push(
+    `\x1B[38;2;255;0;0mBuild logs from ${failures.length} failure${failures.length === 1 ? "" : "s"}`
+  );
+  ret.logLines.push(
+    `Note: Look at the actions summary for a markdown rendering.`
+  );
+  ret.markdownLines.push(`### Build error review :boom:`);
+  ret.markdownLines.push("> [!NOTE]");
+  ret.markdownLines.push(
+    `> ${failures.length} build${failures.length === 1 ? "" : "s"} failed`
+  );
+  for (const event of failures) {
+    ret.logLines.push(`::group::Failed build: ${event.drv}`);
+    const log = await (getLog ?? getLogFromNix)(event.drv) ?? "(failure reading the log for this derivation.)";
+    const indented = log.split("\n").map((line) => `    ${line}`);
+    ret.markdownLines.push(
+      `<details><summary>Failure log: <code>${event.drv.replace(/^(\/nix[^-]*-)(.*)(\.drv)$/, "$1<strong>$2</strong>$3")}</code></summary>`
+    );
+    ret.markdownLines.push("");
+    for (const line of indented) {
+      ret.logLines.push(line);
+      ret.markdownLines.push((0,external_node_util_.stripVTControlCharacters)(line));
+    }
+    ret.markdownLines.push("");
+    ret.markdownLines.push("</details>");
+    ret.markdownLines.push("");
+    ret.logLines.push(`::endgroup::`);
+  }
+  return ret;
+}
+async function getLogFromNix(drv) {
+  const output = await (0,exec.getExecOutput)("nix", ["log", drv], {
+    silent: true
+  });
+  return output.stdout;
+}
+
 // src/index.ts
 var EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
 var EVENT_INSTALL_NIX_START = "install_nix_start";
@@ -88769,7 +88932,40 @@ var FACT_IN_ACT = "in_act";
 var FACT_IN_NAMESPACE_SO = "in_namespace_so";
 var FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 var FLAG_DETERMINATE = "--determinate";
+var STATE_START_DATETIME = "DETERMINATE_NIXD_START_DATETIME";
 var NixInstallerAction = class extends DetSysAction {
+  determinate;
+  platform;
+  nixPackageUrl;
+  backtrace;
+  extraArgs;
+  extraConf;
+  kvm;
+  githubServerUrl;
+  githubToken;
+  forceDockerShim;
+  init;
+  jobConclusion;
+  localRoot;
+  logDirectives;
+  logger;
+  sslCertFile;
+  proxy;
+  macCaseSensitive;
+  macEncrypt;
+  macRootDisk;
+  macVolumeLabel;
+  modifyProfile;
+  nixBuildGroupId;
+  nixBuildGroupName;
+  nixBuildUserBase;
+  nixBuildUserCount;
+  nixBuildUserPrefix;
+  planner;
+  reinstall;
+  startDaemon;
+  trustRunnerUser;
+  runnerOs;
   constructor() {
     super({
       name: "nix-installer",
@@ -88812,12 +89008,20 @@ var NixInstallerAction = class extends DetSysAction {
     this.runnerOs = process.env["RUNNER_OS"];
   }
   async main() {
+    core.saveState(STATE_START_DATETIME, (/* @__PURE__ */ new Date()).toISOString());
     await this.scienceDebugFly();
     await this.detectAndForceDockerShim();
     await this.install();
   }
   async post() {
     await this.annotateMismatches();
+    try {
+      await this.summarizeExecution();
+    } catch (err) {
+      this.recordEvent("summarize-execution:error", {
+        exception: stringifyError(err)
+      });
+    }
     await this.cleanupDockerShim();
     await this.reportOverall();
   }
@@ -89445,6 +89649,39 @@ ${stderrBuffer}`
         exception: stringifyError(error2)
       });
       throw error2;
+    }
+  }
+  async summarizeExecution() {
+    const startDate = new Date(core.getState(STATE_START_DATETIME));
+    const events = await getRecentEvents(startDate);
+    const mermaidSummary = makeMermaidReport(events);
+    const failureSummary = await summarizeFailures(events);
+    if (mermaidSummary || failureSummary) {
+      core.summary.addRaw(
+        `## ![](https://avatars.githubusercontent.com/u/80991770?s=30) Determinate Nix build summary`,
+        true
+      );
+      core.summary.addRaw("\n", true);
+    }
+    if (mermaidSummary !== void 0) {
+      core.summary.addRaw(mermaidSummary, true);
+      core.summary.addRaw("\n", true);
+    }
+    if (failureSummary !== void 0) {
+      for (const logLine of failureSummary.logLines) {
+        core.info(logLine);
+      }
+      core.summary.addRaw(failureSummary.markdownLines.join("\n"), true);
+      core.summary.addRaw("\n", true);
+    }
+    if (mermaidSummary || failureSummary) {
+      core.summary.addRaw("---", true);
+      core.summary.addRaw(
+        `_Please let us know what you think about this summary on the [Determinate Systems Discord](https://determinate.systems/discord)._`,
+        true
+      );
+      core.summary.addRaw("\n", true);
+      await core.summary.write();
     }
   }
   async cleanupDockerShim() {

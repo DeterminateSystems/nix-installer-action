@@ -12,6 +12,9 @@ import got from "got";
 import { setTimeout } from "node:timers/promises";
 import { getFixHashes } from "./fixHashes.js";
 import { annotateMismatches } from "./annotate.js";
+import { getRecentEvents } from "./events.js";
+import { makeMermaidReport } from "./mermaid.js";
+import { summarizeFailures } from "./failuresummary.js";
 
 // Nix installation events
 const EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
@@ -44,6 +47,9 @@ const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 
 // Flags
 const FLAG_DETERMINATE = "--determinate";
+
+// Pre/post state keys
+const STATE_START_DATETIME = "DETERMINATE_NIXD_START_DATETIME";
 
 class NixInstallerAction extends DetSysAction {
   determinate: boolean;
@@ -124,6 +130,8 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async main(): Promise<void> {
+    actionsCore.saveState(STATE_START_DATETIME, new Date().toISOString());
+
     await this.scienceDebugFly();
     await this.detectAndForceDockerShim();
     await this.install();
@@ -131,6 +139,13 @@ class NixInstallerAction extends DetSysAction {
 
   async post(): Promise<void> {
     await this.annotateMismatches();
+    try {
+      await this.summarizeExecution();
+    } catch (err: unknown) {
+      this.recordEvent("summarize-execution:error", {
+        exception: stringifyError(err),
+      });
+    }
     await this.cleanupDockerShim();
     await this.reportOverall();
   }
@@ -870,6 +885,46 @@ class NixInstallerAction extends DetSysAction {
         exception: stringifyError(error),
       });
       throw error;
+    }
+  }
+
+  async summarizeExecution(): Promise<void> {
+    const startDate = new Date(actionsCore.getState(STATE_START_DATETIME));
+    const events = await getRecentEvents(startDate);
+
+    const mermaidSummary = makeMermaidReport(events);
+    const failureSummary = await summarizeFailures(events);
+
+    if (mermaidSummary || failureSummary) {
+      actionsCore.summary.addRaw(
+        `## ![](https://avatars.githubusercontent.com/u/80991770?s=30) Determinate Nix build summary`,
+        true,
+      );
+      actionsCore.summary.addRaw("\n", true);
+    }
+
+    if (mermaidSummary !== undefined) {
+      actionsCore.summary.addRaw(mermaidSummary, true);
+      actionsCore.summary.addRaw("\n", true);
+    }
+
+    if (failureSummary !== undefined) {
+      for (const logLine of failureSummary.logLines) {
+        actionsCore.info(logLine);
+      }
+
+      actionsCore.summary.addRaw(failureSummary.markdownLines.join("\n"), true);
+      actionsCore.summary.addRaw("\n", true);
+    }
+
+    if (mermaidSummary || failureSummary) {
+      actionsCore.summary.addRaw("---", true);
+      actionsCore.summary.addRaw(
+        `_Please let us know what you think about this summary on the [Determinate Systems Discord](https://determinate.systems/discord)._`,
+        true,
+      );
+      actionsCore.summary.addRaw("\n", true);
+      await actionsCore.summary.write();
     }
   }
 
