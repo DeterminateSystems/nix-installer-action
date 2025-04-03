@@ -877,7 +877,7 @@ class NixInstallerAction extends DetSysAction {
 
     const resp: { [key: string]: unknown }[] = await got
       .get(
-        `http://unix:/nix/var/determinate/determinate-nixd.socket:/events/recent?since=${startDate}`,
+        `http://unix:/nix/var/determinate/determinate-nixd.socket:/events/recent`,
         {
           enableUnixSockets: true,
         },
