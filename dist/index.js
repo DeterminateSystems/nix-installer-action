@@ -89601,12 +89601,22 @@ ${stderrBuffer}`
       core.info(
         `\x1B[38;2;255;0;0mBuild logs from ${resp.length} failure${resp.length === 1 ? "" : "s"}`
       );
+      core.summary.addHeading(
+        `Build logs from ${resp.length} failure${resp.length === 1 ? "" : "s"}`
+      );
       for (const event of resp) {
         if ((event.v ?? "") === "1" && (event.c ?? "") === "BuildFailureResponseEventV1" && event.hasOwnProperty("drv") && typeof event.drv === "string") {
           const drv = event.drv;
           core.startGroup(`Failed build: ${drv}`);
-          await exec.exec("nix", ["log", drv]);
+          const output = await exec.getExecOutput("nix", ["log", drv], {
+            silent: true
+          });
+          core.info(output.stdout);
           core.endGroup();
+          core.summary.addDetails(
+            `Failed build: \`${drv}\``,
+            output.stdout
+          );
         }
       }
     }

@@ -889,6 +889,10 @@ class NixInstallerAction extends DetSysAction {
         `\u001b[38;2;255;0;0mBuild logs from ${resp.length} failure${resp.length === 1 ? "" : "s"}`,
       );
 
+      actionsCore.summary.addHeading(
+        `Build logs from ${resp.length} failure${resp.length === 1 ? "" : "s"}`,
+      );
+
       for (const event of resp) {
         if (
           (event.v ?? "") === "1" &&
@@ -899,8 +903,15 @@ class NixInstallerAction extends DetSysAction {
           const drv = event.drv;
 
           actionsCore.startGroup(`Failed build: ${drv}`);
-          await actionsExec.exec("nix", ["log", drv]);
+          const output = await actionsExec.getExecOutput("nix", ["log", drv], {
+            silent: true,
+          });
+          actionsCore.info(output.stdout);
           actionsCore.endGroup();
+          actionsCore.summary.addDetails(
+            `Failed build: \`${drv}\``,
+            output.stdout,
+          );
         }
       }
     }
