@@ -130,11 +130,10 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async main(): Promise<void> {
-    actionsCore.saveState(STATE_START_DATETIME, new Date().toISOString());
-
     await this.scienceDebugFly();
     await this.detectAndForceDockerShim();
     await this.install();
+    actionsCore.saveState(STATE_START_DATETIME, new Date().toISOString());
   }
 
   async post(): Promise<void> {

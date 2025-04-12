@@ -89008,10 +89008,10 @@ var NixInstallerAction = class extends DetSysAction {
     this.runnerOs = process.env["RUNNER_OS"];
   }
   async main() {
-    core.saveState(STATE_START_DATETIME, (/* @__PURE__ */ new Date()).toISOString());
     await this.scienceDebugFly();
     await this.detectAndForceDockerShim();
     await this.install();
+    core.saveState(STATE_START_DATETIME, (/* @__PURE__ */ new Date()).toISOString());
   }
   async post() {
     await this.annotateMismatches();
