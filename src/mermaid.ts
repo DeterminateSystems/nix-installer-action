@@ -1,4 +1,5 @@
 import { DEvent } from "./events.js";
+import { truncateDerivation } from "./util.js";
 
 export function makeMermaidReport(events: DEvent[]): string | undefined {
   // # 50k is the max: https://github.com/mermaid-js/mermaid/blob/c269dc822c528e1afbde34e18a1cad03d972d4fe/src/defaultConfig.js#L55
@@ -73,12 +74,7 @@ export function mermaidify(
       continue;
     }
 
-    const label =
-      pruneLevel >= 0
-        ? event.drv
-            .replace(/^\/nix\/store\/[a-z0-9]+-/, "")
-            .replace(/\.drv$/, "")
-        : event.drv;
+    const label = pruneLevel >= 0 ? truncateDerivation(event.drv) : event.drv;
     const tag = event.c === "BuildFailureResponseEventV1" ? "crit" : "d";
     const relativeStartTime =
       (event.timing.startTime.getTime() - zeroMoment) / 1000;
