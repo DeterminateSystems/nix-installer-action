@@ -88949,11 +88949,14 @@ function annotate(file, fix) {
   }
 }
 function annotateMismatches(output) {
+  let count = 0;
   for (const { file, fixes } of output.files) {
     for (const fix of fixes) {
       annotate(file, fix);
+      count++;
     }
   }
+  return count;
 }
 
 // src/index.ts
@@ -88966,6 +88969,7 @@ var EVENT_CLEAN_UP_DOCKER_SHIM = "clean_up_docker_shim";
 var EVENT_START_DOCKER_SHIM = "start_docker_shim";
 var EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 var EVENT_CONCLUDE_JOB = "conclude_job";
+var EVENT_FOD_ANNOTATE = "fod_annotate";
 var FACT_DETERMINATE_NIX = "determinate_nix";
 var FACT_HAS_DOCKER = "has_docker";
 var FACT_HAS_SYSTEMD = "has_systemd";
@@ -89858,6 +89862,10 @@ ${stderrBuffer}`
     if (!this.determinate) {
       return;
     }
+    const payload = this.getFeature("hash-mismatch-annotations")?.payload;
+    if (!payload) {
+      return;
+    }
     try {
       const mismatches = await getFixHashes();
       if (mismatches.version !== "v1") {
@@ -89865,7 +89873,8 @@ ${stderrBuffer}`
           `Unsupported \`determinate-nixd fix hashes\` output (got ${mismatches.version}, expected v1)`
         );
       }
-      annotateMismatches(mismatches);
+      const count = annotateMismatches(mismatches);
+      this.recordEvent(EVENT_FOD_ANNOTATE, { count });
     } catch (error2) {
       core.warning(`Could not consume hash mismatch events: ${error2}`);
     }
