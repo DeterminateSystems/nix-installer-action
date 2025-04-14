@@ -15,7 +15,7 @@ export function parseEvents(data: unknown): DEvent[] {
     return [];
   }
 
-  const events: DEvent[] = data.flatMap((event) => {
+  return data.flatMap((event) => {
     if (
       event.v === "1" &&
       (event.c === "BuildFailureResponseEventV1" ||
@@ -53,14 +53,12 @@ export function parseEvents(data: unknown): DEvent[] {
 
     return [];
   });
-
-  return events;
 }
 
 export async function getRecentEvents(since: Date): Promise<DEvent[]> {
   const queryParam = encodeURIComponent(since.toISOString());
 
-  const resp: { [key: string]: unknown }[] = await got
+  const resp = await got
     .get(
       `http://unix:/nix/var/determinate/determinate-nixd.socket:/events/recent?since=${queryParam}`,
       {
