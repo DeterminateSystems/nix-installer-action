@@ -22,11 +22,11 @@ export interface FixHashesOutputV1 {
 }
 
 export async function getFixHashes(): Promise<FixHashesOutputV1> {
-  const output = await getExecOutput("determinate-nixd", [
-    "fix",
-    "hashes",
-    "--json",
-  ]);
+  const output = await getExecOutput(
+    "determinate-nixd",
+    ["fix", "hashes", "--json"],
+    { silent: true },
+  );
 
   if (output.exitCode !== 0) {
     throw new Error(

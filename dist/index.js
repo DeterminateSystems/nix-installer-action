@@ -88898,11 +88898,11 @@ function makeOptionsConfident(actionOptions) {
 // src/fixHashes.ts
 
 async function getFixHashes() {
-  const output = await (0,exec.getExecOutput)("determinate-nixd", [
-    "fix",
-    "hashes",
-    "--json"
-  ]);
+  const output = await (0,exec.getExecOutput)(
+    "determinate-nixd",
+    ["fix", "hashes", "--json"],
+    { silent: true }
+  );
   if (output.exitCode !== 0) {
     throw new Error(
       `determinate-nixd fix hashes returned non-zero exit code ${output.exitCode} with the following error output:
