@@ -31,6 +31,9 @@ const EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 const EVENT_CONCLUDE_JOB = "conclude_job";
 const EVENT_FOD_ANNOTATE = "fod_annotate";
 
+// Feature flag names
+const FEAT_ANNOTATIONS = "hash-mismatch-annotations";
+
 // Facts
 const FACT_DETERMINATE_NIX = "determinate_nix";
 const FACT_HAS_DOCKER = "has_docker";
@@ -1114,12 +1117,14 @@ class NixInstallerAction extends DetSysAction {
       return;
     }
 
-    const payload = this.getFeature("hash-mismatch-annotations")?.payload;
-    if (!payload) {
+    const active = this.getFeature(FEAT_ANNOTATIONS)?.variant;
+    if (!active) {
+      actionsCore.debug("The annotations feature is disabled for this run");
       return;
     }
 
     try {
+      actionsCore.debug("Getting hash fixes from determinate-nixd");
       const mismatches = await getFixHashes();
       if (mismatches.version !== "v1") {
         throw new Error(
@@ -1127,11 +1132,15 @@ class NixInstallerAction extends DetSysAction {
         );
       }
 
+      actionsCore.debug("Annotating mismatches");
       const count = annotateMismatches(mismatches);
       this.recordEvent(EVENT_FOD_ANNOTATE, { count });
     } catch (error) {
       // Don't hard fail the action if something exploded; this feature is only a nice-to-have
       actionsCore.warning(`Could not consume hash mismatch events: ${error}`);
+      this.recordEvent("annotation-mismatch-execution:error", {
+        exception: stringifyError(error),
+      });
     }
   }
 }
