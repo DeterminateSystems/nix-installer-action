@@ -88691,10 +88691,10 @@ function makeOptionsConfident(actionOptions) {
 
 // src/fixHashes.ts
 
-async function getFixHashes() {
+async function getFixHashes(since) {
   const output = await (0,exec.getExecOutput)(
     "determinate-nixd",
-    ["fix", "hashes", "--json"],
+    ["fix", "hashes", "--json", "--since", since],
     { silent: true }
   );
   if (output.exitCode !== 0) {
@@ -89897,7 +89897,8 @@ ${stderrBuffer}`
     }
     try {
       core.debug("Getting hash fixes from determinate-nixd");
-      const mismatches = await getFixHashes();
+      const since = core.getState(STATE_START_DATETIME);
+      const mismatches = await getFixHashes(since);
       if (mismatches.version !== "v1") {
         throw new Error(
           `Unsupported \`determinate-nixd fix hashes\` output (got ${mismatches.version}, expected v1)`

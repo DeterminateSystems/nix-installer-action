@@ -1179,7 +1179,9 @@ class NixInstallerAction extends DetSysAction {
 
     try {
       actionsCore.debug("Getting hash fixes from determinate-nixd");
-      const mismatches = await getFixHashes();
+
+      const since = actionsCore.getState(STATE_START_DATETIME);
+      const mismatches = await getFixHashes(since);
       if (mismatches.version !== "v1") {
         throw new Error(
           `Unsupported \`determinate-nixd fix hashes\` output (got ${mismatches.version}, expected v1)`,
