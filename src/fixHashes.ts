@@ -2,7 +2,7 @@ import { getExecOutput } from "@actions/exec";
 
 export interface Mismatch {
   readonly derivation: string;
-  readonly expected: string;
+  readonly replacement: string;
 }
 
 export interface Fix {
