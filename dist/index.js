@@ -88756,7 +88756,7 @@ function parseEvents(data) {
   if (!Array.isArray(data)) {
     return [];
   }
-  const events = data.flatMap((event) => {
+  return data.flatMap((event) => {
     if (event.v === "1" && (event.c === "BuildFailureResponseEventV1" || event.c === "BuiltPathResponseEventV1") && Object.hasOwn(event, "drv") && typeof event.drv === "string" && Object.hasOwn(event, "timing") && typeof event.timing === "object" && event.timing !== null) {
       const timing = event.timing;
       if (Object.hasOwn(timing, "startTime") && typeof timing.startTime === "string" && Object.hasOwn(timing, "durationSeconds") && typeof timing.durationSeconds === "number") {
@@ -88778,7 +88778,6 @@ function parseEvents(data) {
     }
     return [];
   });
-  return events;
 }
 async function getRecentEvents(since) {
   const queryParam = encodeURIComponent(since.toISOString());
@@ -88791,14 +88790,19 @@ async function getRecentEvents(since) {
   return parseEvents(resp);
 }
 
+// src/util.ts
+function truncateDerivation(drv) {
+  return drv.replace(/^\/nix\/store\/[a-z0-9]+-/, "").replace(/\.drv$/, "");
+}
+
 // src/mermaid.ts
 function makeMermaidReport(events) {
-  let mermaid;
+  let mermaid = "";
   let pruneLevel = -2;
   do {
     pruneLevel += 1;
-    mermaid = mermaidify(events, pruneLevel);
-  } while ((mermaid?.length ?? 0) > 49900);
+    mermaid = mermaidify(events, pruneLevel) ?? "";
+  } while (mermaid.length > 49900);
   if (mermaid === void 0) {
     return void 0;
   }
@@ -88825,13 +88829,12 @@ function makeMermaidReport(events) {
   lines.push("</details>");
   return lines.join("\n");
 }
-function mermaidify(events, pruneLevel) {
-  events = events.filter(
+function mermaidify(allEvents, pruneLevel) {
+  const events = allEvents.filter(
     (event) => event.c === "BuiltPathResponseEventV1" || event.c === "BuildFailureResponseEventV1"
+  ).sort(
+    (a, b) => a.timing.startTime.getTime() - b.timing.startTime.getTime()
   );
-  events.sort(function(a, b) {
-    return a.timing.startTime.getTime() - b.timing.startTime.getTime();
-  });
   const firstEvent = events.at(0);
   if (firstEvent === void 0) {
     return void 0;
@@ -88848,7 +88851,7 @@ function mermaidify(events, pruneLevel) {
     if (duration < pruneLevel) {
       continue;
     }
-    const label = pruneLevel >= 0 ? event.drv.replace(/^\/nix\/store\/[a-z0-9]+-/, "").replace(/\.drv$/, "") : event.drv;
+    const label = pruneLevel >= 0 ? truncateDerivation(event.drv) : event.drv;
     const tag = event.c === "BuildFailureResponseEventV1" ? "crit" : "d";
     const relativeStartTime = (event.timing.startTime.getTime() - zeroMoment) / 1e3;
     lines.push(
@@ -88867,44 +88870,40 @@ function getBuildFailures(events) {
     return event.c === "BuildFailureResponseEventV1";
   });
 }
-async function summarizeFailures(events, getLog) {
+async function summarizeFailures(events, getLog = getLogFromNix) {
   const failures = getBuildFailures(events);
   if (failures.length === 0) {
     return void 0;
   }
-  const ret = {
-    logLines: [],
-    markdownLines: []
-  };
-  ret.logLines.push(
+  const logLines = [];
+  const markdownLines = [];
+  logLines.push(
     `\x1B[38;2;255;0;0mBuild logs from ${failures.length} failure${failures.length === 1 ? "" : "s"}`
   );
-  ret.logLines.push(
-    `Note: Look at the actions summary for a markdown rendering.`
-  );
-  ret.markdownLines.push(`### Build error review :boom:`);
-  ret.markdownLines.push("> [!NOTE]");
-  ret.markdownLines.push(
+  logLines.push(`Note: Look at the actions summary for a markdown rendering.`);
+  markdownLines.push(`### Build error review :boom:`);
+  markdownLines.push("> [!NOTE]");
+  markdownLines.push(
     `> ${failures.length} build${failures.length === 1 ? "" : "s"} failed`
   );
   for (const event of failures) {
-    ret.logLines.push(`::group::Failed build: ${event.drv}`);
-    const log = await (getLog ?? getLogFromNix)(event.drv) ?? "(failure reading the log for this derivation.)";
+    logLines.push(`::group::Failed build: ${event.drv}`);
+    const log = await getLog(event.drv) ?? "(failure reading the log for this derivation.)";
     const indented = log.split("\n").map((line) => `    ${line}`);
-    ret.markdownLines.push(
+    markdownLines.push(
       `<details><summary>Failure log: <code>${event.drv.replace(/^(\/nix[^-]*-)(.*)(\.drv)$/, "$1<strong>$2</strong>$3")}</code></summary>`
     );
-    ret.markdownLines.push("");
+    markdownLines.push("");
     for (const line of indented) {
-      ret.logLines.push(line);
-      ret.markdownLines.push((0,external_node_util_.stripVTControlCharacters)(line));
+      logLines.push(line);
+      markdownLines.push((0,external_node_util_.stripVTControlCharacters)(line));
     }
-    ret.markdownLines.push("");
-    ret.markdownLines.push("</details>");
-    ret.markdownLines.push("");
-    ret.logLines.push(`::endgroup::`);
+    markdownLines.push("");
+    markdownLines.push("</details>");
+    markdownLines.push("");
+    logLines.push(`::endgroup::`);
   }
-  return ret;
+  return { logLines, markdownLines };
 }
 async function getLogFromNix(drv) {
   const output = await (0,exec.getExecOutput)("nix", ["log", drv], {
