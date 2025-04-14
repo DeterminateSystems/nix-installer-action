@@ -23,47 +23,43 @@ export async function summarizeFailures(
     return undefined;
   }
 
-  const ret: FailureSummary = {
-    logLines: [],
-    markdownLines: [],
-  };
+  const logLines = [];
+  const markdownLines = [];
 
-  ret.logLines.push(
+  logLines.push(
     `\u001b[38;2;255;0;0mBuild logs from ${failures.length} failure${failures.length === 1 ? "" : "s"}`,
   );
-  ret.logLines.push(
-    `Note: Look at the actions summary for a markdown rendering.`,
-  );
-  ret.markdownLines.push(`### Build error review :boom:`);
-  ret.markdownLines.push("> [!NOTE]");
-  ret.markdownLines.push(
+  logLines.push(`Note: Look at the actions summary for a markdown rendering.`);
+  markdownLines.push(`### Build error review :boom:`);
+  markdownLines.push("> [!NOTE]");
+  markdownLines.push(
     `> ${failures.length} build${failures.length === 1 ? "" : "s"} failed`,
   );
 
   for (const event of failures) {
-    ret.logLines.push(`::group::Failed build: ${event.drv}`);
+    logLines.push(`::group::Failed build: ${event.drv}`);
 
     const log =
       (await getLog(event.drv)) ??
       "(failure reading the log for this derivation.)";
     const indented = log.split("\n").map((line) => `    ${line}`);
 
-    ret.markdownLines.push(
+    markdownLines.push(
       `<details><summary>Failure log: <code>${event.drv.replace(/^(\/nix[^-]*-)(.*)(\.drv)$/, "$1<strong>$2</strong>$3")}</code></summary>`,
     );
-    ret.markdownLines.push("");
+    markdownLines.push("");
 
     for (const line of indented) {
-      ret.logLines.push(line);
-      ret.markdownLines.push(stripVTControlCharacters(line));
+      logLines.push(line);
+      markdownLines.push(stripVTControlCharacters(line));
     }
-    ret.markdownLines.push("");
-    ret.markdownLines.push("</details>");
-    ret.markdownLines.push("");
-    ret.logLines.push(`::endgroup::`);
+    markdownLines.push("");
+    markdownLines.push("</details>");
+    markdownLines.push("");
+    logLines.push(`::endgroup::`);
   }
 
-  return ret;
+  return { logLines, markdownLines };
 }
 
 async function getLogFromNix(drv: string): Promise<string | undefined> {
