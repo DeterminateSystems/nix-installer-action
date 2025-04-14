@@ -15,7 +15,7 @@ export interface FailureSummary {
 
 export async function summarizeFailures(
   events: DEvent[],
-  getLog?: (drv: string) => Promise<string | undefined>,
+  getLog: (drv: string) => Promise<string | undefined> = getLogFromNix,
 ): Promise<FailureSummary | undefined> {
   const failures = getBuildFailures(events);
 
@@ -44,7 +44,7 @@ export async function summarizeFailures(
     ret.logLines.push(`::group::Failed build: ${event.drv}`);
 
     const log =
-      (await (getLog ?? getLogFromNix)(event.drv)) ??
+      (await getLog(event.drv)) ??
       "(failure reading the log for this derivation.)";
     const indented = log.split("\n").map((line) => `    ${line}`);
 
