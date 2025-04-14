@@ -127,9 +127,9 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async post(): Promise<void> {
+    await this.annotateMismatches();
     await this.cleanupDockerShim();
     await this.reportOverall();
-    await this.annotateMismatches();
   }
 
   private get isMacOS(): boolean {
