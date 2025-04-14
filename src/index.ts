@@ -1113,6 +1113,11 @@ class NixInstallerAction extends DetSysAction {
       return;
     }
 
+    const payload = this.getFeature("hash-mismatch-annotations")?.payload;
+    if (!payload) {
+      return;
+    }
+
     try {
       const mismatches = await getFixHashes();
       if (mismatches.version !== "v1") {
