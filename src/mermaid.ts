@@ -40,17 +40,18 @@ export function makeMermaidReport(events: DEvent[]): string | undefined {
 }
 
 export function mermaidify(
-  events: DEvent[],
+  allEvents: DEvent[],
   pruneLevel: number,
 ): string | undefined {
-  events = events.filter(
-    (event) =>
-      event.c === "BuiltPathResponseEventV1" ||
-      event.c === "BuildFailureResponseEventV1",
-  );
-  events.sort(function (a: DEvent, b: DEvent) {
-    return a.timing.startTime.getTime() - b.timing.startTime.getTime();
-  });
+  const events = allEvents
+    .filter(
+      (event) =>
+        event.c === "BuiltPathResponseEventV1" ||
+        event.c === "BuildFailureResponseEventV1",
+    )
+    .sort(
+      (a, b) => a.timing.startTime.getTime() - b.timing.startTime.getTime(),
+    );
 
   const firstEvent = events.at(0);
   if (firstEvent === undefined) {
