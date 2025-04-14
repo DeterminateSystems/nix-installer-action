@@ -3,12 +3,12 @@ import { truncateDerivation } from "./util.js";
 
 export function makeMermaidReport(events: DEvent[]): string | undefined {
   // # 50k is the max: https://github.com/mermaid-js/mermaid/blob/c269dc822c528e1afbde34e18a1cad03d972d4fe/src/defaultConfig.js#L55
-  let mermaid = '';
+  let mermaid = "";
   let pruneLevel = -2;
 
   do {
     pruneLevel += 1;
-    mermaid = mermaidify(events, pruneLevel) ?? '';
+    mermaid = mermaidify(events, pruneLevel) ?? "";
   } while (mermaid.length > 49900);
 
   if (mermaid === undefined) {
