@@ -88927,7 +88927,7 @@ function annotateSingle(file, line, { derivation, replacement }) {
 function annotateMultiple(file, { line, found, mismatches }) {
   const matches = mismatches.map(({ derivation, replacement }) => {
     const pretty = prettyDerivation(derivation);
-    return `* For the derivation ${pretty}, use \`${replacement}\``;
+    return `* For the derivation ${pretty}, use ${replacement}`;
   }).join("\n");
   core.error(
     `There are multiple replacements for the expression ${found}:

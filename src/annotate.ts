@@ -25,7 +25,7 @@ function annotateMultiple(
   const matches = mismatches
     .map(({ derivation, replacement }) => {
       const pretty = prettyDerivation(derivation);
-      return `* For the derivation ${pretty}, use \`${replacement}\``;
+      return `* For the derivation ${pretty}, use ${replacement}`;
     })
     .join("\n");
 
