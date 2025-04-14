@@ -1,6 +1,6 @@
 import * as actionsCore from "@actions/core";
 import * as actionsExec from "@actions/exec";
-import { access, open, readFile, stat } from "node:fs/promises";
+import { access, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import fs from "node:fs";
 import { userInfo } from "node:os";
@@ -10,7 +10,8 @@ import { DetSysAction, inputs, platform, stringifyError } from "detsys-ts";
 import { randomUUID } from "node:crypto";
 import got from "got";
 import { setTimeout } from "node:timers/promises";
-import { SpawnOptions, spawn } from "node:child_process";
+import { getFixHashes } from "./fixHashes.js";
+import { annotateMismatches } from "./annotate.js";
 
 // Nix installation events
 const EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
@@ -39,10 +40,6 @@ const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 
 // Flags
 const FLAG_DETERMINATE = "--determinate";
-
-// Pre/post state keys
-const STATE_EVENT_LOG = "DETERMINATE_NIXD_EVENT_LOG";
-const STATE_EVENT_PID = "DETERMINATE_NIXD_EVENT_PID";
 
 class NixInstallerAction extends DetSysAction {
   determinate: boolean;
@@ -126,14 +123,12 @@ class NixInstallerAction extends DetSysAction {
     await this.scienceDebugFly();
     await this.detectAndForceDockerShim();
     await this.install();
-    await this.spewEventLog();
   }
 
   async post(): Promise<void> {
     await this.cleanupDockerShim();
     await this.reportOverall();
-    await this.slurpEventLog();
-    await this.cleanupLogger();
+    await this.annotateMismatches();
   }
 
   private get isMacOS(): boolean {
@@ -1113,227 +1108,25 @@ class NixInstallerAction extends DetSysAction {
     }
   }
 
-  private async spewEventLog(): Promise<void> {
-    if (!this.determinate) {
-      return;
-    }
-
-    const logfile = this.getTemporaryName();
-    actionsCore.saveState(STATE_EVENT_LOG, logfile);
-    const stdout = await open(logfile, "a");
-    const stderr = await open(`${logfile}.stderr`, "a");
-
-    actionsCore.debug(`Event log: ${logfile}`);
-
-    const opts: SpawnOptions = {
-      stdio: ["ignore", stdout.fd, stderr.fd],
-      detached: true,
-    };
-
-    // Start the server. Once it is ready, it will notify us via the notification server.
-    const daemon = spawn(
-      "curl",
-      [
-        "--no-buffer",
-        "--unix-socket",
-        "/nix/var/determinate/determinate-nixd.socket",
-        "http://localhost/events",
-      ],
-      opts,
-    );
-
-    actionsCore.saveState(STATE_EVENT_PID, daemon.pid);
-    daemon.unref();
-
-    // Wait a tick in the event loop in order for curl to actually be running
-    await Promise.resolve();
-
-    try {
-      await stdout.close();
-    } catch (error) {
-      actionsCore.info(`Could not close curl's stdout: ${error}`);
-    }
-
-    try {
-      await stderr.close();
-    } catch (error) {
-      actionsCore.info(`Could not close curl's stderr: ${error}`);
-    }
-  }
-
-  private async slurpEventLog(): Promise<void> {
+  private async annotateMismatches(): Promise<void> {
     if (!this.determinate) {
       return;
     }
 
     try {
-      const logPath = actionsCore.getState(STATE_EVENT_LOG);
-      const events = await readMismatchEvents(logPath);
-
-      // No point doing any more work if there are no mismatch events
-      if (events.length === 0) {
-        actionsCore.debug("No hash mismatches found.");
-        return;
-      }
-
-      const listing = await getFileListing();
-
-      // For each file, search for potentially bad hashes
-      for (const file of listing) {
-        const text = await readFile(file, "utf-8");
-        const lines = text.split("\n");
-
-        for (const [index, line] of lines.entries()) {
-          const lineNumber = index + 1;
-
-          for (const event of events) {
-            const match = line.match(event.search);
-            if (!match) {
-              continue;
-            }
-
-            // Allegedly, match.index is optional, so default to 0
-            const column = (match.index ?? 0) + 1;
-
-            actionsCore.error(`This derivation's hash is \`${event.good}\``, {
-              title: "Determinate Nix detected an incorrect dependency hash",
-              file,
-              startLine: lineNumber,
-              startColumn: column,
-            });
-          }
-        }
-      }
-    } catch (error) {
-      // Don't hard fail the action if something exploded; this feature is only a nice-to-have
-      actionsCore.warning(`Could not consume hash mismatch logs: ${error}`);
-    }
-  }
-
-  async cleanupLogger(): Promise<void> {
-    if (!this.determinate) {
-      return;
-    }
-
-    const rawPid = actionsCore.getState(STATE_EVENT_PID);
-    const pid = Number(rawPid);
-
-    if (!Number.isSafeInteger(pid) || pid <= 0) {
-      actionsCore.info(
-        `Refusing to send signal to '${rawPid}' because it isn't safe`,
-      );
-      return;
-    }
-
-    try {
-      process.kill(pid);
-    } catch (error) {
-      actionsCore.info(`Could not kill pid ${rawPid}: ${error}`);
-    }
-  }
-}
-
-interface DaemonEvent<V extends number, C extends string> {
-  readonly v: V;
-  readonly c: C;
-}
-
-// Fields we're interested in from the source event
-interface MismatchDaemonEvent
-  extends DaemonEvent<1, "HashMismatchResponseEventV1"> {
-  readonly drv: string;
-  readonly good: string;
-  readonly bad: readonly string[];
-}
-
-// Our augmented event with the RegExp to match against the bad hashes
-interface MismatchEvent extends MismatchDaemonEvent {
-  readonly search: RegExp;
-}
-
-async function readMismatchEvents(logPath: string): Promise<MismatchEvent[]> {
-  const prefix = "data: ";
-
-  // Used to deduplicate events (see below)
-  const memo = new Set<string>();
-
-  const events = (await readFile(logPath, "utf-8"))
-    .split(/\n/)
-    .filter((line) => line.startsWith(prefix))
-    .map((line) => {
-      const json = line.slice(prefix.length);
-      return JSON.parse(json) as DaemonEvent<number, string>;
-    })
-    .filter(
-      (event): event is MismatchDaemonEvent =>
-        event.v === 1 && event.c === "HashMismatchResponseEventV1",
-    )
-    .map((source) => {
-      // Construct a regular expression to search for any of the hash patterns
-      // (do it here to avoid creating RegExp objects in a loop below)
-      const search = new RegExp(
-        source.bad.map((s) => s.replace(/[+]/g, (ch) => `\\${ch}`)).join("|"),
-      );
-
-      return {
-        ...source,
-        search,
-      } satisfies MismatchEvent;
-    })
-    .filter((event) => {
-      // Deduplicate based on the derivation's store path and list of bad hashes.
-      const key = [event.drv, ...event.bad].join("\0");
-      if (memo.has(key)) {
-        false;
-      }
-
-      memo.add(key);
-      return true;
-    });
-
-  return events;
-}
-
-// Get the list of files with potential hash mismatches (limited currently to *.{nix,json,toml})
-async function getFileListing(): Promise<readonly string[]> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    let length = 0;
-
-    const child = spawn(
-      "git",
-      ["ls-files", "-z", "*.nix", "*.json", "*.toml"],
-      {
-        stdio: ["ignore", "pipe", "inherit"],
-      },
-    );
-
-    child.stdout.on("data", (chunk: Buffer) => {
-      chunks.push(chunk);
-      length += chunk.length;
-    });
-
-    child.stdout.on("end", () => {
-      const lines = Buffer.concat(chunks, length)
-        .toString("utf-8")
-        .replace(/\0$/, "")
-        .split(/\0/);
-
-      resolve(lines);
-    });
-
-    child.stdout.on("error", reject);
-
-    child.on("error", reject);
-    child.on("exit", (code, signal) => {
-      // We should consider rejecting the promise here
-      if (code !== 0) {
-        actionsCore.warning(
-          `git ls-files exited suspiciously code=${code}; signal=${signal}`,
+      const mismatches = await getFixHashes();
+      if (mismatches.version !== "v1") {
+        throw new Error(
+          `Unsupported \`determinate-nixd fix hashes\` output (got ${mismatches.version}, expected v1)`,
         );
       }
-    });
-  });
+
+      annotateMismatches(mismatches);
+    } catch (error) {
+      // Don't hard fail the action if something exploded; this feature is only a nice-to-have
+      actionsCore.warning(`Could not consume hash mismatch events: ${error}`);
+    }
+  }
 }
 
 type ExecuteEnvironment = {
