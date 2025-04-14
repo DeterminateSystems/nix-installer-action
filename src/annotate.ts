@@ -12,13 +12,10 @@ function annotateSingle(
   { derivation, replacement }: Mismatch,
 ): void {
   const pretty = prettyDerivation(derivation);
-  core.error(
-    `To correct the hash mismatch for ${pretty}, use ${replacement}`,
-    {
-      file,
-      startLine: line,
-    },
-  );
+  core.error(`To correct the hash mismatch for ${pretty}, use ${replacement}`, {
+    file,
+    startLine: line,
+  });
 }
 
 function annotateMultiple(

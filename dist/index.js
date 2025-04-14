@@ -88917,20 +88917,17 @@ ${output.stderr}`
 function prettyDerivation(derivation) {
   return derivation.replace(/\/nix\/store\/\w+-/, "");
 }
-function annotateSingle(file, line, { derivation, expected }) {
+function annotateSingle(file, line, { derivation, replacement }) {
   const pretty = prettyDerivation(derivation);
-  core.error(
-    `To correct the hash mismatch for **${pretty}**, use \`${expected}\``,
-    {
-      file,
-      startLine: line
-    }
-  );
+  core.error(`To correct the hash mismatch for ${pretty}, use ${replacement}`, {
+    file,
+    startLine: line
+  });
 }
 function annotateMultiple(file, { line, found, mismatches }) {
-  const matches = mismatches.map(({ derivation, expected }) => {
+  const matches = mismatches.map(({ derivation, replacement }) => {
     const pretty = prettyDerivation(derivation);
-    return `* For the derivation **${pretty}**, use \`${expected}\``;
+    return `* For the derivation ${pretty}, use \`${replacement}\``;
   }).join("\n");
   core.error(
     `There are multiple replacements for the expression ${found}:
@@ -88970,6 +88967,7 @@ var EVENT_START_DOCKER_SHIM = "start_docker_shim";
 var EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 var EVENT_CONCLUDE_JOB = "conclude_job";
 var EVENT_FOD_ANNOTATE = "fod_annotate";
+var FEAT_ANNOTATIONS = "hash-mismatch-annotations";
 var FACT_DETERMINATE_NIX = "determinate_nix";
 var FACT_HAS_DOCKER = "has_docker";
 var FACT_HAS_SYSTEMD = "has_systemd";
@@ -89025,9 +89023,9 @@ var NixInstallerAction = class extends DetSysAction {
     await this.install();
   }
   async post() {
+    await this.annotateMismatches();
     await this.cleanupDockerShim();
     await this.reportOverall();
-    await this.annotateMismatches();
   }
   get isMacOS() {
     return this.runnerOs === "macOS";
@@ -89862,21 +89860,27 @@ ${stderrBuffer}`
     if (!this.determinate) {
       return;
     }
-    const payload = this.getFeature("hash-mismatch-annotations")?.payload;
-    if (!payload) {
+    const active = this.getFeature(FEAT_ANNOTATIONS)?.variant;
+    if (!active) {
+      core.debug("The annotations feature is disabled for this run");
       return;
     }
     try {
+      core.debug("Getting hash fixes from determinate-nixd");
       const mismatches = await getFixHashes();
       if (mismatches.version !== "v1") {
         throw new Error(
           `Unsupported \`determinate-nixd fix hashes\` output (got ${mismatches.version}, expected v1)`
         );
       }
+      core.debug("Annotating mismatches");
       const count = annotateMismatches(mismatches);
       this.recordEvent(EVENT_FOD_ANNOTATE, { count });
     } catch (error2) {
       core.warning(`Could not consume hash mismatch events: ${error2}`);
+      this.recordEvent("annotation-mismatch-execution:error", {
+        exception: stringifyError(error2)
+      });
     }
   }
 };
