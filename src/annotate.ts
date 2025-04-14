@@ -49,10 +49,21 @@ function annotate(file: string, fix: Fix): void {
   }
 }
 
-export function annotateMismatches(output: FixHashesOutputV1): void {
+/**
+ * Annotates fixed-output derivation hash mismatches using GitHub Actions'
+ *
+ * @param output The output of `determinate-nixd fix hashes --json`
+ * @returns The number of annotations reported to the user
+ */
+export function annotateMismatches(output: FixHashesOutputV1): number {
+  let count = 0;
+
   for (const { file, fixes } of output.files) {
     for (const fix of fixes) {
       annotate(file, fix);
+      count++;
     }
   }
+
+  return count;
 }

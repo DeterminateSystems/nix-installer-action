@@ -29,6 +29,7 @@ const EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 
 // Other events
 const EVENT_CONCLUDE_JOB = "conclude_job";
+const EVENT_FOD_ANNOTATE = "fod_annotate";
 
 // Facts
 const FACT_DETERMINATE_NIX = "determinate_nix";
@@ -1126,7 +1127,8 @@ class NixInstallerAction extends DetSysAction {
         );
       }
 
-      annotateMismatches(mismatches);
+      const count = annotateMismatches(mismatches);
+      this.recordEvent(EVENT_FOD_ANNOTATE, { count });
     } catch (error) {
       // Don't hard fail the action if something exploded; this feature is only a nice-to-have
       actionsCore.warning(`Could not consume hash mismatch events: ${error}`);
