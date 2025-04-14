@@ -10,6 +10,8 @@ import { DetSysAction, inputs, platform, stringifyError } from "detsys-ts";
 import { randomUUID } from "node:crypto";
 import got from "got";
 import { setTimeout } from "node:timers/promises";
+import { getFixHashes } from "./fixHashes.js";
+import { annotateMismatches } from "./annotate.js";
 
 // Nix installation events
 const EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
@@ -27,6 +29,10 @@ const EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 
 // Other events
 const EVENT_CONCLUDE_JOB = "conclude_job";
+const EVENT_FOD_ANNOTATE = "fod_annotate";
+
+// Feature flag names
+const FEAT_ANNOTATIONS = "hash-mismatch-annotations";
 
 // Facts
 const FACT_DETERMINATE_NIX = "determinate_nix";
@@ -124,6 +130,7 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async post(): Promise<void> {
+    await this.annotateMismatches();
     await this.cleanupDockerShim();
     await this.reportOverall();
   }
@@ -1102,6 +1109,38 @@ class NixInstallerAction extends DetSysAction {
       throw new Error(
         `Unsupported \`RUNNER_OS\` (currently \`${this.runnerOs}\`)`,
       );
+    }
+  }
+
+  private async annotateMismatches(): Promise<void> {
+    if (!this.determinate) {
+      return;
+    }
+
+    const active = this.getFeature(FEAT_ANNOTATIONS)?.variant;
+    if (!active) {
+      actionsCore.debug("The annotations feature is disabled for this run");
+      return;
+    }
+
+    try {
+      actionsCore.debug("Getting hash fixes from determinate-nixd");
+      const mismatches = await getFixHashes();
+      if (mismatches.version !== "v1") {
+        throw new Error(
+          `Unsupported \`determinate-nixd fix hashes\` output (got ${mismatches.version}, expected v1)`,
+        );
+      }
+
+      actionsCore.debug("Annotating mismatches");
+      const count = annotateMismatches(mismatches);
+      this.recordEvent(EVENT_FOD_ANNOTATE, { count });
+    } catch (error) {
+      // Don't hard fail the action if something exploded; this feature is only a nice-to-have
+      actionsCore.warning(`Could not consume hash mismatch events: ${error}`);
+      this.recordEvent("annotation-mismatch-execution:error", {
+        exception: stringifyError(error),
+      });
     }
   }
 }
