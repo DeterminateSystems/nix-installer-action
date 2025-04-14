@@ -9,11 +9,11 @@ function prettyDerivation(derivation: string): string {
 function annotateSingle(
   file: string,
   line: number,
-  { derivation, expected }: Mismatch,
+  { derivation, replacement }: Mismatch,
 ): void {
   const pretty = prettyDerivation(derivation);
   core.error(
-    `To correct the hash mismatch for **${pretty}**, use \`${expected}\``,
+    `To correct the hash mismatch for ${pretty}, use ${replacement}`,
     {
       file,
       startLine: line,
@@ -26,9 +26,9 @@ function annotateMultiple(
   { line, found, mismatches }: Fix,
 ): void {
   const matches = mismatches
-    .map(({ derivation, expected }) => {
+    .map(({ derivation, replacement }) => {
       const pretty = prettyDerivation(derivation);
-      return `* For the derivation **${pretty}**, use \`${expected}\``;
+      return `* For the derivation ${pretty}, use \`${replacement}\``;
     })
     .join("\n");
 
