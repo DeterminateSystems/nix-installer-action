@@ -3,7 +3,7 @@ import * as core from "@actions/core";
 import type { Fix, FixHashesOutputV1, Mismatch } from "./fixHashes.js";
 
 function prettyDerivation(derivation: string): string {
-  return derivation.replace(/\/nix\/store\/\w+-/, "");
+  return derivation.replace(/\/nix\/store\/\w+-/, "").replace(/.drv$/, "");
 }
 
 function annotateSingle(

@@ -88915,7 +88915,7 @@ ${output.stderr}`
 // src/annotate.ts
 
 function prettyDerivation(derivation) {
-  return derivation.replace(/\/nix\/store\/\w+-/, "");
+  return derivation.replace(/\/nix\/store\/\w+-/, "").replace(/.drv$/, "");
 }
 function annotateSingle(file, line, { derivation, replacement }) {
   const pretty = prettyDerivation(derivation);
