@@ -5943,7 +5943,7 @@ packages:
       "@types/node": 20.17.30
       esbuild: 0.25.2
       postcss: 8.5.3
-      rollup: 4.39.0
+      rollup: 4.40.0
     optionalDependencies:
       fsevents: 2.3.3
     dev: false
