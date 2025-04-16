@@ -21,10 +21,10 @@ export interface FixHashesOutputV1 {
   readonly files: readonly FileFix[];
 }
 
-export async function getFixHashes(): Promise<FixHashesOutputV1> {
+export async function getFixHashes(since: string): Promise<FixHashesOutputV1> {
   const output = await getExecOutput(
     "determinate-nixd",
-    ["fix", "hashes", "--json"],
+    ["fix", "hashes", "--json", "--since", since],
     { silent: true },
   );
 
