@@ -88797,12 +88797,13 @@ function truncateDerivation(drv) {
 
 // src/mermaid.ts
 function makeMermaidReport(events) {
+  const maxLength = 49900;
   let mermaid = "";
   let pruneLevel = -2;
   do {
     pruneLevel += 1;
     mermaid = mermaidify(events, pruneLevel) ?? "";
-  } while (mermaid.length > 49900);
+  } while (mermaid.length > maxLength);
   if (mermaid === void 0) {
     return void 0;
   }
