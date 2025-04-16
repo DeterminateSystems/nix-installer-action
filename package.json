@@ -11,7 +11,8 @@
     "check-fmt": "prettier --check .",
     "lint": "eslint src/**/*.ts",
     "package": "ncc build",
-    "all": "pnpm run format && pnpm run lint && pnpm run build && pnpm run package"
+    "test": "vitest --watch false",
+    "all": "pnpm run test && pnpm run format && pnpm run lint && pnpm run build && pnpm run package"
   },
   "repository": {
     "type": "git",
@@ -30,7 +31,8 @@
     "@actions/github": "^6.0.0",
     "detsys-ts": "github:DeterminateSystems/detsys-ts",
     "got": "^14.4.7",
-    "string-argv": "^0.3.2"
+    "string-argv": "^0.3.2",
+    "vitest": "^3.1.1"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
