@@ -88866,16 +88866,14 @@ function mermaidify(allEvents, pruneLevel) {
 // src/failuresummary.ts
 
 
+var defaultMaxSummaryLength = 995e3;
 function getBuildFailures(events) {
   return events.filter((event) => {
     return event.c === "BuildFailureResponseEventV1";
   });
 }
-async function summarizeFailures(events, getLog = getLogFromNix, maxLength) {
+async function summarizeFailures(events, getLog = getLogFromNix, maxLength = defaultMaxSummaryLength) {
   const failures = getBuildFailures(events);
-  if (maxLength === void 0) {
-    maxLength = 995e3;
-  }
   if (failures.length === 0) {
     return void 0;
   }
