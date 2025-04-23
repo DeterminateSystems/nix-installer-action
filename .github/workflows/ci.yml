@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: DeterminateSystems/flakehub-cache-action@main
       - name: pnpm install
         run: nix develop --command pnpm install
       - name: prettier format
@@ -47,6 +47,7 @@ jobs:
   install-nix:
     name: "Test: ${{ matrix.runner }}${{ matrix.determinate && ' with determinate' || '' }}"
     strategy:
+      fail-fast: false
       matrix:
         runner:
           - ubuntu-latest

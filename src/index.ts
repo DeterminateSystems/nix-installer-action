@@ -1,6 +1,7 @@
 import * as actionsCore from "@actions/core";
 import * as actionsExec from "@actions/exec";
-import { access, readFile } from "node:fs/promises";
+import * as github from "@actions/github";
+import { access, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import fs from "node:fs";
 import { userInfo } from "node:os";
@@ -9,6 +10,12 @@ import * as path from "path";
 import { DetSysAction, inputs, platform, stringifyError } from "detsys-ts";
 import { randomUUID } from "node:crypto";
 import got from "got";
+import { setTimeout } from "node:timers/promises";
+import { getFixHashes } from "./fixHashes.js";
+import { annotateMismatches } from "./annotate.js";
+import { getRecentEvents } from "./events.js";
+import { makeMermaidReport } from "./mermaid.js";
+import { summarizeFailures } from "./failuresummary.js";
 
 // Nix installation events
 const EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
@@ -26,6 +33,10 @@ const EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 
 // Other events
 const EVENT_CONCLUDE_JOB = "conclude_job";
+const EVENT_FOD_ANNOTATE = "fod_annotate";
+
+// Feature flag names
+const FEAT_ANNOTATIONS = "hash-mismatch-annotations";
 
 // Facts
 const FACT_DETERMINATE_NIX = "determinate_nix";
@@ -37,6 +48,9 @@ const FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 
 // Flags
 const FLAG_DETERMINATE = "--determinate";
+
+// Pre/post state keys
+const STATE_START_DATETIME = "DETERMINATE_NIXD_START_DATETIME";
 
 class NixInstallerAction extends DetSysAction {
   determinate: boolean;
@@ -120,9 +134,18 @@ class NixInstallerAction extends DetSysAction {
     await this.scienceDebugFly();
     await this.detectAndForceDockerShim();
     await this.install();
+    actionsCore.saveState(STATE_START_DATETIME, new Date().toISOString());
   }
 
   async post(): Promise<void> {
+    await this.annotateMismatches();
+    try {
+      await this.summarizeExecution();
+    } catch (err: unknown) {
+      this.recordEvent("summarize-execution:error", {
+        exception: stringifyError(err),
+      });
+    }
     await this.cleanupDockerShim();
     await this.reportOverall();
   }
@@ -819,10 +842,92 @@ class NixInstallerAction extends DetSysAction {
       }
     }
 
+    const maxDurationSeconds = 120;
+    const delayPerAttemptInMiliseconds = 50;
+    const maxAttempts =
+      (maxDurationSeconds * 1000) / delayPerAttemptInMiliseconds;
+    let didSucceed = false;
+
+    for (let attempt = 0; attempt <= maxAttempts; attempt += 1) {
+      if (await this.doesTheSocketExistYet()) {
+        didSucceed = true;
+        break;
+      }
+
+      await setTimeout(50);
+    }
+
+    if (!didSucceed) {
+      throw new Error("Timed out waiting for the Nix Daemon");
+    }
+
     actionsCore.endGroup();
 
     return;
   }
+
+  async doesTheSocketExistYet(): Promise<boolean> {
+    const socketPath = "/nix/var/nix/daemon-socket/socket";
+    try {
+      await stat(socketPath);
+      return true;
+    } catch (error: unknown) {
+      // eslint-disable-next-line no-undef
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        actionsCore.debug(`Socket '${socketPath}' does not exist yet`);
+        return false;
+      }
+
+      actionsCore.warning(
+        `Error waiting for the Nix Daemon socket: ${stringifyError(error)}`,
+      );
+      this.recordEvent("docker-shim:wait-for-socket", {
+        exception: stringifyError(error),
+      });
+      throw error;
+    }
+  }
+
+  async summarizeExecution(): Promise<void> {
+    const startDate = new Date(actionsCore.getState(STATE_START_DATETIME));
+    const events = await getRecentEvents(startDate);
+
+    const mermaidSummary = makeMermaidReport(events);
+    const failureSummary = await summarizeFailures(events);
+
+    if (mermaidSummary || failureSummary) {
+      actionsCore.summary.addRaw(
+        `## ![](https://avatars.githubusercontent.com/u/80991770?s=30) Determinate Nix build summary`,
+        true,
+      );
+      actionsCore.summary.addRaw("\n", true);
+    }
+
+    if (mermaidSummary !== undefined) {
+      actionsCore.summary.addRaw(mermaidSummary, true);
+      actionsCore.summary.addRaw("\n", true);
+    }
+
+    if (failureSummary !== undefined) {
+      for (const logLine of failureSummary.logLines) {
+        actionsCore.info(logLine);
+      }
+
+      actionsCore.summary.addRaw(failureSummary.markdownLines.join("\n"), true);
+      actionsCore.summary.addRaw("\n", true);
+    }
+
+    if (mermaidSummary || failureSummary) {
+      actionsCore.summary.addRaw("---", true);
+      actionsCore.summary.addRaw(
+        `_Please let us know what you think about this summary on the [Determinate Systems Discord](https://determinate.systems/discord)._`,
+        true,
+      );
+      actionsCore.summary.addRaw("\n", true);
+      await actionsCore.summary.write();
+    }
+  }
+
   async cleanupDockerShim(): Promise<void> {
     const containerId = actionsCore.getState("docker_shim_container_id");
 
@@ -885,22 +990,42 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async flakehubLogin(): Promise<void> {
-    if (
+    const canLogin =
       process.env["ACTIONS_ID_TOKEN_REQUEST_URL"] &&
-      process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]
-    ) {
-      actionsCore.startGroup("Logging in to FlakeHub");
-      this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
-      try {
-        await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
-      } catch (e: unknown) {
-        actionsCore.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
-        this.recordEvent("flakehub-login:failure", {
-          exception: stringifyError(e),
-        });
+      process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"];
+
+    if (!canLogin) {
+      const pr = github.context.payload.pull_request;
+      const base = pr?.base?.repo?.full_name;
+      const head = pr?.head?.head?.full_name;
+
+      if (pr && base !== head) {
+        actionsCore.info(
+          `Not logging in to FlakeHub: GitHub Actions does not allow OIDC authentication from forked repositories ("${head}" is not the same repository as "${base}").`,
+        );
+        return;
       }
-      actionsCore.endGroup();
+
+      actionsCore.info(
+        `Not logging in to FlakeHub: GitHub Actions has not provided OIDC token endpoints; please make sure that \`id-token: write\` and \`contents: read\` are set for this step's (or job's) permissions.`,
+      );
+      actionsCore.info(
+        `For more information, see https://docs.determinate.systems/guides/github-actions/#nix-installer-action`,
+      );
+      return;
     }
+
+    actionsCore.startGroup("Logging in to FlakeHub");
+    this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
+    try {
+      await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
+    } catch (e: unknown) {
+      actionsCore.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
+      this.recordEvent("flakehub-login:failure", {
+        exception: stringifyError(e),
+      });
+    }
+    actionsCore.endGroup();
   }
 
   async executeUninstall(): Promise<number> {
@@ -928,11 +1053,29 @@ class NixInstallerAction extends DetSysAction {
     try {
       await access(receiptPath);
       // There is a /nix/receipt.json
+      actionsCore.info(
+        "\u001b[32m Nix is already installed: found /nix/receipt.json \u001b[33m",
+      );
       return true;
     } catch {
       // No /nix/receipt.json
-      return false;
     }
+
+    try {
+      const exitCode = await actionsExec.exec("nix", ["--version"], {});
+
+      if (exitCode === 0) {
+        actionsCore.info(
+          "\u001b[32m Nix is already installed: `nix --version` exited 0 \u001b[33m",
+        );
+        // Working existing installation of `nix` available, possibly a self-hosted runner
+        return true;
+      }
+    } catch {
+      // nix --version was not successful
+    }
+
+    return false;
   }
 
   private async canAccessKvm(): Promise<boolean> {
@@ -1074,6 +1217,40 @@ class NixInstallerAction extends DetSysAction {
       throw new Error(
         `Unsupported \`RUNNER_OS\` (currently \`${this.runnerOs}\`)`,
       );
+    }
+  }
+
+  private async annotateMismatches(): Promise<void> {
+    if (!this.determinate) {
+      return;
+    }
+
+    const active = this.getFeature(FEAT_ANNOTATIONS)?.variant;
+    if (!active) {
+      actionsCore.debug("The annotations feature is disabled for this run");
+      return;
+    }
+
+    try {
+      actionsCore.debug("Getting hash fixes from determinate-nixd");
+
+      const since = actionsCore.getState(STATE_START_DATETIME);
+      const mismatches = await getFixHashes(since);
+      if (mismatches.version !== "v1") {
+        throw new Error(
+          `Unsupported \`determinate-nixd fix hashes\` output (got ${mismatches.version}, expected v1)`,
+        );
+      }
+
+      actionsCore.debug("Annotating mismatches");
+      const count = annotateMismatches(mismatches);
+      this.recordEvent(EVENT_FOD_ANNOTATE, { count });
+    } catch (error) {
+      // Don't hard fail the action if something exploded; this feature is only a nice-to-have
+      actionsCore.warning(`Could not consume hash mismatch events: ${error}`);
+      this.recordEvent("annotation-mismatch-execution:error", {
+        exception: stringifyError(error),
+      });
     }
   }
 }
