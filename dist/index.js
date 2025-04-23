@@ -94085,10 +94085,23 @@ ${stderrBuffer}`
     const receiptPath = "/nix/receipt.json";
     try {
       await (0,promises_namespaceObject.access)(receiptPath);
+      core.info(
+        "\x1B[32m Nix is already installed: found /nix/receipt.json \x1B[33m"
+      );
       return true;
     } catch {
-      return false;
     }
+    try {
+      const exitCode = await exec.exec("nix", ["--version"], {});
+      if (exitCode === 0) {
+        core.info(
+          "\x1B[32m Nix is already installed: `nix --version` exited 0 \x1B[33m"
+        );
+        return true;
+      }
+    } catch {
+    }
+    return false;
   }
   async setupKvm() {
     this.recordEvent(EVENT_SETUP_KVM);
