@@ -11,7 +11,8 @@
     "check-fmt": "prettier --check .",
     "lint": "eslint src/**/*.ts",
     "package": "ncc build",
-    "all": "pnpm run format && pnpm run lint && pnpm run build && pnpm run package"
+    "test": "vitest --watch false",
+    "all": "pnpm run test && pnpm run format && pnpm run lint && pnpm run build && pnpm run package"
   },
   "repository": {
     "type": "git",
@@ -27,24 +28,25 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
-    "@actions/github": "^5.1.1",
+    "@actions/github": "^6.0.0",
     "detsys-ts": "github:DeterminateSystems/detsys-ts",
-    "got": "^14.4.5",
-    "string-argv": "^0.3.2"
+    "got": "^14.4.7",
+    "string-argv": "^0.3.2",
+    "vitest": "^3.1.1"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
-    "@types/node": "^20.17.17",
+    "@types/node": "^20.17.30",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@vercel/ncc": "^0.38.3",
     "eslint": "^8.57.1",
-    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-import-resolver-typescript": "^3.10.0",
     "eslint-plugin-github": "^4.10.2",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-prettier": "^5.2.3",
-    "prettier": "^3.4.2",
-    "tsup": "^8.3.6",
-    "typescript": "^5.7.3"
+    "eslint-plugin-prettier": "^5.2.6",
+    "prettier": "^3.5.3",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3"
   }
 }
