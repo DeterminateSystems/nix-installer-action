@@ -997,7 +997,7 @@ class NixInstallerAction extends DetSysAction {
     if (!canLogin) {
       const pr = github.context.payload.pull_request;
       const base = pr?.base?.repo?.full_name;
-      const head = pr?.head?.head?.full_name;
+      const head = pr?.head?.repo?.full_name;
 
       if (pr && base !== head) {
         actionsCore.info(
