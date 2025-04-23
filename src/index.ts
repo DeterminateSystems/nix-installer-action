@@ -605,7 +605,6 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async install(): Promise<void> {
-    actionsCore.startGroup("Detecting Nix");
     const existingInstall = await this.detectExisting();
     if (existingInstall) {
       if (this.reinstall) {
@@ -929,7 +928,7 @@ class NixInstallerAction extends DetSysAction {
     try {
       await access(receiptPath);
       // There is a /nix/receipt.json
-      actionsCore.info("\u001b[32m Found /nix/receipt.json \u001b[33m");
+      actionsCore.info("\u001b[32m Nix is already installed: found /nix/receipt.json \u001b[33m");
       return true;
     } catch {
       // No /nix/receipt.json
@@ -940,18 +939,15 @@ class NixInstallerAction extends DetSysAction {
 
       if (exitCode === 0) {
         actionsCore.info(
-          "\u001b[32m Found existing Nix installation \u001b[33m",
+          "\u001b[32m Found existing Nix installation: `nix --version` exited 0 \u001b[33m",
         );
         // Working existing installation of `nix` available, possibly a self-hosted runner
         return true;
       }
     } catch {
-      // No /nix/receipt.json
+      // nix --version was not successful
     }
 
-    actionsCore.info(
-      "\u001b[32m Did not detect existing Nix installation \u001b[33m",
-    );
     return false;
   }
 
