@@ -928,7 +928,9 @@ class NixInstallerAction extends DetSysAction {
     try {
       await access(receiptPath);
       // There is a /nix/receipt.json
-      actionsCore.info("\u001b[32m Nix is already installed: found /nix/receipt.json \u001b[33m");
+      actionsCore.info(
+        "\u001b[32m Nix is already installed: found /nix/receipt.json \u001b[33m",
+      );
       return true;
     } catch {
       // No /nix/receipt.json
@@ -939,7 +941,7 @@ class NixInstallerAction extends DetSysAction {
 
       if (exitCode === 0) {
         actionsCore.info(
-          "\u001b[32m Found existing Nix installation: `nix --version` exited 0 \u001b[33m",
+          "\u001b[32m Nix is already installed: `nix --version` exited 0 \u001b[33m",
         );
         // Working existing installation of `nix` available, possibly a self-hosted runner
         return true;
