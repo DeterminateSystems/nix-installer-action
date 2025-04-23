@@ -88884,7 +88884,9 @@ async function summarizeFailures(events, getLog = getLogFromNix, maxLength) {
   logLines.push(
     `\x1B[38;2;255;0;0mBuild logs from ${failures.length} failure${failures.length === 1 ? "" : "s"}`
   );
-  logLines.push(`Note: Look at the actions summary for a markdown rendering.`);
+  logLines.push(
+    `The following build logs are also available in the Markdown summary:`
+  );
   markdownLines.push(`### Build error review :boom:`);
   markdownLines.push("> [!NOTE]");
   markdownLines.push(
@@ -88893,7 +88895,8 @@ async function summarizeFailures(events, getLog = getLogFromNix, maxLength) {
   const markdownLogChunks = [];
   for (const event of failures) {
     const markdownLogChunk = [];
-    logLines.push(`::group::Failed build: ${event.drv}`);
+    const txtLogChunk = [];
+    txtLogChunk.push(`::group::Failed build: ${event.drv}`);
     const log = await getLog(event.drv) ?? "(failure reading the log for this derivation.)";
     const indented = log.split("\n").map((line) => `    ${line}`);
     markdownLogChunk.push(
@@ -88901,36 +88904,45 @@ async function summarizeFailures(events, getLog = getLogFromNix, maxLength) {
     );
     markdownLogChunk.push("");
     for (const line of indented) {
-      logLines.push(line);
+      txtLogChunk.push(line);
       markdownLogChunk.push((0,external_node_util_.stripVTControlCharacters)(line));
     }
     markdownLogChunk.push("");
     markdownLogChunk.push("</details>");
     markdownLogChunk.push("");
-    markdownLogChunks.push({ drv: event.drv, lines: markdownLogChunk });
-    logLines.push(`::endgroup::`);
+    markdownLogChunks.push({
+      drv: event.drv,
+      mdLines: markdownLogChunk,
+      txtLines: txtLogChunk
+    });
+    txtLogChunk.push(`::endgroup::`);
   }
-  const skippedDerivations = [];
+  const skippedChunks = [];
   let markdownLength = markdownLines.join("\n").length;
   for (const chunk of markdownLogChunks) {
-    const chunkLength = chunk.lines.join("\n").length;
+    const chunkLength = chunk.mdLines.join("\n").length;
     if (markdownLength + chunkLength > maxLength) {
-      skippedDerivations.push(chunk.drv);
+      skippedChunks.push(chunk);
     } else {
-      markdownLines.push(...chunk.lines);
+      logLines.push(...chunk.txtLines);
+      markdownLines.push(...chunk.mdLines);
       markdownLength += chunkLength;
     }
   }
-  if (skippedDerivations.length > 0) {
+  if (skippedChunks.length > 0) {
     markdownLines.push(
       ...[
         "> [!NOTE]",
-        `> The following ${skippedDerivations.length === 1 ? "failure has" : "failures have"} been ommitted due to GitHub Actions summary length limitations.`,
+        `> The following ${skippedChunks.length === 1 ? "failure has" : "failures have"} been ommitted due to GitHub Actions summary length limitations.`,
         "> The full logs are available in the post-run phase of the Nix Installer Action."
       ]
     );
-    for (const drv of skippedDerivations) {
-      markdownLines.push(`> * \`${drv}\``);
+    logLines.push(
+      "The following build logs are NOT available in the Markdown summary:"
+    );
+    for (const chunk of skippedChunks) {
+      markdownLines.push(`> * \`${chunk.drv}\``);
+      logLines.push(...chunk.txtLines);
     }
   }
   return { logLines, markdownLines };
