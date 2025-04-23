@@ -1,5 +1,6 @@
 import * as actionsCore from "@actions/core";
 import * as actionsExec from "@actions/exec";
+import * as github from "@actions/github";
 import { access, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import fs from "node:fs";
@@ -989,22 +990,42 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async flakehubLogin(): Promise<void> {
-    if (
+    const canLogin =
       process.env["ACTIONS_ID_TOKEN_REQUEST_URL"] &&
-      process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]
-    ) {
-      actionsCore.startGroup("Logging in to FlakeHub");
-      this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
-      try {
-        await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
-      } catch (e: unknown) {
-        actionsCore.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
-        this.recordEvent("flakehub-login:failure", {
-          exception: stringifyError(e),
-        });
+      process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"];
+
+    if (!canLogin) {
+      const pr = github.context.payload.pull_request;
+      const base = pr?.base?.repo?.full_name;
+      const head = pr?.head?.head?.full_name;
+
+      if (pr && base !== head) {
+        actionsCore.info(
+          `Not logging in to FlakeHub: GitHub Actions does not allow OIDC authentication from forked repositories ("${head}" is not the same repository as "${base}").`,
+        );
+        return;
       }
-      actionsCore.endGroup();
+
+      actionsCore.info(
+        `Not logging in to FlakeHub: GitHub Actions has not provided OIDC token endpoints; please make sure that \`id-token: write\` and \`contents: read\` are set for this step's (or job's) permissions.`,
+      );
+      actionsCore.info(
+        `For more information, see https://docs.determinate.systems/guides/github-actions/#nix-installer-action`,
+      );
+      return;
     }
+
+    actionsCore.startGroup("Logging in to FlakeHub");
+    this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
+    try {
+      await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
+    } catch (e: unknown) {
+      actionsCore.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
+      this.recordEvent("flakehub-login:failure", {
+        exception: stringifyError(e),
+      });
+    }
+    actionsCore.endGroup();
   }
 
   async executeUninstall(): Promise<number> {
