@@ -1078,12 +1078,27 @@ class NixInstallerAction extends DetSysAction {
     return false;
   }
 
+  private async canAccessKvm(): Promise<boolean> {
+    try {
+      await access("/dev/kvm", fs.constants.R_OK | fs.constants.W_OK);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   private async setupKvm(): Promise<boolean> {
     this.recordEvent(EVENT_SETUP_KVM);
     const currentUser = userInfo();
     const isRoot = currentUser.uid === 0;
     const maybeSudo = isRoot ? "" : "sudo";
 
+    // First check to see whether the current user can open the KVM device node
+    if (await this.canAccessKvm()) {
+      return true;
+    }
+
+    // The current user can't access KVM, so try adding a udev rule to allow access to all users and groups
     const kvmRules = "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
     try {
       const writeFileExitCode = await actionsExec.exec(
