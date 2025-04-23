@@ -16,8 +16,16 @@ export interface FailureSummary {
 export async function summarizeFailures(
   events: DEvent[],
   getLog: (drv: string) => Promise<string | undefined> = getLogFromNix,
+  maxLength?: number,
 ): Promise<FailureSummary | undefined> {
   const failures = getBuildFailures(events);
+
+  // CI summaries have a max length of "1024k" which I assume to be 1048576 bytes.
+  // Generously, the mermaid doc is about 50,000 bytes.
+  // Rounding it all down a bit further for wiggle room, that leaves lots of log space.
+  if (maxLength === undefined) {
+    maxLength = 995_000;
+  }
 
   if (failures.length === 0) {
     return undefined;
@@ -36,7 +44,9 @@ export async function summarizeFailures(
     `> ${failures.length} build${failures.length === 1 ? "" : "s"} failed`,
   );
 
+  const markdownLogChunks: { drv: string; lines: string[] }[] = [];
   for (const event of failures) {
+    const markdownLogChunk = [];
     logLines.push(`::group::Failed build: ${event.drv}`);
 
     const log =
@@ -44,19 +54,49 @@ export async function summarizeFailures(
       "(failure reading the log for this derivation.)";
     const indented = log.split("\n").map((line) => `    ${line}`);
 
-    markdownLines.push(
+    markdownLogChunk.push(
       `<details><summary>Failure log: <code>${event.drv.replace(/^(\/nix[^-]*-)(.*)(\.drv)$/, "$1<strong>$2</strong>$3")}</code></summary>`,
     );
-    markdownLines.push("");
+    markdownLogChunk.push("");
 
     for (const line of indented) {
       logLines.push(line);
-      markdownLines.push(stripVTControlCharacters(line));
+      markdownLogChunk.push(stripVTControlCharacters(line));
     }
-    markdownLines.push("");
-    markdownLines.push("</details>");
-    markdownLines.push("");
+    markdownLogChunk.push("");
+    markdownLogChunk.push("</details>");
+    markdownLogChunk.push("");
+
+    markdownLogChunks.push({ drv: event.drv, lines: markdownLogChunk });
     logLines.push(`::endgroup::`);
+  }
+
+  const skippedDerivations: string[] = [];
+
+  // Add markdown log chunks until we exceed the max length
+  let markdownLength = markdownLines.join("\n").length;
+  for (const chunk of markdownLogChunks) {
+    const chunkLength = chunk.lines.join("\n").length;
+    if (markdownLength + chunkLength > maxLength) {
+      skippedDerivations.push(chunk.drv);
+    } else {
+      markdownLines.push(...chunk.lines);
+      markdownLength += chunkLength;
+    }
+  }
+
+  if (skippedDerivations.length > 0) {
+    markdownLines.push(
+      ...[
+        "> [!NOTE]",
+        `> The following ${skippedDerivations.length === 1 ? "failure has" : "failures have"} been ommitted due to GitHub Actions summary length limitations.`,
+        "> The full logs are available in the post-run phase of the Nix Installer Action.",
+      ],
+    );
+
+    for (const drv of skippedDerivations) {
+      markdownLines.push(`> * \`${drv}\``);
+    }
   }
 
   return { logLines, markdownLines };
