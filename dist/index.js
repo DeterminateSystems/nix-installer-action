@@ -94036,7 +94036,7 @@ ${stderrBuffer}`
     if (!canLogin) {
       const pr = github.context.payload.pull_request;
       const base = pr?.base?.repo?.full_name;
-      const head = pr?.head?.head?.full_name;
+      const head = pr?.head?.repo?.full_name;
       if (pr && base !== head) {
         core.info(
           `Not logging in to FlakeHub: GitHub Actions does not allow OIDC authentication from forked repositories ("${head}" is not the same repository as "${base}").`
