@@ -29,61 +29,55 @@ test("Empty event list returns no report", () => {
 });
 
 test("Create a very large report doc and make sure it is small enough", () => {
-  {
-    const report = makeMermaidReport(generateEvents(2000))!;
+  const report = makeMermaidReport(generateEvents(2000))!;
 
-    // Assert the `.drv` suffix was pruned (1 reference = the NOTE at the end)
-    expect(report.match(/\.drv/g)!.length).equals(1);
+  // Assert the `.drv` suffix was pruned (1 reference = the NOTE at the end)
+  expect(report.match(/\.drv/g)!.length).equals(1);
 
-    // Assert the `/nix/store` prefix was pruned (1 reference = the NOTE at the end)
-    expect(report.match(/\/nix\/store\//g)!.length).equals(1);
+  // Assert the `/nix/store` prefix was pruned (1 reference = the NOTE at the end)
+  expect(report.match(/\/nix\/store\//g)!.length).equals(1);
 
-    // Assert that some events were pruned
-    expect(report.match(/dep-/g)!.length).lessThan(2000);
-    expect(report.match(/dep-/g)!.length).greaterThan(1500);
+  // Assert that some events were pruned
+  expect(report.match(/dep-/g)!.length).lessThan(2000);
+  expect(report.match(/dep-/g)!.length).greaterThan(1500);
 
-    expect(report).toContain("suffix, and builds that took less than 3");
+  expect(report).toContain("suffix, and builds that took less than 3");
 
-    expect(report.length).lessThan(50200);
-    expect(report.length).greaterThan(49000);
-  }
+  expect(report.length).lessThan(50200);
+  expect(report.length).greaterThan(49000);
 });
 
 test("Create a medium large report doc and make sure it is small enough", () => {
-  {
-    const eventCount = 675;
-    const report = makeMermaidReport(generateEvents(eventCount))!;
+  const eventCount = 675;
+  const report = makeMermaidReport(generateEvents(eventCount))!;
 
-    // Assert the `.drv` suffix was pruned (1 reference = the NOTE at the end)
-    expect(report.match(/\.drv/g)!.length).equals(1);
+  // Assert the `.drv` suffix was pruned (1 reference = the NOTE at the end)
+  expect(report.match(/\.drv/g)!.length).equals(1);
 
-    // Assert the `/nix/store` prefix was pruned (1 reference = the NOTE at the end)
-    expect(report.match(/\/nix\/store\//g)!.length).equals(1);
+  // Assert the `/nix/store` prefix was pruned (1 reference = the NOTE at the end)
+  expect(report.match(/\/nix\/store\//g)!.length).equals(1);
 
-    // Assert that no lines were pruned
-    expect(report.match(/dep-/g)!.length).toStrictEqual(eventCount);
+  // Assert that no lines were pruned
+  expect(report.match(/dep-/g)!.length).toStrictEqual(eventCount);
 
-    expect(report).toContain(
-      "suffixes have been removed to make the graph small enough to render",
-    );
+  expect(report).toContain(
+    "suffixes have been removed to make the graph small enough to render",
+  );
 
-    expect(report.length).lessThan(50200);
-    expect(report.length).greaterThan(18000);
-  }
+  expect(report.length).lessThan(50200);
+  expect(report.length).greaterThan(18000);
 });
 
 test("Create a small report doc and make sure it isn't pruned", () => {
-  {
-    const report = makeMermaidReport(generateEvents(100))!;
+  const report = makeMermaidReport(generateEvents(100))!;
 
-    // Assert 100 events have the `.drv` suffix, ie: were not pruned
-    expect(report.match(/\.drv/g)!.length).equals(100);
+  // Assert 100 events have the `.drv` suffix, ie: were not pruned
+  expect(report.match(/\.drv/g)!.length).equals(100);
 
-    // Assert 100 events have the `.drv` suffix, ie: were not pruned
-    expect(report.match(/\/nix\/store\//g)!.length).equals(100);
+  // Assert 100 events have the `.drv` suffix, ie: were not pruned
+  expect(report.match(/\/nix\/store\//g)!.length).equals(100);
 
-    expect(report.length).lessThan(50000);
-  }
+  expect(report.length).lessThan(50000);
 });
 
 test("Generate a really big report and shrink it", () => {
