@@ -93064,7 +93064,7 @@ function makeMermaidReport(events) {
     pruneLevel += 1;
     mermaid = mermaidify(events, pruneLevel) ?? "";
   } while (mermaid.length > maxLength);
-  if (mermaid === void 0) {
+  if (!mermaid) {
     return void 0;
   }
   const lines = [
