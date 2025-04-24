@@ -890,12 +890,14 @@ class NixInstallerAction extends DetSysAction {
 
   async summarizeExecution(): Promise<void> {
     const startDate = new Date(actionsCore.getState(STATE_START_DATETIME));
-    const events = await getRecentEvents(startDate);
+    const { events, hasMismatches } = await getRecentEvents(startDate);
 
     const mermaidSummary = makeMermaidReport(events);
     const failureSummary = await summarizeFailures(events);
 
-    if (mermaidSummary || failureSummary) {
+    const showResults = mermaidSummary || failureSummary || hasMismatches;
+
+    if (showResults) {
       actionsCore.summary.addRaw(
         `## ![](https://avatars.githubusercontent.com/u/80991770?s=30) Determinate Nix build summary`,
         true,
@@ -908,6 +910,18 @@ class NixInstallerAction extends DetSysAction {
       actionsCore.summary.addRaw("\n", true);
     }
 
+    if (hasMismatches) {
+      actionsCore.summary.addRaw(
+        [
+          "> [!TIP]",
+          "> Some derivations failed to build due to the hash in the Nix expression being outdated.",
+          "> To find out how to automatically update your Nix expressions in GitHub Actions, see [our guide](https://docs.determinate.systems/guides/automatically-fix-hashes-in-github-actions).",
+          "",
+        ].join("\n"),
+        true,
+      );
+    }
+
     if (failureSummary !== undefined) {
       for (const logLine of failureSummary.logLines) {
         actionsCore.info(logLine);
@@ -917,7 +931,7 @@ class NixInstallerAction extends DetSysAction {
       actionsCore.summary.addRaw("\n", true);
     }
 
-    if (mermaidSummary || failureSummary) {
+    if (showResults) {
       actionsCore.summary.addRaw("---", true);
       actionsCore.summary.addRaw(
         `_Please let us know what you think about this summary on the [Determinate Systems Discord](https://determinate.systems/discord)._`,

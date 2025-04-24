@@ -12,7 +12,7 @@ if (false) {
 }
 
 test("Parsing existing events", () => {
-  const events = parseEvents([
+  const { events } = parseEvents([
     {
       v: "1",
       c: "BuiltPathResponseEventV1",
