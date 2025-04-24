@@ -94,7 +94,7 @@ test("Generate a really big report and shrink it", () => {
 });
 
 test("Generate a rough report of various length", () => {
-  const events = parseEvents([
+  const { events } = parseEvents([
     {
       v: "1",
       c: "BuiltPathResponseEventV1",

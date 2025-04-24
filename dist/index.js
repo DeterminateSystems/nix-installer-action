@@ -93013,10 +93013,15 @@ function annotateMismatches(output) {
 // src/events.ts
 
 function parseEvents(data) {
+  let hasMismatches = false;
   if (!Array.isArray(data)) {
-    return [];
+    return { events: [], hasMismatches };
   }
-  return data.flatMap((event) => {
+  const events = data.flatMap((event) => {
+    if (event.v === "1" && event.c === "HashMismatchResponseEventV1") {
+      hasMismatches = true;
+      return [];
+    }
     if (event.v === "1" && (event.c === "BuildFailureResponseEventV1" || event.c === "BuiltPathResponseEventV1") && Object.hasOwn(event, "drv") && typeof event.drv === "string" && Object.hasOwn(event, "timing") && typeof event.timing === "object" && event.timing !== null) {
       const timing = event.timing;
       if (Object.hasOwn(timing, "startTime") && typeof timing.startTime === "string" && Object.hasOwn(timing, "durationSeconds") && typeof timing.durationSeconds === "number") {
@@ -93038,6 +93043,7 @@ function parseEvents(data) {
     }
     return [];
   });
+  return { events, hasMismatches };
 }
 async function getRecentEvents(since) {
   const queryParam = encodeURIComponent(since.toISOString());
@@ -93950,10 +93956,11 @@ ${stderrBuffer}`
   }
   async summarizeExecution() {
     const startDate = new Date(core.getState(STATE_START_DATETIME));
-    const events = await getRecentEvents(startDate);
+    const { events, hasMismatches } = await getRecentEvents(startDate);
     const mermaidSummary = makeMermaidReport(events);
     const failureSummary = await summarizeFailures(events);
-    if (mermaidSummary || failureSummary) {
+    const showResults = mermaidSummary || failureSummary || hasMismatches;
+    if (showResults) {
       core.summary.addRaw(
         `## ![](https://avatars.githubusercontent.com/u/80991770?s=30) Determinate Nix build summary`,
         true
@@ -93964,6 +93971,16 @@ ${stderrBuffer}`
       core.summary.addRaw(mermaidSummary, true);
       core.summary.addRaw("\n", true);
     }
+    if (hasMismatches) {
+      core.summary.addRaw(
+        [
+          "> [!INFO]",
+          "> Some derivations failed to build due to the hash in the Nix expression being outdated. See our guide on how to automatically update your Nix expressions: https://docs.determinate.systems/guides/automatically-fix-hashes-in-github-actions",
+          ""
+        ].join("\n"),
+        true
+      );
+    }
     if (failureSummary !== void 0) {
       for (const logLine of failureSummary.logLines) {
         core.info(logLine);
@@ -93971,7 +93988,7 @@ ${stderrBuffer}`
       core.summary.addRaw(failureSummary.markdownLines.join("\n"), true);
       core.summary.addRaw("\n", true);
     }
-    if (mermaidSummary || failureSummary) {
+    if (showResults) {
       core.summary.addRaw("---", true);
       core.summary.addRaw(
         `_Please let us know what you think about this summary on the [Determinate Systems Discord](https://determinate.systems/discord)._`,

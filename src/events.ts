@@ -10,12 +10,26 @@ export interface DEvent {
   };
 }
 
-export function parseEvents(data: unknown): DEvent[] {
+export interface ParsedEventsResult {
+  readonly events: DEvent[];
+  readonly hasMismatches: boolean;
+}
+
+export function parseEvents(data: unknown): ParsedEventsResult {
+  let hasMismatches = false;
+
   if (!Array.isArray(data)) {
-    return [];
+    return { events: [], hasMismatches };
   }
 
-  return data.flatMap((event) => {
+  const events = data.flatMap((event) => {
+    // If this was a hash mismatch event, note it and move on
+    if (event.v === "1" && event.c === "HashMismatchResponseEventV1") {
+      hasMismatches = true;
+      return [];
+    }
+
+    // Otherwise, determine if it's an event we're interested in
     if (
       event.v === "1" &&
       (event.c === "BuildFailureResponseEventV1" ||
@@ -53,9 +67,13 @@ export function parseEvents(data: unknown): DEvent[] {
 
     return [];
   });
+
+  return { events, hasMismatches };
 }
 
-export async function getRecentEvents(since: Date): Promise<DEvent[]> {
+export async function getRecentEvents(
+  since: Date,
+): Promise<ParsedEventsResult> {
   const queryParam = encodeURIComponent(since.toISOString());
 
   const resp = await got
