@@ -913,7 +913,7 @@ class NixInstallerAction extends DetSysAction {
     if (hasMismatches) {
       actionsCore.summary.addRaw(
         [
-          "> [!INFO]",
+          "> [!TIP]",
           "> Some derivations failed to build due to the hash in the Nix expression being outdated. See our guide on how to automatically update your Nix expressions: https://docs.determinate.systems/guides/automatically-fix-hashes-in-github-actions",
           "",
         ].join("\n"),
