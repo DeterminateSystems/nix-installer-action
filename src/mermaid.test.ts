@@ -22,6 +22,12 @@ function generateEvents(count: number): DEvent[] {
   return events;
 }
 
+test("Empty event list returns no report", () => {
+  const report = makeMermaidReport([]);
+
+  expect(report).toBeUndefined();
+});
+
 test("Create a very large report doc and make sure it is small enough", () => {
   {
     const report = makeMermaidReport(generateEvents(2000))!;
