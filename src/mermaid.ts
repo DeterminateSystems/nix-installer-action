@@ -12,7 +12,7 @@ export function makeMermaidReport(events: DEvent[]): string | undefined {
     mermaid = mermaidify(events, pruneLevel) ?? "";
   } while (mermaid.length > maxLength);
 
-  if (mermaid === undefined) {
+  if (!mermaid) {
     return undefined;
   }
 
