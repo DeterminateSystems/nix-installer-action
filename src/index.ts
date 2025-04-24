@@ -914,7 +914,8 @@ class NixInstallerAction extends DetSysAction {
       actionsCore.summary.addRaw(
         [
           "> [!TIP]",
-          "> Some derivations failed to build due to the hash in the Nix expression being outdated. See our guide on how to automatically update your Nix expressions: https://docs.determinate.systems/guides/automatically-fix-hashes-in-github-actions",
+          "> Some derivations failed to build due to the hash in the Nix expression being outdated.",
+          "> To find out how to automatically update your Nix expressions in GitHub Actions, see [our guide](https://docs.determinate.systems/guides/automatically-fix-hashes-in-github-actions).",
           "",
         ].join("\n"),
         true,
