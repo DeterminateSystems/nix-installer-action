@@ -95334,7 +95334,7 @@ function makeMermaidReport(events) {
   } else if (pruneLevel > 0) {
     lines.push("> [!NOTE]");
     lines.push(
-      `> \`/nix/store/[hash]\`, the \`.drv\` suffix, and builds that took less than ${pruneLevel}s have been removed to make the graph small enough to render.`
+      `> \`/nix/store/[hash]\`, the \`.drv\` suffix, and builds that took less than ${collapseSeconds(pruneLevel)} have been removed to make the graph small enough to render.`
     );
   }
   lines.push("");
@@ -95367,11 +95367,16 @@ function mermaidify(allEvents, pruneLevel) {
     const tag = event.c === "BuildFailureResponseEventV1" ? "crit" : "d";
     const relativeStartTime = (event.timing.startTime.getTime() - zeroMoment) / 1e3;
     lines.push(
-      `${label} (${duration}s):${tag}, ${relativeStartTime}, ${duration}s`
+      `${label} (${collapseSeconds(duration)}):${tag}, ${relativeStartTime}, ${duration}s`
     );
   }
   lines.push("```");
   return lines.join("\n");
+}
+function collapseSeconds(duration) {
+  const durSeconds = duration % 60;
+  const durMinutes = (duration - durSeconds) / 60;
+  return `${durMinutes > 0 ? `${durMinutes}m` : ""}${durSeconds}s`;
 }
 
 // src/failuresummary.ts
