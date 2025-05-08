@@ -99,7 +99,7 @@ export async function summarizeFailures(
     markdownLines.push(
       "",
       "> [!NOTE]",
-      `> The following ${skippedChunks.length === 1 ? "failure has" : "failures have"} been omitted due to GitHub Actions summary length limitations.`,
+      `> The following ${skippedChunks.length === 1 ? "failure has" : "failures have"} been omitted due to GitHub Actions' summary length limitations.`,
       "> The full logs are available in the post-run phase of the Nix Installer Action.",
     );
 

@@ -31,7 +31,7 @@ export function makeMermaidReport(events: DEvent[]): string | undefined {
   } else if (pruneLevel > 0) {
     lines.push("> [!NOTE]");
     lines.push(
-      `> \`/nix/store/[hash]\`, the \`.drv\` suffix, and builds that took less than ${collapseSeconds(pruneLevel)} have been removed to make the graph small enough to render.`,
+      `> \`/nix/store/[hash]\`, the \`.drv\` suffix, and builds that took less than ${formatDuration(pruneLevel)} have been removed to make the graph small enough to render.`,
     );
   }
 
@@ -81,7 +81,7 @@ export function mermaidify(
       (event.timing.startTime.getTime() - zeroMoment) / 1000;
 
     lines.push(
-      `${label} (${collapseSeconds(duration)}):${tag}, ${relativeStartTime}, ${duration}s`,
+      `${label} (${formatDuration(duration)}):${tag}, ${relativeStartTime}, ${duration}s`,
     );
   }
   lines.push("```");
@@ -89,7 +89,7 @@ export function mermaidify(
   return lines.join("\n");
 }
 
-function collapseSeconds(duration: number): string {
+function formatDuration(duration: number): string {
   const durSeconds = duration % 60;
   const durMinutes = (duration - durSeconds) / 60;
   return `${durMinutes > 0 ? `${durMinutes}m` : ""}${durSeconds}s`;
