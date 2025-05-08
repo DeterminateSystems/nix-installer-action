@@ -248,6 +248,7 @@ test("Omit some logs if there are too many", async () => {
 
 </details>
 
+
 > [!NOTE]
 > The following failure has been omitted due to GitHub Actions summary length limitations.
 > The full logs are available in the post-run phase of the Nix Installer Action.

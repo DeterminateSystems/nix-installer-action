@@ -95440,6 +95440,7 @@ async function summarizeFailures(events, getLog = getLogFromNix, maxLength = def
   }
   if (skippedChunks.length > 0) {
     markdownLines.push(
+      "",
       "> [!NOTE]",
       `> The following ${skippedChunks.length === 1 ? "failure has" : "failures have"} been omitted due to GitHub Actions summary length limitations.`,
       "> The full logs are available in the post-run phase of the Nix Installer Action."
