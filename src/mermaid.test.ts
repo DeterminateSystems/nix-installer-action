@@ -29,7 +29,7 @@ test("Empty event list returns no report", () => {
 });
 
 test("Create a very large report doc and make sure it is small enough", () => {
-  const report = makeMermaidReport(generateEvents(2000))!;
+  const report = makeMermaidReport(generateEvents(2500))!;
 
   // Assert the `.drv` suffix was pruned (1 reference = the NOTE at the end)
   expect(report.match(/\.drv/g)!.length).equals(1);
@@ -38,10 +38,10 @@ test("Create a very large report doc and make sure it is small enough", () => {
   expect(report.match(/\/nix\/store\//g)!.length).equals(1);
 
   // Assert that some events were pruned
-  expect(report.match(/dep-/g)!.length).lessThan(2000);
+  expect(report.match(/dep-/g)!.length).lessThan(2500);
   expect(report.match(/dep-/g)!.length).greaterThan(1500);
 
-  expect(report).toContain("suffix, and builds that took less than 3");
+  expect(report).toContain("suffix, and builds that took less than ");
 
   expect(report.length).lessThan(50200);
   expect(report.length).greaterThan(49000);
@@ -167,5 +167,41 @@ gantt
 dep-1 (1s):d, 0, 1s
 dep-2 (2s):d, 0, 2s
 hash-mismatch-md5-base16 (4s):crit, 3, 4s
+\`\`\``);
+});
+
+test("Generate a really big report and shrink it", () => {
+  const events = generateEvents(1000);
+
+  const originalLength = mermaidify(events, -1)!.length;
+  const limitedLengthZero = mermaidify(events, 0)!.length;
+  const limitedLengthOne = mermaidify(events, 1)!.length;
+  const limitedLengthTwo = mermaidify(events, 2)!.length;
+
+  expect(originalLength).greaterThan(limitedLengthZero);
+  expect(limitedLengthZero).greaterThan(limitedLengthOne);
+  expect(limitedLengthOne).greaterThan(limitedLengthTwo);
+});
+
+test("Really long builds get multi-unit timestamps", () => {
+  const { events } = parseEvents([
+    {
+      v: "1",
+      c: "BuiltPathResponseEventV1",
+      drv: "/nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-0.drv",
+      outputs: ["/nix/store/qwlgz5da3pfb53gqpgdmazaj9jczrnly-dep-0"],
+      timing: {
+        startTime: "2025-04-11T14:38:02Z",
+        stopTime: "2026-05-14T13:32:01Z",
+        durationSeconds: 34383239,
+      },
+    },
+  ]);
+
+  expect(mermaidify(events, -1)).toStrictEqual(`\`\`\`mermaid
+gantt
+    dateFormat X
+    axisFormat %Mm%Ss
+/nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-0.drv (573053m59s):d, 0, 34383239s
 \`\`\``);
 });
