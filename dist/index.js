@@ -96370,7 +96370,7 @@ ${inspectOutput.stderr}`
         plausibleDeterminateArguments.push("daemon");
       }
       this.recordEvent(EVENT_START_DOCKER_SHIM);
-      const exitCode = await exec.exec(
+      const runOutput = await exec.getExecOutput(
         "docker",
         [
           "--log-level=debug",
@@ -96388,28 +96388,23 @@ ${inspectOutput.stderr}`
         ].concat(plausibleDeterminateOptions).concat(mountArguments).concat(["determinate-nix-shim:latest"]).concat(plausibleDeterminateArguments),
         {
           silent: true,
-          listeners: {
-            stdline: (data) => {
-              core.saveState("docker_shim_container_id", data.trimEnd());
-            },
-            stdout: (data) => {
-              const trimmed = data.toString("utf-8").trimEnd();
-              if (trimmed.length >= 0) {
-                core.debug(trimmed);
-              }
-            },
-            stderr: (data) => {
-              const trimmed = data.toString("utf-8").trimEnd();
-              if (trimmed.length >= 0) {
-                core.debug(trimmed);
-              }
-            }
-          }
+          ignoreReturnCode: true
         }
       );
-      if (exitCode !== 0) {
+      if (runOutput.exitCode !== 0) {
+        this.recordEvent(EVENT_DOCKER_FAILURE, {
+          operation: "run",
+          exitCode: runOutput.exitCode,
+          stdout: runOutput.stdout,
+          stderr: runOutput.stderr
+        });
         throw new Error(
-          `Failed to start the Nix daemon through Docker, exit code: \`${exitCode}\``
+          `Failed to start the Nix daemon through Docker, exit code: \`${runOutput.exitCode}\``
+        );
+      } else {
+        core.saveState(
+          "docker_shim_container_id",
+          runOutput.stdout.trim()
         );
       }
     }

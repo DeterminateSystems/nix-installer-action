@@ -783,7 +783,7 @@ class NixInstallerAction extends DetSysAction {
       }
 
       this.recordEvent(EVENT_START_DOCKER_SHIM);
-      const exitCode = await actionsExec.exec(
+      const runOutput = await actionsExec.getExecOutput(
         "docker",
         [
           "--log-level=debug",
@@ -805,29 +805,25 @@ class NixInstallerAction extends DetSysAction {
           .concat(plausibleDeterminateArguments),
         {
           silent: true,
-          listeners: {
-            stdline: (data: string) => {
-              actionsCore.saveState("docker_shim_container_id", data.trimEnd());
-            },
-            stdout: (data: Buffer) => {
-              const trimmed = data.toString("utf-8").trimEnd();
-              if (trimmed.length >= 0) {
-                actionsCore.debug(trimmed);
-              }
-            },
-            stderr: (data: Buffer) => {
-              const trimmed = data.toString("utf-8").trimEnd();
-              if (trimmed.length >= 0) {
-                actionsCore.debug(trimmed);
-              }
-            },
-          },
+          ignoreReturnCode: true,
         },
       );
 
-      if (exitCode !== 0) {
+      if (runOutput.exitCode !== 0) {
+        this.recordEvent(EVENT_DOCKER_FAILURE, {
+          operation: "run",
+          exitCode: runOutput.exitCode,
+          stdout: runOutput.stdout,
+          stderr: runOutput.stderr,
+        });
+
         throw new Error(
-          `Failed to start the Nix daemon through Docker, exit code: \`${exitCode}\``,
+          `Failed to start the Nix daemon through Docker, exit code: \`${runOutput.exitCode}\``,
+        );
+      } else {
+        actionsCore.saveState(
+          "docker_shim_container_id",
+          runOutput.stdout.trim(),
         );
       }
     }
