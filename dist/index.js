@@ -95448,7 +95448,6 @@ function makeOptionsConfident(actionOptions) {
 
 
 
-
 // src/fixHashes.ts
 
 async function getFixHashes(since) {
@@ -95723,27 +95722,28 @@ async function getLogFromNix(drv) {
 }
 
 // src/index.ts
+
 var EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
 var EVENT_INSTALL_NIX_START = "install_nix_start";
 var EVENT_INSTALL_NIX_SUCCESS = "install_nix_start";
 var EVENT_SETUP_KVM = "setup_kvm";
 var EVENT_UNINSTALL_NIX = "uninstall";
-var EVENT_CLEAN_UP_DOCKER_SHIM = "clean_up_docker_shim";
-var EVENT_START_DOCKER_SHIM = "start_docker_shim";
-var EVENT_DOCKER_FAILURE = "docker_failure";
 var EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 var EVENT_CONCLUDE_JOB = "conclude_job";
 var EVENT_FOD_ANNOTATE = "fod_annotate";
+var EVENT_NO_SYSTEMD_SHIM_FAILED = "no-systemd-shim-failed";
 var FEAT_ANNOTATIONS = "hash-mismatch-annotations";
 var FACT_DETERMINATE_NIX = "determinate_nix";
-var FACT_HAS_DOCKER = "has_docker";
 var FACT_HAS_SYSTEMD = "has_systemd";
 var FACT_IN_ACT = "in_act";
 var FACT_IN_NAMESPACE_SO = "in_namespace_so";
 var FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
+var FACT_SENT_SIGTERM = "sent_sigterm";
 var FLAG_DETERMINATE = "--determinate";
+var STATE_DAEMONDIR = "DNI_DAEMONDIR";
 var STATE_START_DATETIME = "DETERMINATE_NIXD_START_DATETIME";
 var NixInstallerAction = class extends DetSysAction {
+  daemonDir;
   determinate;
   platform;
   nixPackageUrl;
@@ -95753,7 +95753,7 @@ var NixInstallerAction = class extends DetSysAction {
   kvm;
   githubServerUrl;
   githubToken;
-  forceDockerShim;
+  forceNoSystemd;
   init;
   jobConclusion;
   localRoot;
@@ -95784,6 +95784,13 @@ var NixInstallerAction = class extends DetSysAction {
       requireNix: "ignore",
       diagnosticsSuffix: "diagnostic"
     });
+    if (core.getState(STATE_DAEMONDIR) !== "") {
+      this.daemonDir = core.getState(STATE_DAEMONDIR);
+    } else {
+      this.daemonDir = this.getTemporaryName();
+      (0,external_node_fs_namespaceObject.mkdirSync)(this.daemonDir);
+      core.saveState(STATE_DAEMONDIR, this.daemonDir);
+    }
     this.determinate = inputs_exports.getBool("determinate") || inputs_exports.getBool("flakehub");
     this.platform = platform_exports.getNixPlatform(platform_exports.getArchOs());
     this.nixPackageUrl = inputs_exports.getStringOrNull("nix-package-url");
@@ -95791,7 +95798,7 @@ var NixInstallerAction = class extends DetSysAction {
     this.extraArgs = inputs_exports.getStringOrNull("extra-args");
     this.extraConf = inputs_exports.getMultilineStringOrNull("extra-conf");
     this.kvm = inputs_exports.getBool("kvm");
-    this.forceDockerShim = inputs_exports.getBool("force-docker-shim");
+    this.forceNoSystemd = inputs_exports.getBool("force-no-systemd");
     this.githubToken = inputs_exports.getStringOrNull("github-token");
     this.githubServerUrl = inputs_exports.getStringOrNull("github-server-url");
     this.init = inputs_exports.getStringOrNull("init");
@@ -95819,7 +95826,7 @@ var NixInstallerAction = class extends DetSysAction {
   }
   async main() {
     await this.scienceDebugFly();
-    await this.detectAndForceDockerShim();
+    await this.detectAndForceNoSystemd();
     await this.install();
     core.saveState(STATE_START_DATETIME, (/* @__PURE__ */ new Date()).toISOString());
   }
@@ -95832,7 +95839,7 @@ var NixInstallerAction = class extends DetSysAction {
         exception: stringifyError(err)
       });
     }
-    await this.cleanupDockerShim();
+    await this.cleanupNoSystemd();
     await this.reportOverall();
   }
   get isMacOS() {
@@ -95886,175 +95893,32 @@ var NixInstallerAction = class extends DetSysAction {
       });
     }
   }
-  // Detect if we're in a GHA runner which is Linux, doesn't have Systemd, and does have Docker.
+  // Detect if we're in a GHA runner which is Linux, doesn't have Systemd.
   // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
   // and especially GitHub Enterprise Server.
-  async detectAndForceDockerShim() {
+  async detectAndForceNoSystemd() {
     if (!this.isLinux) {
-      if (this.forceDockerShim) {
+      if (this.forceNoSystemd) {
+        this.forceNoSystemd = false;
         core.warning(
-          "Ignoring force-docker-shim which is set to true, as it is only supported on Linux."
+          "Ignoring force-no-systemd which is set to true, as it is only supported on Linux."
         );
-        this.forceDockerShim = false;
       }
       return;
     }
-    if (this.isRunningInAct) {
-      core.debug(
-        "Not bothering to detect if the docker shim should be used, as it is typically incompatible with act."
-      );
-      return;
-    }
+    core.startGroup("Detecting systemd...");
     const systemdCheck = external_node_fs_namespaceObject.statSync("/run/systemd/system", {
       throwIfNoEntry: false
     });
     if (systemdCheck?.isDirectory()) {
       this.addFact(FACT_HAS_SYSTEMD, true);
-      if (this.forceDockerShim) {
-        core.warning(
-          "Systemd is detected, but ignoring it since force-docker-shim is enabled."
-        );
-      } else {
-        return;
-      }
-    }
-    this.addFact(FACT_HAS_SYSTEMD, false);
-    core.debug(
-      "Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor."
-    );
-    this.addFact(FACT_HAS_DOCKER, false);
-    let exitCode;
-    try {
-      exitCode = await exec.exec("docker", ["info"], {
-        ignoreReturnCode: true,
-        silent: true,
-        listeners: {
-          stdout: (data) => {
-            const trimmed = data.toString("utf-8").trimEnd();
-            if (trimmed.length >= 0) {
-              core.debug(trimmed);
-            }
-          },
-          stderr: (data) => {
-            const trimmed = data.toString("utf-8").trimEnd();
-            if (trimmed.length >= 0) {
-              core.debug(trimmed);
-            }
-          }
-        }
-      });
-    } catch {
-      core.debug("Docker not detected, not enabling docker shim.");
-      return;
-    }
-    if (exitCode === 0) {
-      this.addFact(FACT_HAS_DOCKER, true);
     } else {
-      if (this.forceDockerShim) {
-        core.warning(
-          "docker info check failed, but trying anyway since force-docker-shim is enabled."
-        );
-      } else {
-        core.debug("Docker not detected, not enabling docker shim.");
-        return;
-      }
-    }
-    if (!this.forceDockerShim && await this.detectDockerWithMountedDockerSocket()) {
-      core.debug(
-        "Detected a Docker container with a Docker socket mounted, not enabling docker shim."
-      );
-      return;
-    }
-    core.startGroup(
-      "Enabling the Docker shim for running Nix on Linux in CI without Systemd."
-    );
-    if (this.init !== "none") {
-      core.info(`Changing init from '${this.init}' to 'none'`);
+      this.addFact(FACT_HAS_SYSTEMD, false);
+      this.forceNoSystemd = true;
       this.init = "none";
-    }
-    if (this.planner !== "linux") {
-      core.info(`Changing planner from '${this.planner}' to 'linux'`);
       this.planner = "linux";
     }
-    this.forceDockerShim = true;
     core.endGroup();
-  }
-  // Detect if we are running under `act` or some other system which is not using docker-in-docker,
-  // and instead using a mounted docker socket.
-  // In the case of the socket mount solution, the shim will cause issues since the given mount paths will
-  // equate to mount paths on the host, not mount paths to the docker container in question.
-  async detectDockerWithMountedDockerSocket() {
-    let cgroupsBuffer;
-    try {
-      cgroupsBuffer = await (0,promises_namespaceObject.readFile)("/proc/self/cgroup", {
-        encoding: "utf-8"
-      });
-    } catch (e) {
-      core.debug(
-        `Did not detect \`/proc/self/cgroup\` existence, bailing on docker container ID detection:
-${e}`
-      );
-      return false;
-    }
-    const cgroups = cgroupsBuffer.trim().split("\n");
-    const lastCgroup = cgroups[cgroups.length - 1];
-    const lastCgroupParts = lastCgroup.split(":");
-    const lastCgroupPath = lastCgroupParts[lastCgroupParts.length - 1];
-    if (!lastCgroupPath.includes("/docker/")) {
-      core.debug(
-        "Did not detect a container ID, bailing on docker.sock detection"
-      );
-      return false;
-    }
-    const lastCgroupPathParts = lastCgroupPath.split("/");
-    const containerId = lastCgroupPathParts[lastCgroupPathParts.length - 1];
-    const inspectOutput = await exec.getExecOutput(
-      "docker",
-      ["inspect", containerId],
-      {
-        ignoreReturnCode: true,
-        silent: true
-      }
-    );
-    if (inspectOutput.exitCode !== 0) {
-      this.recordEvent(EVENT_DOCKER_FAILURE, {
-        operation: "inspect",
-        exitCode: inspectOutput.exitCode,
-        stdout: inspectOutput.stdout,
-        stderr: inspectOutput.stderr
-      });
-      core.debug(
-        `Unable to inspect detected docker container with id \`${containerId}\`, bailing on container inspection (exit ${inspectOutput.exitCode}):
-${inspectOutput.stderr}`
-      );
-      return false;
-    }
-    const output = JSON.parse(inspectOutput.stdout);
-    if (output.length !== 1) {
-      core.debug(
-        `Got \`docker inspect ${containerId}\` output which was not one item (was ${output.length}), bailing on docker.sock detection.`
-      );
-      return false;
-    }
-    const item = output[0];
-    const mounts = item["Mounts"];
-    if (typeof mounts !== "object") {
-      core.debug(
-        `Got non-object in \`Mounts\` field of \`docker inspect ${containerId}\` output, bailing on docker.sock detection.`
-      );
-      return false;
-    }
-    let foundDockerSockMount = false;
-    for (const mount of mounts) {
-      const destination = mount["Destination"];
-      if (typeof destination === "string") {
-        if (destination.endsWith("docker.sock")) {
-          foundDockerSockMount = true;
-          break;
-        }
-      }
-    }
-    return foundDockerSockMount;
   }
   async executionEnvironment() {
     const executionEnv = {};
@@ -96264,215 +96128,59 @@ ${inspectOutput.stderr}`
     const binaryPath = await this.fetchBinary();
     await this.executeInstall(binaryPath);
     core.endGroup();
-    if (this.forceDockerShim) {
-      await this.spawnDockerShim();
+    if (this.forceNoSystemd) {
+      await this.spawnDoubleFork();
     }
     await this.setGithubPath();
     if (this.determinate) {
       await this.flakehubLogin();
     }
   }
-  async spawnDockerShim() {
+  async spawnDoubleFork() {
     core.startGroup(
-      "Configuring the Docker shim as the Nix Daemon's process supervisor"
+      "Executing the daemon via a double fork, since systemd is not available."
     );
-    const images = {
-      X64: __nccwpck_require__.ab + "amd64.tar.gz",
-      ARM64: __nccwpck_require__.ab + "arm64.tar.gz"
+    const outputPath = `${this.daemonDir}/daemon.log`;
+    const output = (0,external_node_fs_namespaceObject.openSync)(outputPath, "a");
+    const opts = {
+      stdio: ["ignore", output, output],
+      detached: true
     };
-    const runnerArch = process.env["RUNNER_ARCH"];
-    let arch;
-    if (runnerArch === "X64") {
-      arch = "X64";
-    } else if (runnerArch === "ARM64") {
-      arch = "ARM64";
-    } else {
-      throw Error("Architecture not supported in Docker shim mode.");
-    }
-    core.debug("Loading image: determinate-nix-shim:latest...");
-    {
-      const imageLoadOutput = await exec.getExecOutput(
-        "docker",
-        ["image", "load", "--input", images[arch]],
-        {
-          ignoreReturnCode: true,
-          silent: true
+    const daemonBin = this.determinate ? "/usr/local/bin/determinate-nixd" : "/nix/var/nix/profiles/default/bin/nix-daemon";
+    const daemonCliFlags = this.determinate ? ["daemon"] : [];
+    core.debug("Full daemon start command:");
+    core.debug(`${daemonBin} ${daemonCliFlags.join(" ")}`);
+    const daemon = (0,external_node_child_process_namespaceObject.spawn)(daemonBin, daemonCliFlags, opts);
+    const pidFile = external_path_.join(this.daemonDir, "daemon.pid");
+    await (0,promises_namespaceObject.writeFile)(pidFile, `${daemon.pid}`);
+    try {
+      for (let i = 0; i <= 2400; i++) {
+        if (daemon.signalCode !== null || daemon.exitCode !== null) {
+          let msg;
+          if (daemon.signalCode) {
+            msg = `Daemon was killed by signal ${daemon.signalCode}`;
+          } else {
+            msg = `Daemon exited with code ${daemon.exitCode}`;
+          }
+          throw new Error(msg);
         }
-      );
-      if (imageLoadOutput.exitCode !== 0) {
-        this.recordEvent(EVENT_DOCKER_FAILURE, {
-          operation: "load",
-          exitCode: imageLoadOutput.exitCode,
-          stdout: imageLoadOutput.stdout,
-          stderr: imageLoadOutput.stderr
-        });
-        throw new Error(
-          `Failed to load the shim image, exit code: \`${imageLoadOutput.exitCode}\`, stderr: ${imageLoadOutput.stderr}`
-        );
-      }
-    }
-    {
-      core.debug("Starting the Nix daemon through Docker...");
-      const candidateDirectories = [
-        {
-          dir: "/bin",
-          readOnly: true
-        },
-        {
-          dir: "/etc",
-          readOnly: true
-        },
-        {
-          dir: "/home",
-          readOnly: true
-        },
-        {
-          dir: "/lib",
-          readOnly: true
-        },
-        {
-          dir: "/lib64",
-          readOnly: true
-        },
-        {
-          dir: "/tmp",
-          readOnly: false
-        },
-        {
-          dir: "/usr",
-          readOnly: true
-        },
-        {
-          dir: "/nix",
-          readOnly: false
+        if (await this.doesTheSocketExistYet()) {
+          break;
         }
-      ];
-      const mountArguments = [];
-      for (const { dir, readOnly } of candidateDirectories) {
-        if (await this.probeDirExistOnHost(dir)) {
-          core.debug(`Will mount ${dir} in the docker shim.`);
-          mountArguments.push("--mount");
-          mountArguments.push(
-            `type=bind,src=${dir},dst=${dir}${readOnly ? ",readonly" : ""}`
-          );
-        } else {
-          core.debug(
-            `Not mounting ${dir} in the docker shim: it doesn't appear to exist.`
-          );
-        }
+        await (0,external_node_timers_promises_namespaceObject.setTimeout)(50);
       }
-      const plausibleDeterminateOptions = [];
-      const plausibleDeterminateArguments = [];
-      if (this.determinate) {
-        plausibleDeterminateOptions.push("--entrypoint");
-        plausibleDeterminateOptions.push("/usr/local/bin/determinate-nixd");
-        plausibleDeterminateArguments.push("daemon");
+      if (!await this.doesTheSocketExistYet()) {
+        throw new Error("Timed out waiting for the daemon socket to appear.");
       }
-      this.recordEvent(EVENT_START_DOCKER_SHIM);
-      const runOutput = await exec.getExecOutput(
-        "docker",
-        [
-          "--log-level=debug",
-          "run",
-          "--detach",
-          "--privileged",
-          "--network=host",
-          "--userns=host",
-          "--pid=host",
-          "--restart",
-          "always",
-          "--init",
-          "--name",
-          `determinate-nix-shim-${this.getUniqueId()}-${(0,external_node_crypto_.randomUUID)()}`
-        ].concat(plausibleDeterminateOptions).concat(mountArguments).concat(["determinate-nix-shim:latest"]).concat(plausibleDeterminateArguments),
-        {
-          silent: true,
-          ignoreReturnCode: true
-        }
-      );
-      if (runOutput.exitCode !== 0) {
-        this.recordEvent(EVENT_DOCKER_FAILURE, {
-          operation: "run",
-          exitCode: runOutput.exitCode,
-          stdout: runOutput.stdout,
-          stderr: runOutput.stderr
-        });
-        throw new Error(
-          `Failed to start the Nix daemon through Docker, exit code: \`${runOutput.exitCode}\``
-        );
-      } else {
-        core.saveState(
-          "docker_shim_container_id",
-          runOutput.stdout.trim()
-        );
-      }
+    } catch (error2) {
+      this.recordEvent(EVENT_NO_SYSTEMD_SHIM_FAILED, {
+        error: stringifyError(error2),
+        log: (await (0,promises_namespaceObject.readFile)(outputPath)).toString()
+      });
+      throw error2;
     }
-    const maxDurationSeconds = 120;
-    const delayPerAttemptInMiliseconds = 50;
-    const maxAttempts = maxDurationSeconds * 1e3 / delayPerAttemptInMiliseconds;
-    let didSucceed = false;
-    for (let attempt = 0; attempt <= maxAttempts; attempt += 1) {
-      if (await this.doesTheSocketExistYet()) {
-        didSucceed = true;
-        break;
-      }
-      await (0,external_node_timers_promises_namespaceObject.setTimeout)(50);
-    }
-    if (!didSucceed) {
-      throw new Error("Timed out waiting for the Nix Daemon");
-    }
+    daemon.unref();
     core.endGroup();
-    return;
-  }
-  async probeDirExistOnHost(directory) {
-    core.debug("Probing for {}...");
-    const runOutput = await exec.getExecOutput(
-      "docker",
-      [
-        "--log-level=debug",
-        "container",
-        "create",
-        "--init",
-        `--mount=type=bind,src=${directory},dst=${directory},readonly`,
-        "determinate-nix-shim:latest"
-      ],
-      {
-        silent: true,
-        ignoreReturnCode: true
-      }
-    );
-    if (runOutput.exitCode === 0) {
-      const cleanupRet = await exec.getExecOutput(
-        "docker",
-        ["rm", runOutput.stdout.trim()],
-        {
-          silent: true,
-          ignoreReturnCode: true
-        }
-      );
-      if (cleanupRet.exitCode === 0) {
-        core.debug("Successfully cleaned up the probe container");
-      } else {
-        this.recordEvent(EVENT_DOCKER_FAILURE, {
-          operation: "cleanup-probe",
-          containerId: runOutput.stdout.trim(),
-          directory,
-          exitCode: cleanupRet.exitCode,
-          stdout: cleanupRet.stdout,
-          stderr: cleanupRet.stderr
-        });
-        core.debug(
-          `Unable to clean up the probe container with id \`${runOutput.stdout.trim()}\`, ignoring... (exit ${runOutput.exitCode}):
-${runOutput.stderr}`
-        );
-      }
-      return true;
-    } else {
-      core.debug(
-        `Probing to see if ${directory} exists for the Docker daemon reveals it probably does not. Exit code: ${runOutput.exitCode}, stdout: ${runOutput.stdout}, stderr: ${runOutput.stderr}`
-      );
-      return false;
-    }
   }
   async doesTheSocketExistYet() {
     const socketPath = "/nix/var/nix/daemon-socket/socket";
@@ -96487,7 +96195,7 @@ ${runOutput.stderr}`
       core.warning(
         `Error waiting for the Nix Daemon socket: ${stringifyError(error2)}`
       );
-      this.recordEvent("docker-shim:wait-for-socket", {
+      this.recordEvent("shim:wait-for-socket", {
         exception: stringifyError(error2)
       });
       throw error2;
@@ -96536,38 +96244,6 @@ ${runOutput.stderr}`
       );
       core.summary.addRaw("\n", true);
       await core.summary.write();
-    }
-  }
-  async cleanupDockerShim() {
-    const containerId = core.getState("docker_shim_container_id");
-    if (containerId !== "") {
-      core.startGroup("Cleaning up the Nix daemon's Docker shim");
-      let cleaned = false;
-      try {
-        await exec.exec("docker", ["rm", "--force", containerId]);
-        cleaned = true;
-      } catch {
-        core.warning("failed to cleanup nix daemon container");
-      }
-      if (!cleaned) {
-        core.info("trying to pkill the container's shim process");
-        try {
-          await exec.exec("pkill", [containerId]);
-          cleaned = true;
-        } catch {
-          core.warning(
-            "failed to forcibly kill the container's shim process"
-          );
-        }
-      }
-      if (cleaned) {
-        this.recordEvent(EVENT_CLEAN_UP_DOCKER_SHIM);
-      } else {
-        core.warning(
-          "Giving up on cleaning up the nix daemon container"
-        );
-      }
-      core.endGroup();
     }
   }
   async setGithubPath() {
@@ -96760,6 +96436,33 @@ ${runOutput.stderr}`
       const localPath = (0,external_node_path_namespaceObject.join)(this.localRoot, `nix-installer-${this.platform}`);
       core.info(`Using binary ${localPath}`);
       return localPath;
+    }
+  }
+  async cleanupNoSystemd() {
+    if (!this.forceNoSystemd) {
+      return;
+    }
+    const pidFile = external_path_.join(this.daemonDir, "daemon.pid");
+    const pid = parseInt(await (0,promises_namespaceObject.readFile)(pidFile, { encoding: "ascii" }));
+    core.debug(`found daemon pid: ${pid}`);
+    if (!pid) {
+      throw new Error("the daemon did not start successfully");
+    }
+    core.debug(`killing daemon process ${pid}`);
+    try {
+      for (let i = 0; i < 30 * 10; i++) {
+        process.kill(pid, 0);
+        await (0,external_node_timers_promises_namespaceObject.setTimeout)(100);
+      }
+      this.addFact(FACT_SENT_SIGTERM, true);
+      core.info(`Sending the daemon a SIGTERM`);
+      process.kill(pid, "SIGTERM");
+    } catch {
+    }
+    if (core.isDebug()) {
+      core.info("Entire log:");
+      const entireLog = await (0,promises_namespaceObject.readFile)(external_path_.join(this.daemonDir, "daemon.log"));
+      core.info(entireLog.toString());
     }
   }
   async reportOverall() {
