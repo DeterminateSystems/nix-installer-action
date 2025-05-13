@@ -96428,10 +96428,14 @@ ${inspectOutput.stderr}`
     core.debug("Probing for {}...");
     const runOutput = await exec.getExecOutput(
       "docker",
-      ["--log-level=debug", "container", "create", "--init"].concat([
-        "--mount",
-        `type=bind,src=${directory},dst=${directory},readonly`
-      ]).concat(["determinate-nix-shim:latest"]),
+      [
+        "--log-level=debug",
+        "container",
+        "create",
+        "--init",
+        `--mount=type=bind,src=${directory},dst=${directory},readonly`,
+        "determinate-nix-shim:latest"
+      ],
       {
         silent: true,
         ignoreReturnCode: true
