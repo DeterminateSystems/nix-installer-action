@@ -760,14 +760,13 @@ class NixInstallerAction extends DetSysAction {
       const mountArguments = [];
 
       for (const { dir, readOnly } of candidateDirectories) {
-        try {
-          await access(dir);
+        if (await this.probeDirExistOnHost(dir)) {
           actionsCore.debug(`Will mount ${dir} in the docker shim.`);
           mountArguments.push("--mount");
           mountArguments.push(
             `type=bind,src=${dir},dst=${dir}${readOnly ? ",readonly" : ""}`,
           );
-        } catch {
+        } else {
           actionsCore.debug(
             `Not mounting ${dir} in the docker shim: it doesn't appear to exist.`,
           );
@@ -850,6 +849,41 @@ class NixInstallerAction extends DetSysAction {
     actionsCore.endGroup();
 
     return;
+  }
+
+  async probeDirExistOnHost(directory: string): Promise<boolean> {
+    actionsCore.debug("Probing for {}...");
+
+    const mountArguments =
+      directory === "/bin"
+        ? [
+            // We always mount /bin to access /bin/sh
+          ]
+        : ["--mount", `type=bind,src=${directory},dst=${directory},readonly`];
+
+    const runOutput = await actionsExec.getExecOutput(
+      "docker",
+      ["--log-level=debug", "run", "--init"]
+        .concat(["--mount", `type=bind,src=/bin,dst=/bin,readonly`])
+        .concat(mountArguments)
+        .concat(["--entrypoint", "/bin/sh"])
+        .concat(["determinate-nix-shim:latest"])
+        .concat(["-c", "true"]),
+      {
+        silent: true,
+        ignoreReturnCode: true,
+      },
+    );
+
+    if (runOutput.exitCode === 0) {
+      return true;
+    } else {
+      actionsCore.debug(
+        `Probing to see if ${directory} exists for the Docker daemon reveals it probably does not. Exit code: ${runOutput.exitCode}, stdout: ${runOutput.stdout}, stderr: ${runOutput.stderr}`,
+      );
+
+      return false;
+    }
   }
 
   async doesTheSocketExistYet(): Promise<boolean> {
