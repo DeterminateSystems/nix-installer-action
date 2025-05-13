@@ -96012,6 +96012,7 @@ ${e}`
     let exitCode;
     try {
       exitCode = await exec.exec("docker", ["inspect", containerId], {
+        ignoreReturnCode: true,
         silent: true,
         listeners: {
           stdout: (data) => {

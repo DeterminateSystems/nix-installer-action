@@ -356,6 +356,7 @@ class NixInstallerAction extends DetSysAction {
     let exitCode;
     try {
       exitCode = await actionsExec.exec("docker", ["inspect", containerId], {
+        ignoreReturnCode: true,
         silent: true,
         listeners: {
           stdout: (data: Buffer) => {
