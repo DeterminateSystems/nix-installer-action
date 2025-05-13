@@ -95730,7 +95730,7 @@ var EVENT_SETUP_KVM = "setup_kvm";
 var EVENT_UNINSTALL_NIX = "uninstall";
 var EVENT_CLEAN_UP_DOCKER_SHIM = "clean_up_docker_shim";
 var EVENT_START_DOCKER_SHIM = "start_docker_shim";
-var EVENT_DOCKER_INSPECT_FAILURE = "docker_inspect_failure";
+var EVENT_DOCKER_FAILURE = "docker_failure";
 var EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 var EVENT_CONCLUDE_JOB = "conclude_job";
 var EVENT_FOD_ANNOTATE = "fod_annotate";
@@ -96017,7 +96017,8 @@ ${e}`
       }
     );
     if (inspectOutput.exitCode !== 0) {
-      this.recordEvent(EVENT_DOCKER_INSPECT_FAILURE, {
+      this.recordEvent(EVENT_DOCKER_FAILURE, {
+        operation: "inspect",
         exitCode: inspectOutput.exitCode,
         stdout: inspectOutput.stdout,
         stderr: inspectOutput.stderr
@@ -96290,31 +96291,23 @@ ${inspectOutput.stderr}`
     }
     core.debug("Loading image: determinate-nix-shim:latest...");
     {
-      const exitCode = await exec.exec(
+      const imageLoadOutput = await exec.getExecOutput(
         "docker",
         ["image", "load", "--input", images[arch]],
         {
           ignoreReturnCode: true,
-          silent: true,
-          listeners: {
-            stdout: (data) => {
-              const trimmed = data.toString("utf-8").trimEnd();
-              if (trimmed.length >= 0) {
-                core.debug(trimmed);
-              }
-            },
-            stderr: (data) => {
-              const trimmed = data.toString("utf-8").trimEnd();
-              if (trimmed.length >= 0) {
-                core.debug(trimmed);
-              }
-            }
-          }
+          silent: true
         }
       );
-      if (exitCode !== 0) {
+      if (imageLoadOutput.exitCode !== 0) {
+        this.recordEvent(EVENT_DOCKER_FAILURE, {
+          operation: "load",
+          exitCode: imageLoadOutput.exitCode,
+          stdout: imageLoadOutput.stdout,
+          stderr: imageLoadOutput.stderr
+        });
         throw new Error(
-          `Failed to load the shim image, exit code: \`${exitCode}\``
+          `Failed to load the shim image, exit code: \`${imageLoadOutput.exitCode}\`, stderr: ${imageLoadOutput.stderr}`
         );
       }
     }
