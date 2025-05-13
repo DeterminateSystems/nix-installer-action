@@ -854,21 +854,14 @@ class NixInstallerAction extends DetSysAction {
   async probeDirExistOnHost(directory: string): Promise<boolean> {
     actionsCore.debug("Probing for {}...");
 
-    const mountArguments =
-      directory === "/bin"
-        ? [
-            // We always mount /bin to access /bin/sh
-          ]
-        : ["--mount", `type=bind,src=${directory},dst=${directory},readonly`];
-
     const runOutput = await actionsExec.getExecOutput(
       "docker",
-      ["--log-level=debug", "run", "--init"]
-        .concat(["--mount", `type=bind,src=/bin,dst=/bin,readonly`])
-        .concat(mountArguments)
-        .concat(["--entrypoint", "/bin/sh"])
-        .concat(["determinate-nix-shim:latest"])
-        .concat(["-c", "true"]),
+      ["--log-level=debug", "container", "create", "--init"]
+        .concat([
+          "--mount",
+          `type=bind,src=${directory},dst=${directory},readonly`,
+        ])
+        .concat(["determinate-nix-shim:latest"]),
       {
         silent: true,
         ignoreReturnCode: true,
@@ -876,6 +869,30 @@ class NixInstallerAction extends DetSysAction {
     );
 
     if (runOutput.exitCode === 0) {
+      const cleanupRet = await actionsExec.getExecOutput(
+        "docker",
+        ["rm", runOutput.stdout.trim()],
+        {
+          silent: true,
+          ignoreReturnCode: true,
+        },
+      );
+
+      if (cleanupRet.exitCode === 0) {
+        actionsCore.debug("Successfully cleaned up the probe container");
+      } else {
+        this.recordEvent(EVENT_DOCKER_FAILURE, {
+          operation: "cleanup-probe",
+          containerId: runOutput.stdout.trim(),
+          directory,
+          exitCode: cleanupRet.exitCode,
+          stdout: cleanupRet.stdout,
+          stderr: cleanupRet.stderr,
+        });
+        actionsCore.debug(
+          `Unable to clean up the probe container with id \`${runOutput.stdout.trim()}\`, ignoring... (exit ${runOutput.exitCode}):\n${runOutput.stderr}`,
+        );
+      }
       return true;
     } else {
       actionsCore.debug(
