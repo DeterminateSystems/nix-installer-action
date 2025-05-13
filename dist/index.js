@@ -95730,6 +95730,7 @@ var EVENT_SETUP_KVM = "setup_kvm";
 var EVENT_UNINSTALL_NIX = "uninstall";
 var EVENT_CLEAN_UP_DOCKER_SHIM = "clean_up_docker_shim";
 var EVENT_START_DOCKER_SHIM = "start_docker_shim";
+var EVENT_DOCKER_INSPECT_FAILURE = "docker_inspect_failure";
 var EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
 var EVENT_CONCLUDE_JOB = "conclude_job";
 var EVENT_FOD_ANNOTATE = "fod_annotate";
@@ -96007,37 +96008,27 @@ ${e}`
     }
     const lastCgroupPathParts = lastCgroupPath.split("/");
     const containerId = lastCgroupPathParts[lastCgroupPathParts.length - 1];
-    let stdoutBuffer = "";
-    let stderrBuffer = "";
-    let exitCode;
-    try {
-      exitCode = await exec.exec("docker", ["inspect", containerId], {
+    const inspectOutput = await exec.getExecOutput(
+      "docker",
+      ["inspect", containerId],
+      {
         ignoreReturnCode: true,
-        silent: true,
-        listeners: {
-          stdout: (data) => {
-            stdoutBuffer += data.toString("utf-8");
-          },
-          stderr: (data) => {
-            stderrBuffer += data.toString("utf-8");
-          }
-        }
+        silent: true
+      }
+    );
+    if (inspectOutput.exitCode !== 0) {
+      this.recordEvent(EVENT_DOCKER_INSPECT_FAILURE, {
+        exitCode: inspectOutput.exitCode,
+        stdout: inspectOutput.stdout,
+        stderr: inspectOutput.stderr
       });
-    } catch (e) {
       core.debug(
-        `Could not execute \`docker inspect ${containerId}\`, bailing on docker container inspection:
-${e}`
+        `Unable to inspect detected docker container with id \`${containerId}\`, bailing on container inspection (exit ${inspectOutput.exitCode}):
+${inspectOutput.stderr}`
       );
       return false;
     }
-    if (exitCode !== 0) {
-      core.debug(
-        `Unable to inspect detected docker container with id \`${containerId}\`, bailing on container inspection (exit ${exitCode}):
-${stderrBuffer}`
-      );
-      return false;
-    }
-    const output = JSON.parse(stdoutBuffer);
+    const output = JSON.parse(inspectOutput.stdout);
     if (output.length !== 1) {
       core.debug(
         `Got \`docker inspect ${containerId}\` output which was not one item (was ${output.length}), bailing on docker.sock detection.`

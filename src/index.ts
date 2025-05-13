@@ -27,6 +27,7 @@ const EVENT_UNINSTALL_NIX = "uninstall";
 // Docker events
 const EVENT_CLEAN_UP_DOCKER_SHIM = "clean_up_docker_shim";
 const EVENT_START_DOCKER_SHIM = "start_docker_shim";
+const EVENT_DOCKER_INSPECT_FAILURE = "docker_inspect_failure";
 
 // FlakeHub events
 const EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
@@ -351,37 +352,28 @@ class NixInstallerAction extends DetSysAction {
     const containerId = lastCgroupPathParts[lastCgroupPathParts.length - 1];
 
     // If we cannot `docker inspect` this discovered container ID, we'll fall through to the `catch` below.
-    let stdoutBuffer = "";
-    let stderrBuffer = "";
-    let exitCode;
-    try {
-      exitCode = await actionsExec.exec("docker", ["inspect", containerId], {
+    const inspectOutput = await actionsExec.getExecOutput(
+      "docker",
+      ["inspect", containerId],
+      {
         ignoreReturnCode: true,
         silent: true,
-        listeners: {
-          stdout: (data: Buffer) => {
-            stdoutBuffer += data.toString("utf-8");
-          },
-          stderr: (data: Buffer) => {
-            stderrBuffer += data.toString("utf-8");
-          },
-        },
+      },
+    );
+
+    if (inspectOutput.exitCode !== 0) {
+      this.recordEvent(EVENT_DOCKER_INSPECT_FAILURE, {
+        exitCode: inspectOutput.exitCode,
+        stdout: inspectOutput.stdout,
+        stderr: inspectOutput.stderr,
       });
-    } catch (e) {
       actionsCore.debug(
-        `Could not execute \`docker inspect ${containerId}\`, bailing on docker container inspection:\n${e}`,
+        `Unable to inspect detected docker container with id \`${containerId}\`, bailing on container inspection (exit ${inspectOutput.exitCode}):\n${inspectOutput.stderr}`,
       );
       return false;
     }
 
-    if (exitCode !== 0) {
-      actionsCore.debug(
-        `Unable to inspect detected docker container with id \`${containerId}\`, bailing on container inspection (exit ${exitCode}):\n${stderrBuffer}`,
-      );
-      return false;
-    }
-
-    const output = JSON.parse(stdoutBuffer);
+    const output = JSON.parse(inspectOutput.stdout);
     // `docker inspect $ID` prints an array containing objects.
     // In our use case, we should only see 1 item in the array.
     if (output.length !== 1) {
