@@ -708,6 +708,7 @@ class NixInstallerAction extends DetSysAction {
         "docker",
         ["image", "load", "--input", images[arch]],
         {
+          ignoreReturnCode: true,
           silent: true,
           listeners: {
             stdout: (data: Buffer) => {
@@ -728,7 +729,7 @@ class NixInstallerAction extends DetSysAction {
 
       if (exitCode !== 0) {
         throw new Error(
-          `Failed to build the shim image, exit code: \`${exitCode}\``,
+          `Failed to load the shim image, exit code: \`${exitCode}\``,
         );
       }
     }
