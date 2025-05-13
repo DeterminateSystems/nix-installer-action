@@ -548,7 +548,9 @@ class NixInstallerAction extends DetSysAction {
     const daemon = spawn(executable, args, opts);
 
     const pidFile = path.join(this.daemonDir, "daemon.pid");
-    await writeFile(pidFile, daemon.pid);
+    if (daemon.pid) {
+      await writeFile(pidFile, daemon.pid.toString());
+    }
 
     try {
       for (let i = 0; i <= 2400; i++) {
@@ -929,7 +931,10 @@ class NixInstallerAction extends DetSysAction {
 
     if (actionsCore.isDebug()) {
       actionsCore.info("Entire log:");
-      const entireLog = await readFile(path.join(this.daemonDir, "daemon.log"), "utf-8");
+      const entireLog = await readFile(
+        path.join(this.daemonDir, "daemon.log"),
+        "utf-8",
+      );
       actionsCore.info(entireLog);
     }
   }

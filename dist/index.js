@@ -95893,7 +95893,7 @@ var NixInstallerAction = class extends DetSysAction {
       });
     }
   }
-  // Detect if we're in a GHA runner which is Linux, doesn't have Systemd.
+  // Detect if we're in a GHA runner which is Linux and doesn't have Systemd.
   // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
   // and especially GitHub Enterprise Server.
   async detectAndForceNoSystemd() {
@@ -96129,18 +96129,18 @@ var NixInstallerAction = class extends DetSysAction {
     await this.executeInstall(binaryPath);
     core.endGroup();
     if (this.forceNoSystemd) {
-      await this.spawnDoubleFork();
+      await this.spawnDetached();
     }
     await this.setGithubPath();
     if (this.determinate) {
       await this.flakehubLogin();
     }
   }
-  async spawnDoubleFork() {
+  async spawnDetached() {
     core.startGroup(
-      "Executing the daemon via a double fork, since systemd is not available."
+      "Directly spawning the daemon, since systemd is not available."
     );
-    const outputPath = `${this.daemonDir}/daemon.log`;
+    const outputPath = external_path_.join(this.daemonDir, "daemon.log");
     const output = (0,external_node_fs_namespaceObject.openSync)(outputPath, "a");
     const opts = {
       stdio: ["ignore", output, output],
@@ -96161,7 +96161,9 @@ var NixInstallerAction = class extends DetSysAction {
     core.debug(`${executable} ${args.join(" ")}`);
     const daemon = (0,external_node_child_process_namespaceObject.spawn)(executable, args, opts);
     const pidFile = external_path_.join(this.daemonDir, "daemon.pid");
-    await (0,promises_namespaceObject.writeFile)(pidFile, `${daemon.pid}`);
+    if (daemon.pid) {
+      await (0,promises_namespaceObject.writeFile)(pidFile, daemon.pid.toString());
+    }
     try {
       for (let i = 0; i <= 2400; i++) {
         if (daemon.signalCode !== null || daemon.exitCode !== null) {
@@ -96184,7 +96186,7 @@ var NixInstallerAction = class extends DetSysAction {
     } catch (error2) {
       this.recordEvent(EVENT_NO_SYSTEMD_SHIM_FAILED, {
         error: stringifyError(error2),
-        log: (await (0,promises_namespaceObject.readFile)(outputPath)).toString()
+        log: await (0,promises_namespaceObject.readFile)(outputPath, "utf-8")
       });
       throw error2;
     }
@@ -96470,8 +96472,11 @@ var NixInstallerAction = class extends DetSysAction {
     }
     if (core.isDebug()) {
       core.info("Entire log:");
-      const entireLog = await (0,promises_namespaceObject.readFile)(external_path_.join(this.daemonDir, "daemon.log"));
-      core.info(entireLog.toString());
+      const entireLog = await (0,promises_namespaceObject.readFile)(
+        external_path_.join(this.daemonDir, "daemon.log"),
+        "utf-8"
+      );
+      core.info(entireLog);
     }
   }
   async reportOverall() {
