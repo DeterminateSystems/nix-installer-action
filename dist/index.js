@@ -95922,39 +95922,36 @@ var NixInstallerAction = class extends DetSysAction {
       "Linux detected without systemd, testing for Docker with `docker info` as an alternative daemon supervisor."
     );
     this.addFact(FACT_HAS_DOCKER, false);
-    let exitCode;
-    try {
-      exitCode = await exec.exec("docker", ["info"], {
-        silent: true,
-        listeners: {
-          stdout: (data) => {
-            const trimmed = data.toString("utf-8").trimEnd();
-            if (trimmed.length >= 0) {
-              core.debug(trimmed);
-            }
-          },
-          stderr: (data) => {
-            const trimmed = data.toString("utf-8").trimEnd();
-            if (trimmed.length >= 0) {
-              core.debug(trimmed);
-            }
+    const exitCode = await exec.exec("docker", ["info"], {
+      ignoreReturnCode: true,
+      silent: true,
+      listeners: {
+        stdout: (data) => {
+          const trimmed = data.toString("utf-8").trimEnd();
+          if (trimmed.length >= 0) {
+            core.debug(trimmed);
+          }
+        },
+        stderr: (data) => {
+          const trimmed = data.toString("utf-8").trimEnd();
+          if (trimmed.length >= 0) {
+            core.debug(trimmed);
           }
         }
-      });
-    } catch {
-      core.debug("Docker not detected, not enabling docker shim.");
-      return;
-    }
+      }
+    });
     if (exitCode !== 0) {
       if (this.forceDockerShim) {
         core.warning(
           "docker info check failed, but trying anyway since force-docker-shim is enabled."
         );
       } else {
+        core.debug("Docker not detected, not enabling docker shim.");
         return;
       }
+    } else {
+      this.addFact(FACT_HAS_DOCKER, true);
     }
-    this.addFact(FACT_HAS_DOCKER, true);
     if (!this.forceDockerShim && await this.detectDockerWithMountedDockerSocket()) {
       core.debug(
         "Detected a Docker container with a Docker socket mounted, not enabling docker shim."
@@ -96006,9 +96003,11 @@ ${e}`
     const containerId = lastCgroupPathParts[lastCgroupPathParts.length - 1];
     let stdoutBuffer = "";
     let stderrBuffer = "";
-    let exitCode;
-    try {
-      exitCode = await exec.exec("docker", ["inspect", containerId], {
+    const exitCode = await exec.exec(
+      "docker",
+      ["inspect", containerId],
+      {
+        ignoreReturnCode: true,
         silent: true,
         listeners: {
           stdout: (data) => {
@@ -96018,14 +96017,8 @@ ${e}`
             stderrBuffer += data.toString("utf-8");
           }
         }
-      });
-    } catch (e) {
-      core.debug(
-        `Could not execute \`docker inspect ${containerId}\`, bailing on docker container inspection:
-${e}`
-      );
-      return false;
-    }
+      }
+    );
     if (exitCode !== 0) {
       core.debug(
         `Unable to inspect detected docker container with id \`${containerId}\`, bailing on container inspection (exit ${exitCode}):
@@ -96224,7 +96217,8 @@ ${stderrBuffer}`
         ...executionEnv,
         ...process.env
         // To get $PATH, etc
-      }
+      },
+      ignoreReturnCode: true
     });
     if (exitCode !== 0) {
       this.recordEvent(EVENT_INSTALL_NIX_FAILURE, {
@@ -96299,6 +96293,7 @@ ${stderrBuffer}`
         "docker",
         ["image", "load", "--input", images[arch]],
         {
+          ignoreReturnCode: true,
           silent: true,
           listeners: {
             stdout: (data) => {
@@ -96318,7 +96313,7 @@ ${stderrBuffer}`
       );
       if (exitCode !== 0) {
         throw new Error(
-          `Failed to build the shim image, exit code: \`${exitCode}\``
+          `Failed to load the shim image, exit code: \`${exitCode}\``
         );
       }
     }
@@ -96398,6 +96393,7 @@ ${stderrBuffer}`
           `determinate-nix-shim-${this.getUniqueId()}-${(0,external_node_crypto_.randomUUID)()}`
         ].concat(plausibleDeterminateOptions).concat(mountArguments).concat(["determinate-nix-shim:latest"]).concat(plausibleDeterminateArguments),
         {
+          ignoreReturnCode: true,
           silent: true,
           listeners: {
             stdline: (data) => {
@@ -96593,6 +96589,7 @@ ${stderrBuffer}`
       `/nix/nix-installer`,
       ["uninstall"],
       {
+        ignoreReturnCode: true,
         env: {
           NIX_INSTALLER_NO_CONFIRM: "true",
           ...process.env
@@ -96601,7 +96598,9 @@ ${stderrBuffer}`
       }
     );
     if (exitCode !== 0) {
-      throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
+      throw new Error(
+        `Non-zero exit code of \`${exitCode}\` detected during uninstall`
+      );
     }
     return exitCode;
   }
@@ -96615,15 +96614,14 @@ ${stderrBuffer}`
       return true;
     } catch {
     }
-    try {
-      const exitCode = await exec.exec("nix", ["--version"], {});
-      if (exitCode === 0) {
-        core.info(
-          "\x1B[32m Nix is already installed: `nix --version` exited 0 \x1B[33m"
-        );
-        return true;
-      }
-    } catch {
+    const exitCode = await exec.exec("nix", ["--version"], {
+      ignoreReturnCode: true
+    });
+    if (exitCode === 0) {
+      core.info(
+        "\x1B[32m Nix is already installed: `nix --version` exited 0 \x1B[33m"
+      );
+      return true;
     }
     return false;
   }
@@ -96652,6 +96650,7 @@ ${stderrBuffer}`
           `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | ${maybeSudo} tee ${kvmRules} > /dev/null`
         ],
         {
+          ignoreReturnCode: true,
           silent: true,
           listeners: {
             stdout: (data) => {
@@ -96680,6 +96679,7 @@ ${stderrBuffer}`
           command = "sudo";
         }
         const reloadExitCode = await exec.exec(command, args, {
+          ignoreReturnCode: true,
           silent: true,
           listeners: {
             stdout: (data) => {

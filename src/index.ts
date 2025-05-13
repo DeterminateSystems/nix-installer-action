@@ -248,29 +248,24 @@ class NixInstallerAction extends DetSysAction {
     );
 
     this.addFact(FACT_HAS_DOCKER, false); // Set to false here, and only in the success case do we set it to true
-    let exitCode;
-    try {
-      exitCode = await actionsExec.exec("docker", ["info"], {
-        silent: true,
-        listeners: {
-          stdout: (data: Buffer) => {
-            const trimmed = data.toString("utf-8").trimEnd();
-            if (trimmed.length >= 0) {
-              actionsCore.debug(trimmed);
-            }
-          },
-          stderr: (data: Buffer) => {
-            const trimmed = data.toString("utf-8").trimEnd();
-            if (trimmed.length >= 0) {
-              actionsCore.debug(trimmed);
-            }
-          },
+    const exitCode = await actionsExec.exec("docker", ["info"], {
+      ignoreReturnCode: true,
+      silent: true,
+      listeners: {
+        stdout: (data: Buffer) => {
+          const trimmed = data.toString("utf-8").trimEnd();
+          if (trimmed.length >= 0) {
+            actionsCore.debug(trimmed);
+          }
         },
-      });
-    } catch {
-      actionsCore.debug("Docker not detected, not enabling docker shim.");
-      return;
-    }
+        stderr: (data: Buffer) => {
+          const trimmed = data.toString("utf-8").trimEnd();
+          if (trimmed.length >= 0) {
+            actionsCore.debug(trimmed);
+          }
+        },
+      },
+    });
 
     if (exitCode !== 0) {
       if (this.forceDockerShim) {
@@ -278,10 +273,12 @@ class NixInstallerAction extends DetSysAction {
           "docker info check failed, but trying anyway since force-docker-shim is enabled.",
         );
       } else {
+        actionsCore.debug("Docker not detected, not enabling docker shim.");
         return;
       }
+    } else {
+      this.addFact(FACT_HAS_DOCKER, true);
     }
-    this.addFact(FACT_HAS_DOCKER, true);
 
     if (
       !this.forceDockerShim &&
@@ -350,9 +347,11 @@ class NixInstallerAction extends DetSysAction {
     // If we cannot `docker inspect` this discovered container ID, we'll fall through to the `catch` below.
     let stdoutBuffer = "";
     let stderrBuffer = "";
-    let exitCode;
-    try {
-      exitCode = await actionsExec.exec("docker", ["inspect", containerId], {
+    const exitCode = await actionsExec.exec(
+      "docker",
+      ["inspect", containerId],
+      {
+        ignoreReturnCode: true,
         silent: true,
         listeners: {
           stdout: (data: Buffer) => {
@@ -362,13 +361,8 @@ class NixInstallerAction extends DetSysAction {
             stderrBuffer += data.toString("utf-8");
           },
         },
-      });
-    } catch (e) {
-      actionsCore.debug(
-        `Could not execute \`docker inspect ${containerId}\`, bailing on docker container inspection:\n${e}`,
-      );
-      return false;
-    }
+      },
+    );
 
     if (exitCode !== 0) {
       actionsCore.debug(
@@ -613,6 +607,7 @@ class NixInstallerAction extends DetSysAction {
         ...executionEnv,
         ...process.env, // To get $PATH, etc
       },
+      ignoreReturnCode: true,
     });
 
     if (exitCode !== 0) {
@@ -704,6 +699,7 @@ class NixInstallerAction extends DetSysAction {
         "docker",
         ["image", "load", "--input", images[arch]],
         {
+          ignoreReturnCode: true,
           silent: true,
           listeners: {
             stdout: (data: Buffer) => {
@@ -724,7 +720,7 @@ class NixInstallerAction extends DetSysAction {
 
       if (exitCode !== 0) {
         throw new Error(
-          `Failed to build the shim image, exit code: \`${exitCode}\``,
+          `Failed to load the shim image, exit code: \`${exitCode}\``,
         );
       }
     }
@@ -814,6 +810,7 @@ class NixInstallerAction extends DetSysAction {
           .concat(["determinate-nix-shim:latest"])
           .concat(plausibleDeterminateArguments),
         {
+          ignoreReturnCode: true,
           silent: true,
           listeners: {
             stdline: (data: string) => {
@@ -1048,6 +1045,7 @@ class NixInstallerAction extends DetSysAction {
       `/nix/nix-installer`,
       ["uninstall"],
       {
+        ignoreReturnCode: true,
         env: {
           NIX_INSTALLER_NO_CONFIRM: "true",
           ...process.env, // To get $PATH, etc
@@ -1056,7 +1054,9 @@ class NixInstallerAction extends DetSysAction {
     );
 
     if (exitCode !== 0) {
-      throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
+      throw new Error(
+        `Non-zero exit code of \`${exitCode}\` detected during uninstall`,
+      );
     }
 
     return exitCode;
@@ -1075,18 +1075,16 @@ class NixInstallerAction extends DetSysAction {
       // No /nix/receipt.json
     }
 
-    try {
-      const exitCode = await actionsExec.exec("nix", ["--version"], {});
+    const exitCode = await actionsExec.exec("nix", ["--version"], {
+      ignoreReturnCode: true,
+    });
 
-      if (exitCode === 0) {
-        actionsCore.info(
-          "\u001b[32m Nix is already installed: `nix --version` exited 0 \u001b[33m",
-        );
-        // Working existing installation of `nix` available, possibly a self-hosted runner
-        return true;
-      }
-    } catch {
-      // nix --version was not successful
+    if (exitCode === 0) {
+      actionsCore.info(
+        "\u001b[32m Nix is already installed: `nix --version` exited 0 \u001b[33m",
+      );
+      // Working existing installation of `nix` available, possibly a self-hosted runner
+      return true;
     }
 
     return false;
@@ -1122,6 +1120,7 @@ class NixInstallerAction extends DetSysAction {
           `echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | ${maybeSudo} tee ${kvmRules} > /dev/null`,
         ],
         {
+          ignoreReturnCode: true,
           silent: true,
           listeners: {
             stdout: (data: Buffer) => {
@@ -1156,6 +1155,7 @@ class NixInstallerAction extends DetSysAction {
           command = "sudo";
         }
         const reloadExitCode = await actionsExec.exec(command, args, {
+          ignoreReturnCode: true,
           silent: true,
           listeners: {
             stdout: (data: Buffer) => {
