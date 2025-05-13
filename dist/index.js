@@ -96148,9 +96148,18 @@ var NixInstallerAction = class extends DetSysAction {
     };
     const daemonBin = this.determinate ? "/usr/local/bin/determinate-nixd" : "/nix/var/nix/profiles/default/bin/nix-daemon";
     const daemonCliFlags = this.determinate ? ["daemon"] : [];
+    let executable;
+    let args;
+    if ((0,external_node_os_.userInfo)().uid === 0) {
+      executable = daemonBin;
+      args = daemonCliFlags;
+    } else {
+      executable = "sudo";
+      args = [daemonBin].concat(daemonCliFlags);
+    }
     core.debug("Full daemon start command:");
-    core.debug(`${daemonBin} ${daemonCliFlags.join(" ")}`);
-    const daemon = (0,external_node_child_process_namespaceObject.spawn)(daemonBin, daemonCliFlags, opts);
+    core.debug(`${executable} ${args.join(" ")}`);
+    const daemon = (0,external_node_child_process_namespaceObject.spawn)(executable, args, opts);
     const pidFile = external_path_.join(this.daemonDir, "daemon.pid");
     await (0,promises_namespaceObject.writeFile)(pidFile, `${daemon.pid}`);
     try {

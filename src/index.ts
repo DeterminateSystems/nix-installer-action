@@ -530,12 +530,23 @@ class NixInstallerAction extends DetSysAction {
       : "/nix/var/nix/profiles/default/bin/nix-daemon";
     const daemonCliFlags = this.determinate ? ["daemon"] : [];
 
+    let executable: string;
+    let args: string[];
+
+    if (userInfo().uid === 0) {
+      executable = daemonBin;
+      args = daemonCliFlags;
+    } else {
+      executable = "sudo";
+      args = [daemonBin].concat(daemonCliFlags);
+    }
+
     // Display the final command for debugging purposes
     actionsCore.debug("Full daemon start command:");
-    actionsCore.debug(`${daemonBin} ${daemonCliFlags.join(" ")}`);
+    actionsCore.debug(`${executable} ${args.join(" ")}`);
 
     // Start the server, and wait for the socket to exist
-    const daemon = spawn(daemonBin, daemonCliFlags, opts);
+    const daemon = spawn(executable, args, opts);
 
     const pidFile = path.join(this.daemonDir, "daemon.pid");
     await writeFile(pidFile, `${daemon.pid}`);
