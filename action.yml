@@ -21,8 +21,8 @@ inputs:
     description: Deprecated. Implies `determinate`.
     required: false
     default: false
-  force-docker-shim:
-    description: Force the use of Docker as a process supervisor. This setting is automatically enabled when necessary.
+  force-no-systemd:
+    description: Force using other methods than systemd to launch the daemon. This setting is automatically enabled when necessary.
     required: false
     default: false
   github-token:
