@@ -251,6 +251,7 @@ class NixInstallerAction extends DetSysAction {
     let exitCode;
     try {
       exitCode = await actionsExec.exec("docker", ["info"], {
+        ignoreReturnCode: true,
         silent: true,
         listeners: {
           stdout: (data: Buffer) => {
@@ -272,16 +273,18 @@ class NixInstallerAction extends DetSysAction {
       return;
     }
 
-    if (exitCode !== 0) {
+    if (exitCode === 0) {
+      this.addFact(FACT_HAS_DOCKER, true);
+    } else {
       if (this.forceDockerShim) {
         actionsCore.warning(
           "docker info check failed, but trying anyway since force-docker-shim is enabled.",
         );
       } else {
+        actionsCore.debug("Docker not detected, not enabling docker shim.");
         return;
       }
     }
-    this.addFact(FACT_HAS_DOCKER, true);
 
     if (
       !this.forceDockerShim &&

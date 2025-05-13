@@ -95925,6 +95925,7 @@ var NixInstallerAction = class extends DetSysAction {
     let exitCode;
     try {
       exitCode = await exec.exec("docker", ["info"], {
+        ignoreReturnCode: true,
         silent: true,
         listeners: {
           stdout: (data) => {
@@ -95945,16 +95946,18 @@ var NixInstallerAction = class extends DetSysAction {
       core.debug("Docker not detected, not enabling docker shim.");
       return;
     }
-    if (exitCode !== 0) {
+    if (exitCode === 0) {
+      this.addFact(FACT_HAS_DOCKER, true);
+    } else {
       if (this.forceDockerShim) {
         core.warning(
           "docker info check failed, but trying anyway since force-docker-shim is enabled."
         );
       } else {
+        core.debug("Docker not detected, not enabling docker shim.");
         return;
       }
     }
-    this.addFact(FACT_HAS_DOCKER, true);
     if (!this.forceDockerShim && await this.detectDockerWithMountedDockerSocket()) {
       core.debug(
         "Detected a Docker container with a Docker socket mounted, not enabling docker shim."
