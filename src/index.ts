@@ -214,7 +214,7 @@ class NixInstallerAction extends DetSysAction {
     }
   }
 
-  // Detect if we're in a GHA runner which is Linux, doesn't have Systemd.
+  // Detect if we're in a GHA runner which is Linux and doesn't have Systemd.
   // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
   // and especially GitHub Enterprise Server.
   async detectAndForceNoSystemd(): Promise<void> {
@@ -501,7 +501,7 @@ class NixInstallerAction extends DetSysAction {
     actionsCore.endGroup();
 
     if (this.forceNoSystemd) {
-      await this.spawnDoubleFork();
+      await this.spawnDetached();
     }
 
     await this.setGithubPath();
@@ -511,14 +511,13 @@ class NixInstallerAction extends DetSysAction {
     }
   }
 
-  async spawnDoubleFork(): Promise<void> {
+  async spawnDetached(): Promise<void> {
     actionsCore.startGroup(
-      "Executing the daemon via a double fork, since systemd is not available.",
+      "Directly spawning the daemon, since systemd is not available.",
     );
 
-    const outputPath = `${this.daemonDir}/daemon.log`;
+    const outputPath = path.join(this.daemonDir, "daemon.log");
     const output = openSync(outputPath, "a");
-    //const log = tailLog(this.daemonDir);
 
     const opts: SpawnOptions = {
       stdio: ["ignore", output, output],
@@ -549,7 +548,7 @@ class NixInstallerAction extends DetSysAction {
     const daemon = spawn(executable, args, opts);
 
     const pidFile = path.join(this.daemonDir, "daemon.pid");
-    await writeFile(pidFile, `${daemon.pid}`);
+    await writeFile(pidFile, daemon.pid);
 
     try {
       for (let i = 0; i <= 2400; i++) {
@@ -578,7 +577,7 @@ class NixInstallerAction extends DetSysAction {
     } catch (error: unknown) {
       this.recordEvent(EVENT_NO_SYSTEMD_SHIM_FAILED, {
         error: stringifyError(error),
-        log: (await readFile(outputPath)).toString(),
+        log: await readFile(outputPath, "utf-8"),
       });
 
       throw error;
@@ -930,8 +929,8 @@ class NixInstallerAction extends DetSysAction {
 
     if (actionsCore.isDebug()) {
       actionsCore.info("Entire log:");
-      const entireLog = await readFile(path.join(this.daemonDir, "daemon.log"));
-      actionsCore.info(entireLog.toString());
+      const entireLog = await readFile(path.join(this.daemonDir, "daemon.log"), "utf-8");
+      actionsCore.info(entireLog);
     }
   }
 
