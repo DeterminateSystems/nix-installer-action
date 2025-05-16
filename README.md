@@ -61,7 +61,7 @@ See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for a full example.
 
 This GitHub Action uses the most recent version of the Determinate Nix Installer, even when the Action itself is pinned.
 If you wish to pin your CI workflows to a specific version, use the [`determinate-nix-action`][determinate-nix-action].
-That action updated and tagged for every Determinate release.
+That Action is updated and tagged for every Determinate release.
 
 For example, `DeterminateSystems/determinate-nix-action@v3.5.2` will always install Determinate Nix v3.5.2.
 
