@@ -34,7 +34,7 @@ jobs:
 
 ### With FlakeHub
 
-To fetch private flakes from FlakeHub and Nix builds from FlakeHub Cache, update the `permissions` block and pass `determinate: true`:
+To fetch private flakes from FlakeHub and Nix builds from FlakeHub Cache, update the `permissions` block and use [`determinate-nix-action`][determinate-nix-action]:
 
 ```yaml
 on:
@@ -51,13 +51,24 @@ jobs:
       contents: "read"
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
-        with:
-          determinate: true
+      - uses: DeterminateSystems/determinate-nix-action@v3
       - run: nix build .
 ```
 
 See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for a full example.
+
+### Pinning the version
+
+This GitHub Action uses the most recent version of the Determinate Nix Installer, even when the Action itself is pinned.
+If you wish to pin your CI workflows to a specific version, use the [`determinate-nix-action`][determinate-nix-action].
+That Action is updated and tagged for every Determinate release.
+
+The `DeterminateSystems/determinate-nix-action@v3.5.2` reference, for example, always installs Determinate Nix v3.5.2.
+
+Additionally, an extra tag on the major version is kept up to date with the current release.
+The `DeterminateSystems/determinate-nix-action@v3` reference, for example, installs the most recent release in the `v3.x.y` series.
+
+If you do tag to a specific version, please [use Dependabot to update your actions][dependabot-actions].
 
 ### Advanced Usage
 
@@ -123,6 +134,8 @@ Differing from the upstream [Nix](https://github.com/NixOS/nix) installer script
 
 [apfs]: https://en.wikipedia.org/wiki/Apple_File_System
 [backtrace]: https://doc.rust-lang.org/std/backtrace/index.html#environment-variables
+[dependabot-actions]: https://github.com/DeterminateSystems/determinate-nix-action?tab=readme-ov-file#-automate-updates-with-dependabot
+[determinate-nix-action]: https://github.com/DeterminateSystems/determinate-nix-action
 [github token]: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
 [planner]: https://github.com/determinateSystems/nix-installer#usage
 [profile]: https://nixos.org/manual/nix/stable/package-management/profiles
