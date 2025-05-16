@@ -63,7 +63,7 @@ This GitHub Action uses the most recent version of the Determinate Nix Installer
 If you wish to pin your CI workflows to a specific version, use the [`determinate-nix-action`][determinate-nix-action].
 That Action is updated and tagged for every Determinate release.
 
-For example, `DeterminateSystems/determinate-nix-action@v3.5.2` will always install Determinate Nix v3.5.2.
+The `DeterminateSystems/determinate-nix-action@v3.5.2` reference, for example, always installs Determinate Nix v3.5.2.
 
 Additionally, an extra tag on the major version is kept up to date with the current release.
 The `DeterminateSystems/determinate-nix-action@v3` reference, for example, installs the most recent release in the `v3.x.y` series.
