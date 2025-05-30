@@ -5,8 +5,6 @@ import {
   summarizeFailures,
 } from "./failuresummary.js";
 
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 test("Select for failure events", () => {
   const events = [
     {
@@ -99,10 +97,12 @@ test("Summarize Failures", async () => {
     }
   };
 
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const summary: FailureSummary = (await summarizeFailures(events, logMaker))!;
 
-  expect(summary.markdownLines.join("\n"))
-    .toStrictEqual(`### Build error review :boom:
+  expect(
+    summary.markdownLines.join("\n"),
+  ).toStrictEqual(`### Build error review :boom:
 > [!NOTE]
 > 2 builds failed
 <details><summary>Failure log: <code>/nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-<strong>dep-1</strong>.drv</code></summary>
@@ -150,8 +150,9 @@ test("Summarize Failures", async () => {
 </details>
 `);
 
-  expect(summary.logLines.join("\n"))
-    .toStrictEqual(`\u001b[38;2;255;0;0mBuild logs from 2 failures
+  expect(
+    summary.logLines.join("\n"),
+  ).toStrictEqual(`\u001b[38;2;255;0;0mBuild logs from 2 failures
 The following build logs are also available in the Markdown summary:
 ::group::Failed build: /nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-1.drv
     /nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-1.drv
@@ -228,14 +229,16 @@ test("Omit some logs if there are too many", async () => {
     return `${drv}\n`.repeat(5).trimEnd();
   };
 
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const summary: FailureSummary = (await summarizeFailures(
     events,
     logMaker,
     500,
   ))!;
 
-  expect(summary.markdownLines.join("\n"))
-    .toStrictEqual(`### Build error review :boom:
+  expect(
+    summary.markdownLines.join("\n"),
+  ).toStrictEqual(`### Build error review :boom:
 > [!NOTE]
 > 2 builds failed
 <details><summary>Failure log: <code>/nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-<strong>dep-1</strong>.drv</code></summary>
@@ -254,8 +257,9 @@ test("Omit some logs if there are too many", async () => {
 > The full logs are available in the post-run phase of the Nix Installer Action.
 > * \`/nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-3.drv\``);
 
-  expect(summary.logLines.join("\n"))
-    .toStrictEqual(`\u001b[38;2;255;0;0mBuild logs from 2 failures
+  expect(
+    summary.logLines.join("\n"),
+  ).toStrictEqual(`\u001b[38;2;255;0;0mBuild logs from 2 failures
 The following build logs are also available in the Markdown summary:
 ::group::Failed build: /nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-1.drv
     /nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-1.drv

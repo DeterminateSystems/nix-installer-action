@@ -1,6 +1,6 @@
 import got from "got";
 
-export interface DEvent {
+export interface Event {
   v: string;
   c: string;
   drv: string;
@@ -11,7 +11,7 @@ export interface DEvent {
 }
 
 export interface ParsedEventsResult {
-  readonly events: DEvent[];
+  readonly events: Event[];
   readonly hasMismatches: boolean;
 }
 

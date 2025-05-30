@@ -1,7 +1,7 @@
-import { DEvent } from "./events.js";
+import { Event } from "./events.js";
 import { truncateDerivation } from "./util.js";
 
-export function makeMermaidReport(events: DEvent[]): string | undefined {
+export function makeMermaidReport(events: Event[]): string | undefined {
   // # 50k is the max: https://github.com/mermaid-js/mermaid/blob/c269dc822c528e1afbde34e18a1cad03d972d4fe/src/defaultConfig.js#L55
   const maxLength = 49900;
   let mermaid = "";
@@ -42,7 +42,7 @@ export function makeMermaidReport(events: DEvent[]): string | undefined {
 }
 
 export function mermaidify(
-  allEvents: DEvent[],
+  allEvents: Event[],
   pruneLevel: number,
 ): string | undefined {
   const events = allEvents
