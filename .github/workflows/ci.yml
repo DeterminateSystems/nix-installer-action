@@ -8,7 +8,7 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs:
       - check-dist-up-to-date
       - install-nix
@@ -24,7 +24,7 @@ jobs:
 
   check-dist-up-to-date:
     name: Check the dist/ folder is up to date
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
@@ -148,7 +148,7 @@ jobs:
 
   install-with-non-default-source-inputs:
     name: Install Nix using non-default source-${{ matrix.inputs.key }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         inputs:
@@ -173,7 +173,7 @@ jobs:
 
   install-no-id-token:
     name: Install Nix without an ID token
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./
