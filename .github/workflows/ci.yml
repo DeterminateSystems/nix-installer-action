@@ -35,6 +35,8 @@ jobs:
         run: nix develop --command pnpm run check-fmt
       - name: Link
         run: nix develop --command pnpm run lint
+      - name: Test
+        run: nix develop --command pnpm run test
       - name: tsup build
         run: nix develop --command pnpm run build
       - name: ncc package
