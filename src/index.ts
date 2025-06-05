@@ -1,21 +1,21 @@
+import { SpawnOptions, spawn } from "node:child_process";
+import fs, { mkdirSync, openSync } from "node:fs";
+import { access, readFile, stat, writeFile } from "node:fs/promises";
+import { userInfo } from "node:os";
+import { join } from "node:path";
+import { setTimeout } from "node:timers/promises";
+import * as path from "path";
 import * as actionsCore from "@actions/core";
 import * as actionsExec from "@actions/exec";
 import * as github from "@actions/github";
-import { access, readFile, stat, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import fs, { mkdirSync, openSync } from "node:fs";
-import { userInfo } from "node:os";
-import stringArgv from "string-argv";
-import * as path from "path";
 import { DetSysAction, inputs, platform, stringifyError } from "detsys-ts";
 import got from "got";
-import { setTimeout } from "node:timers/promises";
-import { getFixHashes } from "./fixHashes.js";
+import stringArgv from "string-argv";
 import { annotateMismatches } from "./annotate.js";
 import { getRecentEvents } from "./events.js";
-import { makeMermaidReport } from "./mermaid.js";
 import { summarizeFailures } from "./failuresummary.js";
-import { SpawnOptions, spawn } from "node:child_process";
+import { getFixHashes } from "./fixHashes.js";
+import { makeMermaidReport } from "./mermaid.js";
 
 // Nix installation events
 const EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
@@ -157,7 +157,7 @@ class NixInstallerAction extends DetSysAction {
     await this.reportOverall();
   }
 
-  private get isMacOS(): boolean {
+  private get isMacOs(): boolean {
     return this.runnerOs === "macOS";
   }
 
@@ -194,17 +194,22 @@ class NixInstallerAction extends DetSysAction {
         });
 
         this.recordEvent("debug-probe-urls:response", {
-          debug_probe_urls_ip: resp.ip, // eslint-disable-line camelcase
-          debug_probe_urls_ok: resp.ok, // eslint-disable-line camelcase
-          debug_probe_urls_status_code: resp.statusCode, // eslint-disable-line camelcase
-          debug_probe_urls_body: resp.body, // eslint-disable-line camelcase
-          // eslint-disable-next-line camelcase
+          // biome-ignore lint/style/useNamingConvention: Posthog JSON
+          debug_probe_urls_ip: resp.ip,
+          // biome-ignore lint/style/useNamingConvention: Posthog JSON
+          debug_probe_urls_ok: resp.ok,
+          // biome-ignore lint/style/useNamingConvention: Posthog JSON
+          debug_probe_urls_status_code: resp.statusCode,
+          // biome-ignore lint/style/useNamingConvention: Posthog JSON
+          debug_probe_urls_body: resp.body,
+          // biome-ignore lint/style/useNamingConvention: Posthog JSON
           debug_probe_urls_elapsed:
             (resp.timings.end ?? 0) - resp.timings.start,
         });
       } catch (e: unknown) {
         this.recordEvent("debug-probe-urls:exception", {
-          debug_probe_urls_exception: stringifyError(e), // eslint-disable-line camelcase
+          // biome-ignore lint/style/useNamingConvention: Posthog JSON
+          debug_probe_urls_exception: stringifyError(e),
         });
       }
     } catch (err: unknown) {
@@ -302,14 +307,14 @@ class NixInstallerAction extends DetSysAction {
 
     // TODO: Error if the user uses these on not-MacOS
     if (this.macEncrypt !== null) {
-      if (!this.isMacOS) {
+      if (!this.isMacOs) {
         throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ENCRYPT = this.macEncrypt;
     }
 
     if (this.macCaseSensitive !== null) {
-      if (!this.isMacOS) {
+      if (!this.isMacOs) {
         throw new Error(
           "`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`",
         );
@@ -318,7 +323,7 @@ class NixInstallerAction extends DetSysAction {
     }
 
     if (this.macVolumeLabel !== null) {
-      if (!this.isMacOS) {
+      if (!this.isMacOs) {
         throw new Error(
           "`mac-volume-label` while `$RUNNER_OS` was not `macOS`",
         );
@@ -327,7 +332,7 @@ class NixInstallerAction extends DetSysAction {
     }
 
     if (this.macRootDisk !== null) {
-      if (!this.isMacOS) {
+      if (!this.isMacOs) {
         throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ROOT_DISK = this.macRootDisk;
@@ -343,7 +348,7 @@ class NixInstallerAction extends DetSysAction {
 
     // TODO: Error if the user uses these on MacOS
     if (this.init !== null) {
-      if (this.isMacOS) {
+      if (this.isMacOs) {
         throw new Error(
           "`init` is not a valid option when `$RUNNER_OS` is `macOS`",
         );
@@ -596,7 +601,6 @@ class NixInstallerAction extends DetSysAction {
       await stat(socketPath);
       return true;
     } catch (error: unknown) {
-      // eslint-disable-next-line no-undef
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         actionsCore.debug(`Socket '${socketPath}' does not exist yet`);
         return false;
@@ -735,6 +739,7 @@ class NixInstallerAction extends DetSysAction {
       ["uninstall"],
       {
         env: {
+          // biome-ignore lint/style/useNamingConvention: environment variable
           NIX_INSTALLER_NO_CONFIRM: "true",
           ...process.env, // To get $PATH, etc
         },
@@ -950,7 +955,7 @@ class NixInstallerAction extends DetSysAction {
   }
 
   private get defaultPlanner(): string {
-    if (this.isMacOS) {
+    if (this.isMacOs) {
       return "macos";
     } else if (this.isLinux) {
       return "linux";
@@ -996,29 +1001,51 @@ class NixInstallerAction extends DetSysAction {
   }
 }
 
+// All env vars are strings, no fanciness here.
 type ExecuteEnvironment = {
-  // All env vars are strings, no fanciness here.
+  // biome-ignore lint/style/useNamingConvention: environment variable
   RUST_BACKTRACE?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_MODIFY_PROFILE?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_NIX_BUILD_GROUP_NAME?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_NIX_BUILD_GROUP_ID?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_NIX_BUILD_USER_PREFIX?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_NIX_BUILD_USER_COUNT?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_NIX_BUILD_USER_ID_BASE?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_NIX_PACKAGE_URL?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_PROXY?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_SSL_CERT_FILE?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_DIAGNOSTIC_ENDPOINT?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_ENCRYPT?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_CASE_SENSITIVE?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_VOLUME_LABEL?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_ROOT_DISK?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_INIT?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_START_DAEMON?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_NO_CONFIRM?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_EXTRA_CONF?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_LOG_DIRECTIVES?: string;
+  // biome-ignore lint/style/useNamingConvention: environment variable
   NIX_INSTALLER_LOGGER?: string;
 };
 

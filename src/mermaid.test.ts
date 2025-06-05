@@ -1,11 +1,9 @@
-import { mermaidify, makeMermaidReport } from "./mermaid.js";
-import { DEvent, parseEvents } from "./events.js";
 import { expect, test } from "vitest";
+import { Event, parseEvents } from "./events.js";
+import { makeMermaidReport, mermaidify } from "./mermaid.js";
 
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
-function generateEvents(count: number): DEvent[] {
-  const events: DEvent[] = [];
+function generateEvents(count: number): Event[] {
+  const events: Event[] = [];
 
   for (let i = 0; i < count; i++) {
     events.push({
@@ -29,16 +27,21 @@ test("Empty event list returns no report", () => {
 });
 
 test("Create a very large report doc and make sure it is small enough", () => {
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const report = makeMermaidReport(generateEvents(2500))!;
 
   // Assert the `.drv` suffix was pruned (1 reference = the NOTE at the end)
+  // biome-ignore lint/style/noNonNullAssertion: testing
   expect(report.match(/\.drv/g)!.length).equals(1);
 
   // Assert the `/nix/store` prefix was pruned (1 reference = the NOTE at the end)
+  // biome-ignore lint/style/noNonNullAssertion: testing
   expect(report.match(/\/nix\/store\//g)!.length).equals(1);
 
   // Assert that some events were pruned
+  // biome-ignore lint/style/noNonNullAssertion: testing
   expect(report.match(/dep-/g)!.length).lessThan(2500);
+  // biome-ignore lint/style/noNonNullAssertion: testing
   expect(report.match(/dep-/g)!.length).greaterThan(1500);
 
   expect(report).toContain("suffix, and builds that took less than ");
@@ -49,15 +52,19 @@ test("Create a very large report doc and make sure it is small enough", () => {
 
 test("Create a medium large report doc and make sure it is small enough", () => {
   const eventCount = 675;
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const report = makeMermaidReport(generateEvents(eventCount))!;
 
   // Assert the `.drv` suffix was pruned (1 reference = the NOTE at the end)
+  // biome-ignore lint/style/noNonNullAssertion: testing
   expect(report.match(/\.drv/g)!.length).equals(1);
 
   // Assert the `/nix/store` prefix was pruned (1 reference = the NOTE at the end)
+  // biome-ignore lint/style/noNonNullAssertion: testing
   expect(report.match(/\/nix\/store\//g)!.length).equals(1);
 
   // Assert that no lines were pruned
+  // biome-ignore lint/style/noNonNullAssertion: testing
   expect(report.match(/dep-/g)!.length).toStrictEqual(eventCount);
 
   expect(report).toContain(
@@ -69,12 +76,15 @@ test("Create a medium large report doc and make sure it is small enough", () => 
 });
 
 test("Create a small report doc and make sure it isn't pruned", () => {
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const report = makeMermaidReport(generateEvents(100))!;
 
   // Assert 100 events have the `.drv` suffix, ie: were not pruned
+  // biome-ignore lint/style/noNonNullAssertion: testing
   expect(report.match(/\.drv/g)!.length).equals(100);
 
   // Assert 100 events have the `.drv` suffix, ie: were not pruned
+  // biome-ignore lint/style/noNonNullAssertion: testing
   expect(report.match(/\/nix\/store\//g)!.length).equals(100);
 
   expect(report.length).lessThan(50000);
@@ -83,9 +93,13 @@ test("Create a small report doc and make sure it isn't pruned", () => {
 test("Generate a really big report and shrink it", () => {
   const events = generateEvents(1000);
 
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const originalLength = mermaidify(events, -1)!.length;
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const limitedLengthZero = mermaidify(events, 0)!.length;
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const limitedLengthOne = mermaidify(events, 1)!.length;
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const limitedLengthTwo = mermaidify(events, 2)!.length;
 
   expect(originalLength).greaterThan(limitedLengthZero);
@@ -173,9 +187,13 @@ hash-mismatch-md5-base16 (4s):crit, 3, 4s
 test("Generate a really big report and shrink it", () => {
   const events = generateEvents(1000);
 
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const originalLength = mermaidify(events, -1)!.length;
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const limitedLengthZero = mermaidify(events, 0)!.length;
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const limitedLengthOne = mermaidify(events, 1)!.length;
+  // biome-ignore lint/style/noNonNullAssertion: testing
   const limitedLengthTwo = mermaidify(events, 2)!.length;
 
   expect(originalLength).greaterThan(limitedLengthZero);

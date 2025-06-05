@@ -42755,7 +42755,7 @@ exports.colors = [6, 2, 3, 4, 5, 1];
 try {
 	// Optional dependency (as in, doesn't need to be installed, NOT like optionalDependencies in package.json)
 	// eslint-disable-next-line import/no-extraneous-dependencies
-	const supportsColor = __nccwpck_require__(1953);
+	const supportsColor = __nccwpck_require__(5545);
 
 	if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
 		exports.colors = [
@@ -43133,21 +43133,6 @@ class Deprecation extends Error {
 }
 
 exports.Deprecation = Deprecation;
-
-
-/***/ }),
-
-/***/ 1330:
-/***/ ((module) => {
-
-
-
-module.exports = (flag, argv = process.argv) => {
-	const prefix = flag.startsWith('-') ? '' : (flag.length === 1 ? '-' : '--');
-	const position = argv.indexOf(prefix + flag);
-	const terminatorPosition = argv.indexOf('--');
-	return position !== -1 && (terminatorPosition === -1 || position < terminatorPosition);
-};
 
 
 /***/ }),
@@ -45941,7 +45926,7 @@ const auto = __nccwpck_require__(2342);
 const {
 	HttpOverHttp2,
 	HttpsOverHttp2
-} = __nccwpck_require__(449);
+} = __nccwpck_require__(2830);
 const Http2OverHttp2 = __nccwpck_require__(2016);
 const {
 	Http2OverHttp,
@@ -46007,7 +45992,7 @@ module.exports = self => {
 
 /***/ }),
 
-/***/ 449:
+/***/ 2830:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 
@@ -50358,148 +50343,6 @@ function coerce (version, options) {
     '.' + (match[3] || '0') +
     '.' + (match[4] || '0'), options)
 }
-
-
-/***/ }),
-
-/***/ 1953:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-
-const os = __nccwpck_require__(857);
-const tty = __nccwpck_require__(2018);
-const hasFlag = __nccwpck_require__(1330);
-
-const {env} = process;
-
-let forceColor;
-if (hasFlag('no-color') ||
-	hasFlag('no-colors') ||
-	hasFlag('color=false') ||
-	hasFlag('color=never')) {
-	forceColor = 0;
-} else if (hasFlag('color') ||
-	hasFlag('colors') ||
-	hasFlag('color=true') ||
-	hasFlag('color=always')) {
-	forceColor = 1;
-}
-
-if ('FORCE_COLOR' in env) {
-	if (env.FORCE_COLOR === 'true') {
-		forceColor = 1;
-	} else if (env.FORCE_COLOR === 'false') {
-		forceColor = 0;
-	} else {
-		forceColor = env.FORCE_COLOR.length === 0 ? 1 : Math.min(parseInt(env.FORCE_COLOR, 10), 3);
-	}
-}
-
-function translateLevel(level) {
-	if (level === 0) {
-		return false;
-	}
-
-	return {
-		level,
-		hasBasic: true,
-		has256: level >= 2,
-		has16m: level >= 3
-	};
-}
-
-function supportsColor(haveStream, streamIsTTY) {
-	if (forceColor === 0) {
-		return 0;
-	}
-
-	if (hasFlag('color=16m') ||
-		hasFlag('color=full') ||
-		hasFlag('color=truecolor')) {
-		return 3;
-	}
-
-	if (hasFlag('color=256')) {
-		return 2;
-	}
-
-	if (haveStream && !streamIsTTY && forceColor === undefined) {
-		return 0;
-	}
-
-	const min = forceColor || 0;
-
-	if (env.TERM === 'dumb') {
-		return min;
-	}
-
-	if (process.platform === 'win32') {
-		// Windows 10 build 10586 is the first Windows release that supports 256 colors.
-		// Windows 10 build 14931 is the first release that supports 16m/TrueColor.
-		const osRelease = os.release().split('.');
-		if (
-			Number(osRelease[0]) >= 10 &&
-			Number(osRelease[2]) >= 10586
-		) {
-			return Number(osRelease[2]) >= 14931 ? 3 : 2;
-		}
-
-		return 1;
-	}
-
-	if ('CI' in env) {
-		if (['TRAVIS', 'CIRCLECI', 'APPVEYOR', 'GITLAB_CI', 'GITHUB_ACTIONS', 'BUILDKITE'].some(sign => sign in env) || env.CI_NAME === 'codeship') {
-			return 1;
-		}
-
-		return min;
-	}
-
-	if ('TEAMCITY_VERSION' in env) {
-		return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
-	}
-
-	if (env.COLORTERM === 'truecolor') {
-		return 3;
-	}
-
-	if ('TERM_PROGRAM' in env) {
-		const version = parseInt((env.TERM_PROGRAM_VERSION || '').split('.')[0], 10);
-
-		switch (env.TERM_PROGRAM) {
-			case 'iTerm.app':
-				return version >= 3 ? 3 : 2;
-			case 'Apple_Terminal':
-				return 2;
-			// No default
-		}
-	}
-
-	if (/-256(color)?$/i.test(env.TERM)) {
-		return 2;
-	}
-
-	if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
-		return 1;
-	}
-
-	if ('COLORTERM' in env) {
-		return 1;
-	}
-
-	return min;
-}
-
-function getSupportLevel(stream) {
-	const level = supportsColor(stream, stream && stream.isTTY);
-	return translateLevel(level);
-}
-
-module.exports = {
-	supportsColor: getSupportLevel,
-	stdout: translateLevel(supportsColor(true, tty.isatty(1))),
-	stderr: translateLevel(supportsColor(true, tty.isatty(2)))
-};
 
 
 /***/ }),
@@ -73402,6 +73245,14 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 5545:
+/***/ ((module) => {
+
+module.exports = eval("require")("supports-color");
+
+
+/***/ }),
+
 /***/ 2613:
 /***/ ((module) => {
 
@@ -86650,69 +86501,36 @@ module.exports = /*#__PURE__*/JSON.parse('{"name":"@actions/cache","version":"4.
 /************************************************************************/
 var __webpack_exports__ = {};
 
+// EXTERNAL MODULE: external "child_process"
+var external_child_process_ = __nccwpck_require__(5317);
+// EXTERNAL MODULE: external "fs"
+var external_fs_ = __nccwpck_require__(9896);
+;// CONCATENATED MODULE: external "fs/promises"
+const promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("fs/promises");
+// EXTERNAL MODULE: external "os"
+var external_os_ = __nccwpck_require__(857);
+// EXTERNAL MODULE: external "path"
+var external_path_ = __nccwpck_require__(6928);
+;// CONCATENATED MODULE: external "timers/promises"
+const external_timers_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("timers/promises");
 // EXTERNAL MODULE: ./node_modules/.pnpm/@actions+core@1.11.1/node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(9999);
 // EXTERNAL MODULE: ./node_modules/.pnpm/@actions+exec@1.1.1/node_modules/@actions/exec/lib/exec.js
 var exec = __nccwpck_require__(8872);
 // EXTERNAL MODULE: ./node_modules/.pnpm/@actions+github@6.0.1/node_modules/@actions/github/lib/github.js
 var github = __nccwpck_require__(5380);
-;// CONCATENATED MODULE: external "fs/promises"
-const promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("fs/promises");
-// EXTERNAL MODULE: external "path"
-var external_path_ = __nccwpck_require__(6928);
-// EXTERNAL MODULE: external "fs"
-var external_fs_ = __nccwpck_require__(9896);
-// EXTERNAL MODULE: external "os"
-var external_os_ = __nccwpck_require__(857);
-;// CONCATENATED MODULE: ./node_modules/.pnpm/string-argv@0.3.2/node_modules/string-argv/index.js
-
-function parseArgsStringToArgv(value, env, file) {
-    // ([^\s'"]([^\s'"]*(['"])([^\3]*?)\3)+[^\s'"]*) Matches nested quotes until the first space outside of quotes
-    // [^\s'"]+ or Match if not a space ' or "
-    // (['"])([^\5]*?)\5 or Match "quoted text" without quotes
-    // `\3` and `\5` are a backreference to the quote style (' or ") captured
-    var myRegexp = /([^\s'"]([^\s'"]*(['"])([^\3]*?)\3)+[^\s'"]*)|[^\s'"]+|(['"])([^\5]*?)\5/gi;
-    var myString = value;
-    var myArray = [];
-    if (env) {
-        myArray.push(env);
-    }
-    if (file) {
-        myArray.push(file);
-    }
-    var match;
-    do {
-        // Each call to exec returns the next regex match as an array
-        match = myRegexp.exec(myString);
-        if (match !== null) {
-            // Index 1 in the array is the captured group if it exists
-            // Index 0 is the matched text, which we use if no captured group exists
-            myArray.push(firstString(match[1], match[6], match[0]));
-        }
-    } while (match !== null);
-    return myArray;
-}
-// Accepts any number of arguments, and returns the first one that is a string
-// (even an empty string)
-function firstString() {
-    var args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        args[_i] = arguments[_i];
-    }
-    for (var i = 0; i < args.length; i++) {
-        var arg = args[i];
-        if (typeof arg === "string") {
-            return arg;
-        }
-    }
-}
-
-// EXTERNAL MODULE: external "util"
-var external_util_ = __nccwpck_require__(9023);
-// EXTERNAL MODULE: external "zlib"
-var external_zlib_ = __nccwpck_require__(3106);
-// EXTERNAL MODULE: external "crypto"
-var external_crypto_ = __nccwpck_require__(6982);
+;// CONCATENATED MODULE: external "node:fs"
+const external_node_fs_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs");
+// EXTERNAL MODULE: external "node:os"
+var external_node_os_ = __nccwpck_require__(8161);
+// EXTERNAL MODULE: external "node:util"
+var external_node_util_ = __nccwpck_require__(7975);
+;// CONCATENATED MODULE: external "node:fs/promises"
+const external_node_fs_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:fs/promises");
+// EXTERNAL MODULE: external "node:zlib"
+var external_node_zlib_ = __nccwpck_require__(8522);
+// EXTERNAL MODULE: external "node:crypto"
+var external_node_crypto_ = __nccwpck_require__(7598);
 ;// CONCATENATED MODULE: external "node:timers/promises"
 const external_node_timers_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:timers/promises");
 ;// CONCATENATED MODULE: ./node_modules/.pnpm/@sindresorhus+is@7.0.1/node_modules/@sindresorhus/is/distribution/index.js
@@ -88291,6 +88109,8 @@ var external_node_stream_ = __nccwpck_require__(7075);
 var external_node_http_ = __nccwpck_require__(7067);
 // EXTERNAL MODULE: external "events"
 var external_events_ = __nccwpck_require__(4434);
+// EXTERNAL MODULE: external "util"
+var external_util_ = __nccwpck_require__(9023);
 // EXTERNAL MODULE: ./node_modules/.pnpm/defer-to-connect@2.0.1/node_modules/defer-to-connect/dist/source/index.js
 var source = __nccwpck_require__(7596);
 ;// CONCATENATED MODULE: ./node_modules/.pnpm/@szmarczak+http-timer@5.0.1/node_modules/@szmarczak/http-timer/dist/source/index.js
@@ -88403,8 +88223,6 @@ const timer = (request) => {
 
 ;// CONCATENATED MODULE: external "node:url"
 const external_node_url_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:url");
-// EXTERNAL MODULE: external "node:crypto"
-var external_node_crypto_ = __nccwpck_require__(7598);
 ;// CONCATENATED MODULE: ./node_modules/.pnpm/normalize-url@8.0.1/node_modules/normalize-url/index.js
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
 const DATA_URL_DEFAULT_MIME_TYPE = 'text/plain';
@@ -89927,8 +89745,6 @@ getContentLength_fn = function() {
 };
 
 
-// EXTERNAL MODULE: external "node:util"
-var external_node_util_ = __nccwpck_require__(7975);
 ;// CONCATENATED MODULE: ./node_modules/.pnpm/got@14.4.7/node_modules/got/dist/source/core/utils/is-form-data.js
 
 function is_form_data_isFormData(body) {
@@ -90230,8 +90046,6 @@ const external_node_tls_namespaceObject = __WEBPACK_EXTERNAL_createRequire(impor
 var external_node_https_ = __nccwpck_require__(4708);
 ;// CONCATENATED MODULE: external "node:dns"
 const external_node_dns_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:dns");
-// EXTERNAL MODULE: external "node:os"
-var external_node_os_ = __nccwpck_require__(8161);
 ;// CONCATENATED MODULE: ./node_modules/.pnpm/cacheable-lookup@7.0.0/node_modules/cacheable-lookup/source/index.js
 
 
@@ -93806,13 +93620,15 @@ const got = source_create(defaults);
 
 
 
-;// CONCATENATED MODULE: external "dns/promises"
-const external_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("dns/promises");
+;// CONCATENATED MODULE: external "node:dns/promises"
+const external_node_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:dns/promises");
 // EXTERNAL MODULE: ./node_modules/.pnpm/@actions+cache@4.0.3/node_modules/@actions/cache/lib/cache.js
 var cache = __nccwpck_require__(7389);
-// EXTERNAL MODULE: external "child_process"
-var external_child_process_ = __nccwpck_require__(5317);
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@4bf247b1cb6b057abe94721ea1bfa131618e2b7f_qygv7jy5hm2oenc72q37xutlhi/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: external "node:child_process"
+const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
+;// CONCATENATED MODULE: external "node:path"
+const external_node_path_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:path");
+;// CONCATENATED MODULE: ./node_modules/.pnpm/detsys-ts@https+++codeload.github.com+DeterminateSystems+detsys-ts+tar.gz+74999c82de35e_a754901a6826e5fd30cb4252e10d4dc7/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -93823,7 +93639,7 @@ var __export = (target, all) => {
 
 
 
-var readFileAsync = (0,external_util_.promisify)(external_fs_.readFile);
+var readFileAsync = (0,external_node_util_.promisify)(external_node_fs_namespaceObject.readFile);
 var linuxReleaseInfoOptionsDefaults = {
   mode: "async",
   customFile: null,
@@ -93834,7 +93650,7 @@ function releaseInfo(infoOptions) {
   const searchOsReleaseFileList = osReleaseFileList(
     options.customFile
   );
-  if (external_os_.type() !== "Linux") {
+  if (external_node_os_.type() !== "Linux") {
     if (options.mode === "sync") {
       return getOsInfo();
     } else {
@@ -93875,11 +93691,11 @@ function osReleaseFileList(customFile) {
 }
 function getOsInfo() {
   return {
-    type: external_os_.type(),
-    platform: external_os_.platform(),
-    hostname: external_os_.hostname(),
-    arch: external_os_.arch(),
-    release: external_os_.release()
+    type: external_node_os_.type(),
+    platform: external_node_os_.platform(),
+    hostname: external_node_os_.hostname(),
+    arch: external_node_os_.arch(),
+    release: external_node_os_.release()
   };
 }
 async function readAsyncOsReleaseFile(fileList, options) {
@@ -93913,7 +93729,7 @@ function readSyncOsreleaseFile(releaseFileList, options) {
       if (options.debug) {
         console.log(`Trying to read '${osReleaseFile}'...`);
       }
-      fileData = external_fs_.readFileSync(osReleaseFile, "binary");
+      fileData = external_node_fs_namespaceObject.readFileSync(osReleaseFile, "binary");
       if (options.debug) {
         console.log(`Read data:
 ${fileData}`);
@@ -94097,7 +93913,7 @@ async function collectBacktracesMacOS(prefixes, programNameDenyList, startTimest
     ["user", `${process.env["HOME"]}/Library/Logs/DiagnosticReports/`]
   ];
   for (const [source, dir] of dirs) {
-    const fileNames = (await (0,promises_namespaceObject.readdir)(dir)).filter((fileName) => {
+    const fileNames = (await (0,external_node_fs_promises_namespaceObject.readdir)(dir)).filter((fileName) => {
       return prefixes.some((prefix) => fileName.startsWith(prefix));
     }).filter((fileName) => {
       return !programNameDenyList.some(
@@ -94106,11 +93922,11 @@ async function collectBacktracesMacOS(prefixes, programNameDenyList, startTimest
     }).filter((fileName) => {
       return !fileName.endsWith(".diag");
     });
-    const doGzip = (0,external_util_.promisify)(external_zlib_.gzip);
+    const doGzip = (0,external_node_util_.promisify)(external_node_zlib_.gzip);
     for (const fileName of fileNames) {
       try {
-        if ((await (0,promises_namespaceObject.stat)(`${dir}/${fileName}`)).ctimeMs >= startTimestampMs) {
-          const logText = await (0,promises_namespaceObject.readFile)(`${dir}/${fileName}`);
+        if ((await (0,external_node_fs_promises_namespaceObject.stat)(`${dir}/${fileName}`)).ctimeMs >= startTimestampMs) {
+          const logText = await (0,external_node_fs_promises_namespaceObject.readFile)(`${dir}/${fileName}`);
           const buf = await doGzip(logText);
           backtraces.set(
             `backtrace_value_${source}_${fileName}`,
@@ -94172,7 +93988,7 @@ async function collectBacktracesSystemd(prefixes, programNameDenyList, startTime
     );
     return backtraces;
   }
-  const doGzip = (0,external_util_.promisify)(external_zlib_.gzip);
+  const doGzip = (0,external_node_util_.promisify)(external_node_zlib_.gzip);
   for (const coredump of coredumps) {
     try {
       const { stdout: logText } = await exec.getExecOutput(
@@ -94263,7 +94079,7 @@ function identify(projectName) {
   return ident;
 }
 function hashEnvironmentVariables(prefix, variables) {
-  const hash = (0,external_crypto_.createHash)("sha256");
+  const hash = (0,external_node_crypto_.createHash)("sha256");
   for (const varName of variables) {
     let value = process.env[varName];
     if (value === void 0) {
@@ -94444,7 +94260,7 @@ function recordToUrl(record) {
   }
 }
 async function discoverServiceRecords() {
-  return await discoverServicesStub((0,external_dns_promises_namespaceObject.resolveSrv)(LOOKUP), 1e3);
+  return await discoverServicesStub((0,external_node_dns_promises_namespaceObject.resolveSrv)(LOOKUP), 1e3);
 }
 async function discoverServicesStub(lookup, timeout) {
   const defaultFallback = new Promise(
@@ -94832,8 +94648,8 @@ var DetSysAction = class {
     });
   }
   getTemporaryName() {
-    const tmpDir = process.env["RUNNER_TEMP"] || (0,external_os_.tmpdir)();
-    return external_path_.join(tmpDir, `${this.actionOptions.name}-${(0,external_crypto_.randomUUID)()}`);
+    const tmpDir = process.env["RUNNER_TEMP"] || (0,external_node_os_.tmpdir)();
+    return external_node_path_namespaceObject.join(tmpDir, `${this.actionOptions.name}-${(0,external_node_crypto_.randomUUID)()}`);
   }
   addFact(key, value) {
     this.facts[key] = value;
@@ -94842,13 +94658,13 @@ var DetSysAction = class {
     return await this.idsHost.getDiagnosticsUrl();
   }
   getUniqueId() {
-    return this.identity.run_differentiator || process.env.RUNNER_TRACKING_ID || (0,external_crypto_.randomUUID)();
+    return this.identity.run_differentiator || process.env.RUNNER_TRACKING_ID || (0,external_node_crypto_.randomUUID)();
   }
   // This ID will be saved in the action's state, to be persisted across phase steps
   getCrossPhaseId() {
     let crossPhaseId = core.getState(STATE_KEY_CROSS_PHASE_ID);
     if (crossPhaseId === "") {
-      crossPhaseId = (0,external_crypto_.randomUUID)();
+      crossPhaseId = (0,external_node_crypto_.randomUUID)();
       core.saveState(STATE_KEY_CROSS_PHASE_ID, crossPhaseId);
     }
     return crossPhaseId;
@@ -94865,7 +94681,7 @@ var DetSysAction = class {
       facts: this.facts,
       features: this.featureEventMetadata,
       timestamp: /* @__PURE__ */ new Date(),
-      uuid: (0,external_crypto_.randomUUID)()
+      uuid: (0,external_node_crypto_.randomUUID)()
     });
   }
   /**
@@ -94875,10 +94691,10 @@ var DetSysAction = class {
    */
   async unpackClosure(bin) {
     const artifact = await this.fetchArtifact();
-    const { stdout } = await (0,external_util_.promisify)(external_child_process_.exec)(
+    const { stdout } = await (0,external_node_util_.promisify)(external_node_child_process_namespaceObject.exec)(
       `cat "${artifact}" | xz -d | nix-store --import`
     );
-    const paths = stdout.split(external_os_.EOL);
+    const paths = stdout.split(external_node_os_.EOL);
     const lastPath = paths.at(-2);
     return `${lastPath}/bin/${bin}`;
   }
@@ -94888,7 +94704,7 @@ var DetSysAction = class {
    */
   async fetchExecutable() {
     const binaryPath = await this.fetchArtifact();
-    await (0,promises_namespaceObject.chmod)(binaryPath, promises_namespaceObject.constants.S_IXUSR | promises_namespaceObject.constants.S_IXGRP);
+    await (0,external_node_fs_promises_namespaceObject.chmod)(binaryPath, external_node_fs_promises_namespaceObject.constants.S_IXUSR | external_node_fs_promises_namespaceObject.constants.S_IXGRP);
     return binaryPath;
   }
   get isMain() {
@@ -94925,11 +94741,11 @@ var DetSysAction = class {
       } else {
         core.setFailed(reportable);
       }
-      const doGzip = (0,external_util_.promisify)(external_zlib_.gzip);
+      const doGzip = (0,external_node_util_.promisify)(external_node_zlib_.gzip);
       const exceptionContext = /* @__PURE__ */ new Map();
       for (const [attachmentLabel, filePath] of this.exceptionAttachments) {
         try {
-          const logText = (0,external_fs_.readFileSync)(filePath);
+          const logText = (0,external_node_fs_namespaceObject.readFileSync)(filePath);
           const buf = await doGzip(logText);
           exceptionContext.set(
             `staple_value_${attachmentLabel}`,
@@ -95145,7 +94961,7 @@ var DetSysAction = class {
         if (writeStream) {
           writeStream.destroy();
         }
-        writeStream = (0,external_fs_.createWriteStream)(destination, {
+        writeStream = (0,external_node_fs_namespaceObject.createWriteStream)(destination, {
           encoding: "binary",
           mode: 493
         });
@@ -95209,7 +95025,7 @@ var DetSysAction = class {
     const startCwd = process.cwd();
     try {
       const tempDir = this.getTemporaryName();
-      await (0,promises_namespaceObject.mkdir)(tempDir);
+      await (0,external_node_fs_promises_namespaceObject.mkdir)(tempDir);
       process.chdir(tempDir);
       process.env.GITHUB_WORKSPACE_BACKUP = process.env.GITHUB_WORKSPACE;
       delete process.env.GITHUB_WORKSPACE;
@@ -95235,9 +95051,9 @@ var DetSysAction = class {
     const startCwd = process.cwd();
     try {
       const tempDir = this.getTemporaryName();
-      await (0,promises_namespaceObject.mkdir)(tempDir);
+      await (0,external_node_fs_promises_namespaceObject.mkdir)(tempDir);
       process.chdir(tempDir);
-      await (0,promises_namespaceObject.copyFile)(toolPath, `${tempDir}/${this.actionOptions.name}`);
+      await (0,external_node_fs_promises_namespaceObject.copyFile)(toolPath, `${tempDir}/${this.actionOptions.name}`);
       process.env.GITHUB_WORKSPACE_BACKUP = process.env.GITHUB_WORKSPACE;
       delete process.env.GITHUB_WORKSPACE;
       await cache.saveCache(
@@ -95286,9 +95102,9 @@ var DetSysAction = class {
     let nixLocation;
     const pathParts = (process.env["PATH"] || "").split(":");
     for (const location of pathParts) {
-      const candidateNix = external_path_.join(location, "nix");
+      const candidateNix = external_node_path_namespaceObject.join(location, "nix");
       try {
-        await promises_namespaceObject.access(candidateNix, promises_namespaceObject.constants.X_OK);
+        await external_node_fs_promises_namespaceObject.access(candidateNix, external_node_fs_promises_namespaceObject.constants.X_OK);
         core.debug(`Found Nix at ${candidateNix}`);
         nixLocation = candidateNix;
         break;
@@ -95433,8 +95249,49 @@ function makeOptionsConfident(actionOptions) {
  * Copyright (c) 2018-2020 [Samuel Carreira]
  */
 //# sourceMappingURL=index.js.map
-;// CONCATENATED MODULE: external "timers/promises"
-const external_timers_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("timers/promises");
+;// CONCATENATED MODULE: ./node_modules/.pnpm/string-argv@0.3.2/node_modules/string-argv/index.js
+
+function parseArgsStringToArgv(value, env, file) {
+    // ([^\s'"]([^\s'"]*(['"])([^\3]*?)\3)+[^\s'"]*) Matches nested quotes until the first space outside of quotes
+    // [^\s'"]+ or Match if not a space ' or "
+    // (['"])([^\5]*?)\5 or Match "quoted text" without quotes
+    // `\3` and `\5` are a backreference to the quote style (' or ") captured
+    var myRegexp = /([^\s'"]([^\s'"]*(['"])([^\3]*?)\3)+[^\s'"]*)|[^\s'"]+|(['"])([^\5]*?)\5/gi;
+    var myString = value;
+    var myArray = [];
+    if (env) {
+        myArray.push(env);
+    }
+    if (file) {
+        myArray.push(file);
+    }
+    var match;
+    do {
+        // Each call to exec returns the next regex match as an array
+        match = myRegexp.exec(myString);
+        if (match !== null) {
+            // Index 1 in the array is the captured group if it exists
+            // Index 0 is the matched text, which we use if no captured group exists
+            myArray.push(firstString(match[1], match[6], match[0]));
+        }
+    } while (match !== null);
+    return myArray;
+}
+// Accepts any number of arguments, and returns the first one that is a string
+// (even an empty string)
+function firstString() {
+    var args = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        args[_i] = arguments[_i];
+    }
+    for (var i = 0; i < args.length; i++) {
+        var arg = args[i];
+        if (typeof arg === "string") {
+            return arg;
+        }
+    }
+}
+
 ;// CONCATENATED MODULE: ./dist/index.js
 // src/index.ts
 
@@ -95450,22 +95307,6 @@ const external_timers_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequir
 
 
 
-// src/fixHashes.ts
-
-async function getFixHashes(since) {
-  const output = await (0,exec.getExecOutput)(
-    "determinate-nixd",
-    ["fix", "hashes", "--json", "--since", since],
-    { silent: true }
-  );
-  if (output.exitCode !== 0) {
-    throw new Error(
-      `determinate-nixd fix hashes returned non-zero exit code ${output.exitCode} with the following error output:
-${output.stderr}`
-    );
-  }
-  return JSON.parse(output.stdout);
-}
 
 // src/annotate.ts
 
@@ -95557,84 +95398,6 @@ async function getRecentEvents(since) {
   return parseEvents(resp);
 }
 
-// src/util.ts
-function truncateDerivation(drv) {
-  return drv.replace(/^\/nix\/store\/[a-z0-9]+-/, "").replace(/\.drv$/, "");
-}
-
-// src/mermaid.ts
-function makeMermaidReport(events) {
-  const maxLength = 49900;
-  let mermaid = "";
-  let pruneLevel = -2;
-  do {
-    pruneLevel += 1;
-    mermaid = mermaidify(events, pruneLevel) ?? "";
-  } while (mermaid.length > maxLength);
-  if (!mermaid) {
-    return void 0;
-  }
-  const lines = [
-    "<details open><summary><strong>Build timeline</strong> :hourglass_flowing_sand:</summary>",
-    "",
-    // load bearing whitespace, deleting it breaks the details expander / markdown
-    mermaid,
-    ""
-    // load bearing whitespace, deleting it breaks the details expander / markdown
-  ];
-  if (pruneLevel === 0) {
-    lines.push("> [!NOTE]");
-    lines.push(
-      "> `/nix/store/[hash]` and the `.drv` suffixes have been removed to make the graph small enough to render."
-    );
-  } else if (pruneLevel > 0) {
-    lines.push("> [!NOTE]");
-    lines.push(
-      `> \`/nix/store/[hash]\`, the \`.drv\` suffix, and builds that took less than ${formatDuration(pruneLevel)} have been removed to make the graph small enough to render.`
-    );
-  }
-  lines.push("");
-  lines.push("</details>");
-  return lines.join("\n");
-}
-function mermaidify(allEvents, pruneLevel) {
-  const events = allEvents.filter(
-    (event) => event.c === "BuiltPathResponseEventV1" || event.c === "BuildFailureResponseEventV1"
-  ).sort(
-    (a, b) => a.timing.startTime.getTime() - b.timing.startTime.getTime()
-  );
-  const firstEvent = events.at(0);
-  if (firstEvent === void 0) {
-    return void 0;
-  }
-  const zeroMoment = firstEvent.timing.startTime.getTime();
-  const lines = [
-    "```mermaid",
-    "gantt",
-    "    dateFormat X",
-    "    axisFormat %Mm%Ss"
-  ];
-  for (const event of events) {
-    const duration = event.timing.durationSeconds;
-    if (duration < pruneLevel) {
-      continue;
-    }
-    const label = pruneLevel >= 0 ? truncateDerivation(event.drv) : event.drv;
-    const tag = event.c === "BuildFailureResponseEventV1" ? "crit" : "d";
-    const relativeStartTime = (event.timing.startTime.getTime() - zeroMoment) / 1e3;
-    lines.push(
-      `${label} (${formatDuration(duration)}):${tag}, ${relativeStartTime}, ${duration}s`
-    );
-  }
-  lines.push("```");
-  return lines.join("\n");
-}
-function formatDuration(duration) {
-  const durSeconds = duration % 60;
-  const durMinutes = (duration - durSeconds) / 60;
-  return `${durMinutes > 0 ? `${durMinutes}m` : ""}${durSeconds}s`;
-}
-
 // src/failuresummary.ts
 
 
@@ -95723,8 +95486,102 @@ async function getLogFromNix(drv) {
   return output.stdout;
 }
 
-// src/index.ts
+// src/fixHashes.ts
 
+async function getFixHashes(since) {
+  const output = await (0,exec.getExecOutput)(
+    "determinate-nixd",
+    ["fix", "hashes", "--json", "--since", since],
+    { silent: true }
+  );
+  if (output.exitCode !== 0) {
+    throw new Error(
+      `determinate-nixd fix hashes returned non-zero exit code ${output.exitCode} with the following error output:
+${output.stderr}`
+    );
+  }
+  return JSON.parse(output.stdout);
+}
+
+// src/util.ts
+function truncateDerivation(drv) {
+  return drv.replace(/^\/nix\/store\/[a-z0-9]+-/, "").replace(/\.drv$/, "");
+}
+
+// src/mermaid.ts
+function makeMermaidReport(events) {
+  const maxLength = 49900;
+  let mermaid = "";
+  let pruneLevel = -2;
+  do {
+    pruneLevel += 1;
+    mermaid = mermaidify(events, pruneLevel) ?? "";
+  } while (mermaid.length > maxLength);
+  if (!mermaid) {
+    return void 0;
+  }
+  const lines = [
+    "<details open><summary><strong>Build timeline</strong> :hourglass_flowing_sand:</summary>",
+    "",
+    // load bearing whitespace, deleting it breaks the details expander / markdown
+    mermaid,
+    ""
+    // load bearing whitespace, deleting it breaks the details expander / markdown
+  ];
+  if (pruneLevel === 0) {
+    lines.push("> [!NOTE]");
+    lines.push(
+      "> `/nix/store/[hash]` and the `.drv` suffixes have been removed to make the graph small enough to render."
+    );
+  } else if (pruneLevel > 0) {
+    lines.push("> [!NOTE]");
+    lines.push(
+      `> \`/nix/store/[hash]\`, the \`.drv\` suffix, and builds that took less than ${formatDuration(pruneLevel)} have been removed to make the graph small enough to render.`
+    );
+  }
+  lines.push("");
+  lines.push("</details>");
+  return lines.join("\n");
+}
+function mermaidify(allEvents, pruneLevel) {
+  const events = allEvents.filter(
+    (event) => event.c === "BuiltPathResponseEventV1" || event.c === "BuildFailureResponseEventV1"
+  ).sort(
+    (a, b) => a.timing.startTime.getTime() - b.timing.startTime.getTime()
+  );
+  const firstEvent = events.at(0);
+  if (firstEvent === void 0) {
+    return void 0;
+  }
+  const zeroMoment = firstEvent.timing.startTime.getTime();
+  const lines = [
+    "```mermaid",
+    "gantt",
+    "    dateFormat X",
+    "    axisFormat %Mm%Ss"
+  ];
+  for (const event of events) {
+    const duration = event.timing.durationSeconds;
+    if (duration < pruneLevel) {
+      continue;
+    }
+    const label = pruneLevel >= 0 ? truncateDerivation(event.drv) : event.drv;
+    const tag = event.c === "BuildFailureResponseEventV1" ? "crit" : "d";
+    const relativeStartTime = (event.timing.startTime.getTime() - zeroMoment) / 1e3;
+    lines.push(
+      `${label} (${formatDuration(duration)}):${tag}, ${relativeStartTime}, ${duration}s`
+    );
+  }
+  lines.push("```");
+  return lines.join("\n");
+}
+function formatDuration(duration) {
+  const durSeconds = duration % 60;
+  const durMinutes = (duration - durSeconds) / 60;
+  return `${durMinutes > 0 ? `${durMinutes}m` : ""}${durSeconds}s`;
+}
+
+// src/index.ts
 var EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
 var EVENT_INSTALL_NIX_START = "install_nix_start";
 var EVENT_INSTALL_NIX_SUCCESS = "install_nix_start";
@@ -95844,7 +95701,7 @@ var NixInstallerAction = class extends DetSysAction {
     await this.cleanupNoSystemd();
     await this.reportOverall();
   }
-  get isMacOS() {
+  get isMacOs() {
     return this.runnerOs === "macOS";
   }
   get isLinux() {
@@ -95872,21 +95729,21 @@ var NixInstallerAction = class extends DetSysAction {
           }
         });
         this.recordEvent("debug-probe-urls:response", {
+          // biome-ignore lint/style/useNamingConvention: Posthog JSON
           debug_probe_urls_ip: resp.ip,
-          // eslint-disable-line camelcase
+          // biome-ignore lint/style/useNamingConvention: Posthog JSON
           debug_probe_urls_ok: resp.ok,
-          // eslint-disable-line camelcase
+          // biome-ignore lint/style/useNamingConvention: Posthog JSON
           debug_probe_urls_status_code: resp.statusCode,
-          // eslint-disable-line camelcase
+          // biome-ignore lint/style/useNamingConvention: Posthog JSON
           debug_probe_urls_body: resp.body,
-          // eslint-disable-line camelcase
-          // eslint-disable-next-line camelcase
+          // biome-ignore lint/style/useNamingConvention: Posthog JSON
           debug_probe_urls_elapsed: (resp.timings.end ?? 0) - resp.timings.start
         });
       } catch (e) {
         this.recordEvent("debug-probe-urls:exception", {
+          // biome-ignore lint/style/useNamingConvention: Posthog JSON
           debug_probe_urls_exception: stringifyError(e)
-          // eslint-disable-line camelcase
         });
       }
     } catch (err) {
@@ -95964,13 +95821,13 @@ var NixInstallerAction = class extends DetSysAction {
     }
     executionEnv.NIX_INSTALLER_DIAGNOSTIC_ENDPOINT = (await this.getDiagnosticsUrl())?.toString() ?? "";
     if (this.macEncrypt !== null) {
-      if (!this.isMacOS) {
+      if (!this.isMacOs) {
         throw new Error("`mac-encrypt` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ENCRYPT = this.macEncrypt;
     }
     if (this.macCaseSensitive !== null) {
-      if (!this.isMacOS) {
+      if (!this.isMacOs) {
         throw new Error(
           "`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`"
         );
@@ -95978,7 +95835,7 @@ var NixInstallerAction = class extends DetSysAction {
       executionEnv.NIX_INSTALLER_CASE_SENSITIVE = this.macCaseSensitive;
     }
     if (this.macVolumeLabel !== null) {
-      if (!this.isMacOS) {
+      if (!this.isMacOs) {
         throw new Error(
           "`mac-volume-label` while `$RUNNER_OS` was not `macOS`"
         );
@@ -95986,7 +95843,7 @@ var NixInstallerAction = class extends DetSysAction {
       executionEnv.NIX_INSTALLER_VOLUME_LABEL = this.macVolumeLabel;
     }
     if (this.macRootDisk !== null) {
-      if (!this.isMacOS) {
+      if (!this.isMacOs) {
         throw new Error("`mac-root-disk` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_ROOT_DISK = this.macRootDisk;
@@ -95998,7 +95855,7 @@ var NixInstallerAction = class extends DetSysAction {
       executionEnv.NIX_INSTALLER_LOG_DIRECTIVES = this.logDirectives;
     }
     if (this.init !== null) {
-      if (this.isMacOS) {
+      if (this.isMacOs) {
         throw new Error(
           "`init` is not a valid option when `$RUNNER_OS` is `macOS`"
         );
@@ -96316,6 +96173,7 @@ var NixInstallerAction = class extends DetSysAction {
       ["uninstall"],
       {
         env: {
+          // biome-ignore lint/style/useNamingConvention: environment variable
           NIX_INSTALLER_NO_CONFIRM: "true",
           ...process.env
           // To get $PATH, etc
@@ -96491,7 +96349,7 @@ var NixInstallerAction = class extends DetSysAction {
     }
   }
   get defaultPlanner() {
-    if (this.isMacOS) {
+    if (this.isMacOs) {
       return "macos";
     } else if (this.isLinux) {
       return "linux";

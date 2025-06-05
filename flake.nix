@@ -3,8 +3,8 @@
   description = "Development environment for the Nix Installer action for GitHub.";
 
   inputs = {
-    flake-schemas.url = "https://flakehub.com/f/DeterminateSystems/flake-schemas/*.tar.gz";
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.0.tar.gz";
+    flake-schemas.url = "https://flakehub.com/f/DeterminateSystems/flake-schemas/0.1";
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1";
   };
 
   outputs = { self, flake-schemas, nixpkgs }:
@@ -21,9 +21,9 @@
         default = pkgs.mkShell {
           packages = with pkgs; [
             nodejs_latest
-            nixpkgs-fmt
             nodePackages_latest.pnpm
-            nodePackages_latest.typescript-language-server
+            biome
+            nixpkgs-fmt
           ];
         };
       });

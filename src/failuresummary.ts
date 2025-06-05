@@ -1,14 +1,14 @@
-import { getExecOutput } from "@actions/exec";
-import { DEvent } from "./events.js";
 import { stripVTControlCharacters } from "node:util";
+import { getExecOutput } from "@actions/exec";
+import { Event } from "./events.js";
 
 // CI summaries have a max length of "1024k" which I assume to be 1048576 bytes.
 // Generously, the mermaid doc is about 50,000 bytes.
 // Rounding it all down a bit further for wiggle room, that leaves lots of log space.
 const defaultMaxSummaryLength = 995_000;
 
-export function getBuildFailures(events: DEvent[]): DEvent[] {
-  return events.filter((event: DEvent): Boolean => {
+export function getBuildFailures(events: Event[]): Event[] {
+  return events.filter((event: Event): Boolean => {
     return event.c === "BuildFailureResponseEventV1";
   });
 }
@@ -19,7 +19,7 @@ export interface FailureSummary {
 }
 
 export async function summarizeFailures(
-  events: DEvent[],
+  events: Event[],
   getLog: (drv: string) => Promise<string | undefined> = getLogFromNix,
   maxLength: number = defaultMaxSummaryLength,
 ): Promise<FailureSummary | undefined> {
