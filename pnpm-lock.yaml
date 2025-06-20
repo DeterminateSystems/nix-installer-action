@@ -15,8 +15,8 @@ dependencies:
     specifier: ^6.0.1
     version: 6.0.1
   detsys-ts:
-    specifier: github:DeterminateSystems/detsys-ts
-    version: github.com/DeterminateSystems/detsys-ts/4bf247b1cb6b057abe94721ea1bfa131618e2b7f
+    specifier: github:DeterminateSystems/detsys-ts#gustavderdrache/write-correlation
+    version: github.com/DeterminateSystems/detsys-ts/fa60ac832b405f3e083cfe35b8981b0ae88013c8
   got:
     specifier: ^14.4.7
     version: 14.4.7
@@ -6380,10 +6380,10 @@ packages:
     engines: { node: ">=10" }
     dev: true
 
-  github.com/DeterminateSystems/detsys-ts/4bf247b1cb6b057abe94721ea1bfa131618e2b7f:
+  github.com/DeterminateSystems/detsys-ts/fa60ac832b405f3e083cfe35b8981b0ae88013c8:
     resolution:
       {
-        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/4bf247b1cb6b057abe94721ea1bfa131618e2b7f,
+        tarball: https://codeload.github.com/DeterminateSystems/detsys-ts/tar.gz/fa60ac832b405f3e083cfe35b8981b0ae88013c8,
       }
     name: detsys-ts
     version: 1.0.0

@@ -93812,7 +93812,7 @@ const external_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(i
 var cache = __nccwpck_require__(7389);
 // EXTERNAL MODULE: external "child_process"
 var external_child_process_ = __nccwpck_require__(5317);
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@4bf247b1cb6b057abe94721ea1bfa131618e2b7f_qygv7jy5hm2oenc72q37xutlhi/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@fa60ac832b405f3e083cfe35b8981b0ae88013c8_uqztr23qfqhs47o72awldpdaw4/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -94698,6 +94698,7 @@ var EVENT_ARTIFACT_CACHE_HIT = "artifact_cache_hit";
 var EVENT_ARTIFACT_CACHE_MISS = "artifact_cache_miss";
 var EVENT_ARTIFACT_CACHE_PERSIST = "artifact_cache_persist";
 var EVENT_PREFLIGHT_REQUIRE_NIX_DENIED = "preflight-require-nix-denied";
+var EVENT_STORE_IDENTITY_FAILED = "store_identity_failed";
 var FACT_ARTIFACT_FETCHED_FROM_CACHE = "artifact_fetched_from_cache";
 var FACT_ENDED_WITH_EXCEPTION = "ended_with_exception";
 var FACT_FINAL_EXCEPTION = "final_exception";
@@ -94722,6 +94723,49 @@ var PROGRAM_NAME_CRASH_DENY_LIST = [
   "nix-store-tests",
   "nix-util-tests"
 ];
+var determinateStateDir = "/var/lib/determinate";
+var determinateIdentityFile = external_path_.join(determinateStateDir, "identity.json");
+var isRoot = external_os_.userInfo().uid === 0;
+async function sudoEnsureDeterminateStateDir() {
+  const code = await exec.exec("sudo", [
+    "mkdir",
+    "-p",
+    determinateStateDir
+  ]);
+  if (code !== 0) {
+    throw new Error(`sudo mkdir -p exit: ${code}`);
+  }
+}
+async function ensureDeterminateStateDir() {
+  if (isRoot) {
+    await (0,promises_namespaceObject.mkdir)(determinateStateDir, { recursive: true });
+  } else {
+    return sudoEnsureDeterminateStateDir();
+  }
+}
+async function sudoWriteCorrelationHashes(hashes) {
+  const buffer = Buffer.from(hashes);
+  const code = await exec.exec(
+    "sudo",
+    ["tee", determinateIdentityFile],
+    {
+      input: buffer,
+      // Ignore output from tee
+      outStream: (0,external_fs_.createWriteStream)("/dev/null")
+    }
+  );
+  if (code !== 0) {
+    throw new Error(`sudo tee exit: ${code}`);
+  }
+}
+async function writeCorrelationHashes(hashes) {
+  await ensureDeterminateStateDir();
+  if (isRoot) {
+    await promises_namespaceObject.writeFile(determinateIdentityFile, hashes, "utf-8");
+  } else {
+    return sudoWriteCorrelationHashes(hashes);
+  }
+}
 var DetSysAction = class {
   determineExecutionPhase() {
     const currentPhase = core.getState(STATE_KEY_EXECUTION_PHASE);
@@ -94900,9 +94944,13 @@ var DetSysAction = class {
   async executeAsync() {
     try {
       await this.checkIn();
-      process.env.DETSYS_CORRELATION = JSON.stringify(
-        this.getCorrelationHashes()
-      );
+      const correlationHashes = JSON.stringify(this.getCorrelationHashes());
+      process.env.DETSYS_CORRELATION = correlationHashes;
+      try {
+        await writeCorrelationHashes(correlationHashes);
+      } catch (error3) {
+        this.recordEvent(EVENT_STORE_IDENTITY_FAILED, { error: String(error3) });
+      }
       if (!await this.preflightRequireNix()) {
         this.recordEvent(EVENT_PREFLIGHT_REQUIRE_NIX_DENIED);
         return;
