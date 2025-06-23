@@ -93812,7 +93812,7 @@ const external_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(i
 var cache = __nccwpck_require__(7389);
 // EXTERNAL MODULE: external "child_process"
 var external_child_process_ = __nccwpck_require__(5317);
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@fa60ac832b405f3e083cfe35b8981b0ae88013c8_uqztr23qfqhs47o72awldpdaw4/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@4e79c5b32d326f3596e09300d5d5ce5e7a412786_objx2bnahfcrlmccv7oxmqb33m/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -94256,7 +94256,8 @@ function identify(projectName) {
         "GITHUB_REPOSITORY_OWNER",
         "GITHUB_REPOSITORY_OWNER_ID"
       ])
-    }
+    },
+    is_ci: true
   };
   core.debug("Correlation data:");
   core.debug(JSON.stringify(ident, null, 2));
