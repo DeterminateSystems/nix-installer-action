@@ -29,7 +29,7 @@
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.1",
-    "detsys-ts": "github:DeterminateSystems/detsys-ts#grahamc/skip-complicated-rewrite",
+    "detsys-ts": "../detsys-ts",
     "got": "^14.4.7",
     "string-argv": "^0.3.2",
     "vitest": "^3.2.4"
