@@ -41900,7 +41900,7 @@ function removeHook(state, name, method) {
 
 /***/ }),
 
-/***/ 5612:
+/***/ 3443:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 var concatMap = __nccwpck_require__(8401);
@@ -42014,7 +42014,7 @@ function expand(str, isTop) {
   var isOptions = m.body.indexOf(',') >= 0;
   if (!isSequence && !isOptions) {
     // {a},b}
-    if (m.post.match(/,.*\}/)) {
+    if (m.post.match(/,(?!,).*\}/)) {
       str = m.pre + '{' + m.body + escClose + m.post;
       return expand(str);
     }
@@ -47374,7 +47374,7 @@ var path = (function () { try { return __nccwpck_require__(6928) } catch (e) {}}
 minimatch.sep = path.sep
 
 var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
-var expand = __nccwpck_require__(5612)
+var expand = __nccwpck_require__(3443)
 
 var plTypes = {
   '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
@@ -86700,7 +86700,7 @@ var external_zlib_ = __nccwpck_require__(3106);
 var external_crypto_ = __nccwpck_require__(6982);
 ;// CONCATENATED MODULE: external "node:timers/promises"
 const external_node_timers_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:timers/promises");
-;// CONCATENATED MODULE: ./node_modules/.pnpm/@sindresorhus+is@7.0.1/node_modules/@sindresorhus/is/distribution/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/@sindresorhus+is@7.0.2/node_modules/@sindresorhus/is/distribution/index.js
 const typedArrayTypeNames = [
     'Int8Array',
     'Uint8Array',
@@ -87063,6 +87063,7 @@ function isEnumCase(value, targetEnum) {
     return Object.values(targetEnum).includes(value);
 }
 function isError(value) {
+    // TODO: Use `Error.isError` when targeting Node.js 24.`
     return getObjectType(value) === 'Error';
 }
 function isEvenInteger(value) {
@@ -87072,6 +87073,7 @@ function isEvenInteger(value) {
 function isFalsy(value) {
     return !value;
 }
+// TODO: Support detecting Float16Array when targeting Node.js 24.
 function isFloat32Array(value) {
     return getObjectType(value) === 'Float32Array';
 }
@@ -87195,7 +87197,7 @@ function isObservable(value) {
         return false;
     }
     // eslint-disable-next-line no-use-extend-native/no-use-extend-native, @typescript-eslint/no-unsafe-call
-    if (value === value[Symbol.observable]?.()) {
+    if (Symbol.observable !== undefined && value === value[Symbol.observable]?.()) {
         return true;
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -88390,7 +88392,7 @@ const timer = (request) => {
 const external_node_url_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:url");
 // EXTERNAL MODULE: external "node:crypto"
 var external_node_crypto_ = __nccwpck_require__(7598);
-;// CONCATENATED MODULE: ./node_modules/.pnpm/normalize-url@8.0.1/node_modules/normalize-url/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/normalize-url@8.0.2/node_modules/normalize-url/index.js
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
 const DATA_URL_DEFAULT_MIME_TYPE = 'text/plain';
 const DATA_URL_DEFAULT_CHARSET = 'us-ascii';
@@ -88574,7 +88576,7 @@ function normalizeUrl(urlString, options) {
 	// Decode URI octets
 	if (urlObject.pathname) {
 		try {
-			urlObject.pathname = decodeURI(urlObject.pathname);
+			urlObject.pathname = decodeURI(urlObject.pathname).replace(/\\/g, '%5C');
 		} catch {}
 	}
 
@@ -89549,35 +89551,15 @@ const onResponse = 'onResponse';
 //# sourceMappingURL=index.js.map
 // EXTERNAL MODULE: ./node_modules/.pnpm/decompress-response@6.0.0/node_modules/decompress-response/index.js
 var decompress_response = __nccwpck_require__(4010);
-;// CONCATENATED MODULE: ./node_modules/.pnpm/form-data-encoder@4.0.2/node_modules/form-data-encoder/lib/index.js
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
+;// CONCATENATED MODULE: ./node_modules/.pnpm/form-data-encoder@4.1.0/node_modules/form-data-encoder/lib/index.js
+var __typeError = (msg) => {
+  throw TypeError(msg);
 };
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
-var __privateMethod = (obj, member, method) => {
-  __accessCheck(obj, member, "access private method");
-  return method;
-};
-
-// src/util/isFunction.ts
-var lib_isFunction = (value) => typeof value === "function";
-
-// src/util/isAsyncIterable.ts
-var lib_isAsyncIterable = (value) => lib_isFunction(value[Symbol.asyncIterator]);
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
+var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 
 // src/util/chunk.ts
 var MAX_CHUNK_SIZE = 65536;
@@ -89594,6 +89576,29 @@ function* chunk(value) {
     yield new Uint8Array(buffer);
   }
 }
+
+// src/util/createBoundary.ts
+var alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+function createBoundary() {
+  let size = 16;
+  let res = "";
+  while (size--) {
+    res += alphabet[Math.random() * alphabet.length << 0];
+  }
+  return res;
+}
+
+// src/util/escapeName.ts
+var escapeName = (name) => String(name).replace(/\r/g, "%0D").replace(/\n/g, "%0A").replace(/"/g, "%22");
+
+// src/util/isFunction.ts
+var lib_isFunction = (value) => typeof value === "function";
+
+// src/util/isReadableStreamFallback.ts
+var isReadableStreamFallback = (value) => !!value && typeof value === "object" && !Array.isArray(value) && lib_isFunction(value.getReader);
+
+// src/util/isAsyncIterable.ts
+var lib_isAsyncIterable = (value) => lib_isFunction(value[Symbol.asyncIterator]);
 
 // src/util/getStreamIterator.ts
 async function* readStream(readable) {
@@ -89615,7 +89620,7 @@ var getStreamIterator = (source) => {
   if (lib_isAsyncIterable(source)) {
     return chunkStream(source);
   }
-  if (lib_isFunction(source.getReader)) {
+  if (isReadableStreamFallback(source)) {
     return chunkStream(readStream(source));
   }
   throw new TypeError(
@@ -89623,24 +89628,15 @@ var getStreamIterator = (source) => {
   );
 };
 
-// src/util/createBoundary.ts
-var alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
-function createBoundary() {
-  let size = 16;
-  let res = "";
-  while (size--) {
-    res += alphabet[Math.random() * alphabet.length << 0];
-  }
-  return res;
-}
+// src/util/isFile.ts
+var isFile = (value) => Boolean(
+  value && typeof value === "object" && lib_isFunction(value.constructor) && value[Symbol.toStringTag] === "File" && lib_isFunction(value.stream) && value.name != null
+);
 
-// src/util/normalizeValue.ts
-var normalizeValue = (value) => String(value).replace(/\r|\n/g, (match, i, str) => {
-  if (match === "\r" && str[i + 1] !== "\n" || match === "\n" && str[i - 1] !== "\r") {
-    return "\r\n";
-  }
-  return match;
-});
+// src/util/isFormData.ts
+var lib_isFormData = (value) => Boolean(
+  value && lib_isFunction(value.constructor) && value[Symbol.toStringTag] === "FormData" && lib_isFunction(value.append) && lib_isFunction(value.getAll) && lib_isFunction(value.entries) && lib_isFunction(value[Symbol.iterator])
+);
 
 // src/util/isPlainObject.ts
 var getType = (value) => Object.prototype.toString.call(value).slice(8, -1).toLowerCase();
@@ -89652,9 +89648,16 @@ function lib_isPlainObject(value) {
   if (pp === null || pp === void 0) {
     return true;
   }
-  const Ctor = pp.constructor && pp.constructor.toString();
-  return Ctor === Object.toString();
+  return pp.constructor?.toString?.() === Object.toString();
 }
+
+// src/util/normalizeValue.ts
+var normalizeValue = (value) => String(value).replace(/\r|\n/g, (match, i, str) => {
+  if (match === "\r" && str[i + 1] !== "\n" || match === "\n" && str[i - 1] !== "\r") {
+    return "\r\n";
+  }
+  return match;
+});
 
 // src/util/proxyHeaders.ts
 function getProperty(target, prop) {
@@ -89675,35 +89678,18 @@ var proxyHeaders = (object) => new Proxy(
   }
 );
 
-// src/util/isFormData.ts
-var lib_isFormData = (value) => Boolean(
-  value && lib_isFunction(value.constructor) && value[Symbol.toStringTag] === "FormData" && lib_isFunction(value.append) && lib_isFunction(value.getAll) && lib_isFunction(value.entries) && lib_isFunction(value[Symbol.iterator])
-);
-
-// src/util/escapeName.ts
-var escapeName = (name) => String(name).replace(/\r/g, "%0D").replace(/\n/g, "%0A").replace(/"/g, "%22");
-
-// src/util/isFile.ts
-var isFile = (value) => Boolean(
-  value && typeof value === "object" && lib_isFunction(value.constructor) && value[Symbol.toStringTag] === "File" && lib_isFunction(value.stream) && value.name != null
-);
-
 // src/FormDataEncoder.ts
 var defaultOptions = {
   enableAdditionalHeaders: false
 };
 var readonlyProp = { writable: false, configurable: false };
-var _CRLF, _CRLF_BYTES, _CRLF_BYTES_LENGTH, _DASHES, _encoder, _footer, _form, _options, _getFieldHeader, getFieldHeader_fn, _getContentLength, getContentLength_fn;
+var _CRLF, _CRLF_BYTES, _CRLF_BYTES_LENGTH, _DASHES, _encoder, _footer, _form, _options, _FormDataEncoder_instances, getFieldHeader_fn, getContentLength_fn;
 var FormDataEncoder = class {
   constructor(form, boundaryOrOptions, options) {
-    __privateAdd(this, _getFieldHeader);
-    /**
-     * Returns form-data content length
-     */
-    __privateAdd(this, _getContentLength);
+    __privateAdd(this, _FormDataEncoder_instances);
     __privateAdd(this, _CRLF, "\r\n");
-    __privateAdd(this, _CRLF_BYTES, void 0);
-    __privateAdd(this, _CRLF_BYTES_LENGTH, void 0);
+    __privateAdd(this, _CRLF_BYTES);
+    __privateAdd(this, _CRLF_BYTES_LENGTH);
     __privateAdd(this, _DASHES, "-".repeat(2));
     /**
      * TextEncoder instance
@@ -89712,15 +89698,15 @@ var FormDataEncoder = class {
     /**
      * Returns form-data footer bytes
      */
-    __privateAdd(this, _footer, void 0);
+    __privateAdd(this, _footer);
     /**
      * FormData instance
      */
-    __privateAdd(this, _form, void 0);
+    __privateAdd(this, _form);
     /**
      * Instance options
      */
-    __privateAdd(this, _options, void 0);
+    __privateAdd(this, _options);
     if (!lib_isFormData(form)) {
       throw new TypeError("Expected first argument to be a FormData instance.");
     }
@@ -89731,7 +89717,7 @@ var FormDataEncoder = class {
       boundary = boundaryOrOptions;
     }
     if (!boundary) {
-      boundary = createBoundary();
+      boundary = `form-data-encoder-${createBoundary()}`;
     }
     if (typeof boundary !== "string") {
       throw new TypeError("Expected boundary argument to be a string.");
@@ -89743,7 +89729,7 @@ var FormDataEncoder = class {
     __privateSet(this, _options, { ...defaultOptions, ...options });
     __privateSet(this, _CRLF_BYTES, __privateGet(this, _encoder).encode(__privateGet(this, _CRLF)));
     __privateSet(this, _CRLF_BYTES_LENGTH, __privateGet(this, _CRLF_BYTES).byteLength);
-    this.boundary = `form-data-boundary-${boundary}`;
+    this.boundary = boundary;
     this.contentType = `multipart/form-data; boundary=${this.boundary}`;
     __privateSet(this, _footer, __privateGet(this, _encoder).encode(
       `${__privateGet(this, _DASHES)}${this.boundary}${__privateGet(this, _DASHES)}${__privateGet(this, _CRLF).repeat(2)}`
@@ -89751,7 +89737,7 @@ var FormDataEncoder = class {
     const headers = {
       "Content-Type": this.contentType
     };
-    const contentLength = __privateMethod(this, _getContentLength, getContentLength_fn).call(this);
+    const contentLength = __privateMethod(this, _FormDataEncoder_instances, getContentLength_fn).call(this);
     if (contentLength) {
       this.contentLength = contentLength;
       headers["Content-Length"] = contentLength;
@@ -89804,10 +89790,8 @@ var FormDataEncoder = class {
    */
   *values() {
     for (const [name, raw] of __privateGet(this, _form)) {
-      const value = isFile(raw) ? raw : __privateGet(this, _encoder).encode(
-        normalizeValue(raw)
-      );
-      yield __privateMethod(this, _getFieldHeader, getFieldHeader_fn).call(this, name, value);
+      const value = isFile(raw) ? raw : __privateGet(this, _encoder).encode(normalizeValue(raw));
+      yield __privateMethod(this, _FormDataEncoder_instances, getFieldHeader_fn).call(this, name, value);
       yield value;
       yield __privateGet(this, _CRLF_BYTES);
     }
@@ -89876,7 +89860,7 @@ _encoder = new WeakMap();
 _footer = new WeakMap();
 _form = new WeakMap();
 _options = new WeakMap();
-_getFieldHeader = new WeakSet();
+_FormDataEncoder_instances = new WeakSet();
 getFieldHeader_fn = function(name, value) {
   let header = "";
   header += `${__privateGet(this, _DASHES)}${this.boundary}${__privateGet(this, _CRLF)}`;
@@ -89893,18 +89877,18 @@ getFieldHeader_fn = function(name, value) {
   }
   return __privateGet(this, _encoder).encode(`${header}${__privateGet(this, _CRLF).repeat(2)}`);
 };
-_getContentLength = new WeakSet();
+/**
+ * Returns form-data content length
+ */
 getContentLength_fn = function() {
   let length = 0;
   for (const [name, raw] of __privateGet(this, _form)) {
-    const value = isFile(raw) ? raw : __privateGet(this, _encoder).encode(
-      normalizeValue(raw)
-    );
+    const value = isFile(raw) ? raw : __privateGet(this, _encoder).encode(normalizeValue(raw));
     const size = isFile(value) ? value.size : value.byteLength;
     if (size == null || isNaN(size)) {
       return void 0;
     }
-    length += __privateMethod(this, _getFieldHeader, getFieldHeader_fn).call(this, name, value).byteLength;
+    length += __privateMethod(this, _FormDataEncoder_instances, getFieldHeader_fn).call(this, name, value).byteLength;
     length += size;
     length += __privateGet(this, _CRLF_BYTES_LENGTH);
   }
@@ -93797,7 +93781,7 @@ const external_dns_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(i
 var cache = __nccwpck_require__(7389);
 // EXTERNAL MODULE: external "child_process"
 var external_child_process_ = __nccwpck_require__(5317);
-;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@b9bf2cbbf36d7d393a82137e06adbb89b36dfda3_7ejzlsxo6zzeyqngkxjzdbulnm/node_modules/detsys-ts/dist/index.js
+;// CONCATENATED MODULE: ./node_modules/.pnpm/github.com+DeterminateSystems+detsys-ts@13c37dfe65b47ee7a95e88fa2ca5e157af1086bb_rxdas5hkntcaf4je5tbrjvqusu/node_modules/detsys-ts/dist/index.js
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -94808,7 +94792,7 @@ var DetSysAction = class {
     this.identity = identify();
     this.archOs = getArchOs();
     this.nixSystem = getNixPlatform(this.archOs);
-    this.facts["$app_name"] = this.actionOptions.name;
+    this.facts["$app_name"] = `${this.actionOptions.name}/action`;
     this.facts.arch_os = this.archOs;
     this.facts.nix_system = this.nixSystem;
     {
