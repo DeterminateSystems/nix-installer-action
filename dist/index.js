@@ -100413,6 +100413,7 @@ var NixInstallerAction = class extends DetSysAction {
   async summarizeExecution() {
     const startDate = new Date(core.getState(STATE_START_DATETIME));
     const { events, hasMismatches } = await getRecentEvents(startDate);
+    await this.reportPassFailCount(events);
     const mermaidSummary = makeMermaidReport(events);
     const failureSummary = await summarizeFailures(events);
     const showResults = mermaidSummary || failureSummary || hasMismatches;
@@ -100454,6 +100455,26 @@ var NixInstallerAction = class extends DetSysAction {
       core.summary.addRaw("\n", true);
       await core.summary.write();
     }
+  }
+  async reportPassFailCount(events) {
+    let built = 0;
+    let failed = 0;
+    let unknown = 0;
+    for (const event of events) {
+      switch (event.c) {
+        case "BuiltPathResponseEventV1":
+          built++;
+          break;
+        case "BuildFailureResponseEventV1":
+          failed++;
+          break;
+        default:
+          unknown++;
+      }
+    }
+    this.addFact("nix_builds_succeeded", built);
+    this.addFact("nix_builds_failed", failed);
+    this.addFact("nix_builds_unknown_event", unknown);
   }
   async setGithubPath() {
     try {

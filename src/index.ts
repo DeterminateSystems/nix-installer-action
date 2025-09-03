@@ -12,7 +12,7 @@ import got from "got";
 import { setTimeout } from "node:timers/promises";
 import { getFixHashes } from "./fixHashes.js";
 import { annotateMismatches } from "./annotate.js";
-import { getRecentEvents } from "./events.js";
+import { DEvent, getRecentEvents } from "./events.js";
 import { makeMermaidReport } from "./mermaid.js";
 import { summarizeFailures } from "./failuresummary.js";
 import { SpawnOptions, spawn } from "node:child_process";
@@ -616,6 +616,8 @@ class NixInstallerAction extends DetSysAction {
     const startDate = new Date(actionsCore.getState(STATE_START_DATETIME));
     const { events, hasMismatches } = await getRecentEvents(startDate);
 
+    await this.reportPassFailCount(events);
+
     const mermaidSummary = makeMermaidReport(events);
     const failureSummary = await summarizeFailures(events);
 
@@ -664,6 +666,29 @@ class NixInstallerAction extends DetSysAction {
       actionsCore.summary.addRaw("\n", true);
       await actionsCore.summary.write();
     }
+  }
+
+  async reportPassFailCount(events: DEvent[]): Promise<void> {
+    let built = 0;
+    let failed = 0;
+    let unknown = 0;
+
+    for (const event of events) {
+      switch (event.c) {
+        case "BuiltPathResponseEventV1":
+          built++;
+          break;
+        case "BuildFailureResponseEventV1":
+          failed++;
+          break;
+        default:
+          unknown++;
+      }
+    }
+
+    this.addFact("nix_builds_succeeded", built);
+    this.addFact("nix_builds_failed", failed);
+    this.addFact("nix_builds_unknown_event", unknown);
   }
 
   async setGithubPath(): Promise<void> {
