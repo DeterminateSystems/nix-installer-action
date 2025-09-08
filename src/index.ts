@@ -32,6 +32,9 @@ const EVENT_CONCLUDE_JOB = "conclude_job";
 const EVENT_FOD_ANNOTATE = "fod_annotate";
 const EVENT_NO_SYSTEMD_SHIM_FAILED = "no-systemd-shim-failed";
 
+const EVENT_AUTH_SKIP_FORK = "auth-skip:fork";
+const EVENT_AUTH_SKIP_NOT_CONFIGURED = "auth-skip:not-configured";
+
 // Feature flag names
 const FEAT_ANNOTATIONS = "hash-mismatch-annotations";
 
@@ -725,11 +728,14 @@ class NixInstallerAction extends DetSysAction {
       const head = pr?.head?.repo?.full_name;
 
       if (pr && base !== head) {
+        this.recordEvent(EVENT_AUTH_SKIP_FORK);
         actionsCore.info(
           `Not logging in to FlakeHub: GitHub Actions does not allow OIDC authentication from forked repositories ("${head}" is not the same repository as "${base}").`,
         );
         return;
       }
+
+      this.recordEvent(EVENT_AUTH_SKIP_NOT_CONFIGURED);
 
       actionsCore.info(
         `Not logging in to FlakeHub: GitHub Actions has not provided OIDC token endpoints; please make sure that \`id-token: write\` and \`contents: read\` are set for this step's (or job's) permissions.`,
