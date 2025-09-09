@@ -26,14 +26,12 @@ const EVENT_UNINSTALL_NIX = "uninstall";
 
 // FlakeHub events
 const EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
+const EVENT_LOGIN_FAILURE = "flakehub-login:failure";
 
 // Other events
 const EVENT_CONCLUDE_JOB = "conclude_job";
 const EVENT_FOD_ANNOTATE = "fod_annotate";
 const EVENT_NO_SYSTEMD_SHIM_FAILED = "no-systemd-shim-failed";
-
-const EVENT_AUTH_SKIP_FORK = "auth-skip:fork";
-const EVENT_AUTH_SKIP_NOT_CONFIGURED = "auth-skip:not-configured";
 
 // Feature flag names
 const FEAT_ANNOTATIONS = "hash-mismatch-annotations";
@@ -728,14 +726,14 @@ class NixInstallerAction extends DetSysAction {
       const head = pr?.head?.repo?.full_name;
 
       if (pr && base !== head) {
-        this.recordEvent(EVENT_AUTH_SKIP_FORK);
+        this.recordEvent(EVENT_LOGIN_FAILURE, { reason: "fork" });
         actionsCore.info(
           `Not logging in to FlakeHub: GitHub Actions does not allow OIDC authentication from forked repositories ("${head}" is not the same repository as "${base}").`,
         );
         return;
       }
 
-      this.recordEvent(EVENT_AUTH_SKIP_NOT_CONFIGURED);
+      this.recordEvent(EVENT_LOGIN_FAILURE, { reason: "not-configured" });
 
       actionsCore.info(
         `Not logging in to FlakeHub: GitHub Actions has not provided OIDC token endpoints; please make sure that \`id-token: write\` and \`contents: read\` are set for this step's (or job's) permissions.`,
@@ -752,7 +750,8 @@ class NixInstallerAction extends DetSysAction {
       await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
     } catch (e: unknown) {
       actionsCore.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
-      this.recordEvent("flakehub-login:failure", {
+      this.recordEvent(EVENT_LOGIN_FAILURE, {
+        reason: "failed",
         exception: stringifyError(e),
       });
     }
