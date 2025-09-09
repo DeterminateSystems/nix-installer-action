@@ -20,7 +20,7 @@ import { SpawnOptions, spawn } from "node:child_process";
 // Nix installation events
 const EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
 const EVENT_INSTALL_NIX_START = "install_nix_start";
-const EVENT_INSTALL_NIX_SUCCESS = "install_nix_start";
+const EVENT_INSTALL_NIX_SUCCESS = "install_nix_success";
 const EVENT_SETUP_KVM = "setup_kvm";
 const EVENT_UNINSTALL_NIX = "uninstall";
 
@@ -141,10 +141,10 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async main(): Promise<void> {
+    actionsCore.saveState(STATE_START_DATETIME, new Date().toISOString());
     await this.scienceDebugFly();
     await this.detectAndForceNoSystemd();
     await this.install();
-    actionsCore.saveState(STATE_START_DATETIME, new Date().toISOString());
   }
 
   async post(): Promise<void> {
@@ -285,7 +285,7 @@ class NixInstallerAction extends DetSysAction {
     }
 
     if (this.nixBuildUserBase !== null) {
-      executionEnv.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nixBuildUserCount}`;
+      executionEnv.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nixBuildUserBase}`;
     }
 
     if (this.nixPackageUrl !== null) {
