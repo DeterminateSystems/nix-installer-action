@@ -25,8 +25,10 @@ const EVENT_SETUP_KVM = "setup_kvm";
 const EVENT_UNINSTALL_NIX = "uninstall";
 
 // FlakeHub events
-const EVENT_LOGIN_TO_FLAKEHUB = "login_to_flakehub";
+const EVENT_LOGIN_START = "flakehub-login:start";
 const EVENT_LOGIN_FAILURE = "flakehub-login:failure";
+const EVENT_LOGIN_SUCCESS = "flakehub-login:success";
+const EVENT_LOGIN_END = "flakehub-login:end";
 
 // Other events
 const EVENT_CONCLUDE_JOB = "conclude_job";
@@ -716,6 +718,8 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async flakehubLogin(): Promise<void> {
+    this.recordEvent(EVENT_LOGIN_START);
+
     const canLogin =
       process.env["ACTIONS_ID_TOKEN_REQUEST_URL"] &&
       process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"];
@@ -727,6 +731,8 @@ class NixInstallerAction extends DetSysAction {
 
       if (pr && base !== head) {
         this.recordEvent(EVENT_LOGIN_FAILURE, { reason: "fork" });
+        this.recordEvent(EVENT_LOGIN_END);
+
         actionsCore.info(
           `FlakeHub is disabled because this is a fork. GitHub Actions does not allow OIDC authentication from forked repositories ("${head}" is not from the same repository as "${base}").`,
         );
@@ -734,6 +740,7 @@ class NixInstallerAction extends DetSysAction {
       }
 
       this.recordEvent(EVENT_LOGIN_FAILURE, { reason: "not-configured" });
+      this.recordEvent(EVENT_LOGIN_END);
 
       actionsCore.info(
         "FlakeHub is disabled because the workflow is misconfigured. Please make sure that `id-token: write` and `contents: read` are set for this step's (or job's) permissions so that GitHub Actions provides OIDC token endpoints.",
@@ -745,9 +752,9 @@ class NixInstallerAction extends DetSysAction {
     }
 
     actionsCore.startGroup("Logging in to FlakeHub");
-    this.recordEvent(EVENT_LOGIN_TO_FLAKEHUB);
     try {
       await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
+      this.recordEvent(EVENT_LOGIN_SUCCESS);
     } catch (e: unknown) {
       actionsCore.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
       this.recordEvent(EVENT_LOGIN_FAILURE, {
@@ -755,6 +762,8 @@ class NixInstallerAction extends DetSysAction {
         exception: stringifyError(e),
       });
     }
+
+    this.recordEvent(EVENT_LOGIN_END);
     actionsCore.endGroup();
   }
 
