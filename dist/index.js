@@ -100504,13 +100504,13 @@ var NixInstallerAction = class extends DetSysAction {
       if (pr && base !== head) {
         this.recordEvent(EVENT_LOGIN_FAILURE, { reason: "fork" });
         core.info(
-          `Not logging in to FlakeHub: GitHub Actions does not allow OIDC authentication from forked repositories ("${head}" is not the same repository as "${base}").`
+          `FlakeHub is disabled because this is a fork. GitHub Actions does not allow OIDC authentication from forked repositories ("${head}" is not from the same repository as "${base}").`
         );
         return;
       }
       this.recordEvent(EVENT_LOGIN_FAILURE, { reason: "not-configured" });
       core.info(
-        `Not logging in to FlakeHub: GitHub Actions has not provided OIDC token endpoints; please make sure that \`id-token: write\` and \`contents: read\` are set for this step's (or job's) permissions.`
+        "FlakeHub is disabled because the workflow is misconfigured. Please make sure that `id-token: write` and `contents: read` are set for this step's (or job's) permissions so that GitHub Actions provides OIDC token endpoints."
       );
       core.info(
         `For more information, see https://docs.determinate.systems/guides/github-actions/#nix-installer-action`
