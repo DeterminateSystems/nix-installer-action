@@ -99923,7 +99923,7 @@ async function getLogFromNix(drv) {
 
 var EVENT_INSTALL_NIX_FAILURE = "install_nix_failure";
 var EVENT_INSTALL_NIX_START = "install_nix_start";
-var EVENT_INSTALL_NIX_SUCCESS = "install_nix_start";
+var EVENT_INSTALL_NIX_SUCCESS = "install_nix_success";
 var EVENT_SETUP_KVM = "setup_kvm";
 var EVENT_UNINSTALL_NIX = "uninstall";
 var EVENT_LOGIN_START = "flakehub-login:start";
@@ -100026,10 +100026,10 @@ var NixInstallerAction = class extends DetSysAction {
     this.runnerOs = process.env["RUNNER_OS"];
   }
   async main() {
+    core.saveState(STATE_START_DATETIME, (/* @__PURE__ */ new Date()).toISOString());
     await this.scienceDebugFly();
     await this.detectAndForceNoSystemd();
     await this.install();
-    core.saveState(STATE_START_DATETIME, (/* @__PURE__ */ new Date()).toISOString());
   }
   async post() {
     await this.annotateMismatches();
@@ -100150,7 +100150,7 @@ var NixInstallerAction = class extends DetSysAction {
       executionEnv.NIX_INSTALLER_NIX_BUILD_USER_COUNT = `${this.nixBuildUserCount}`;
     }
     if (this.nixBuildUserBase !== null) {
-      executionEnv.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nixBuildUserCount}`;
+      executionEnv.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nixBuildUserBase}`;
     }
     if (this.nixPackageUrl !== null) {
       executionEnv.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nixPackageUrl}`;
