@@ -48,6 +48,7 @@ const FACT_SENT_SIGTERM = "sent_sigterm";
 
 // Flags
 const FLAG_DETERMINATE = "--determinate";
+const FLAG_PREFER_UPSTREAM_NIX = "--prefer-upstream-nix";
 
 // Pre/post state keys
 const STATE_DAEMONDIR = "DNI_DAEMONDIR";
@@ -432,6 +433,8 @@ class NixInstallerAction extends DetSysAction {
       if (this.extraArgs && !this.extraArgs.includes(FLAG_DETERMINATE)) {
         args.push(FLAG_DETERMINATE);
       }
+    } else {
+      args.push(FLAG_PREFER_UPSTREAM_NIX);
     }
 
     return args;
