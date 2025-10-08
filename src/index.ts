@@ -72,6 +72,7 @@ class NixInstallerAction extends DetSysAction {
   logger: string | null;
   sslCertFile: string | null;
   proxy: string | null;
+  timeout: number | null;
   macCaseSensitive: string | null;
   macEncrypt: string | null;
   macRootDisk: string | null;
@@ -123,6 +124,7 @@ class NixInstallerAction extends DetSysAction {
     this.logger = inputs.getStringOrNull("logger");
     this.sslCertFile = inputs.getStringOrNull("ssl-cert-file");
     this.proxy = inputs.getStringOrNull("proxy");
+    this.timeout = inputs.getNumberOrNull("timeout");
     this.macCaseSensitive = inputs.getStringOrNull("mac-case-sensitive");
     this.macEncrypt = inputs.getStringOrNull("mac-encrypt");
     this.macRootDisk = inputs.getStringOrNull("mac-root-disk");
@@ -929,7 +931,7 @@ class NixInstallerAction extends DetSysAction {
 
   private async fetchBinary(): Promise<string> {
     if (!this.localRoot) {
-      return await this.fetchExecutable();
+      return await this.fetchExecutable(this.timeout ?? undefined);
     } else {
       const localPath = join(this.localRoot, `nix-installer-${this.platform}`);
       actionsCore.info(`Using binary ${localPath}`);
