@@ -154,10 +154,6 @@ jobs:
           - key: url
             value: https://github.com/DeterminateSystems/nix-installer/releases/download/v3.11.3/nix-installer-x86_64-linux
             nix-version: "3.11.3"
-          # https://github.com/DeterminateSystems/nix-installer/tree/a8befc7a44db5463cd4269f6d2381b0ab9a5dfc5
-          - key: revision
-            value: a8befc7a44db5463cd4269f6d2381b0ab9a5dfc5
-            nix-version: "3.11.3"
 
     steps:
       - uses: actions/checkout@v4
