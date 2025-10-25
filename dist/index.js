@@ -99817,6 +99817,7 @@ var FACT_IN_NAMESPACE_SO = "in_namespace_so";
 var FACT_NIX_INSTALLER_PLANNER = "nix_installer_planner";
 var FACT_SENT_SIGTERM = "sent_sigterm";
 var FLAG_DETERMINATE = "--determinate";
+var FLAG_PREFER_UPSTREAM_NIX = "--prefer-upstream-nix";
 var STATE_DAEMONDIR = "DNI_DAEMONDIR";
 var STATE_START_DATETIME = "DETERMINATE_NIXD_START_DATETIME";
 var NixInstallerAction = class extends DetSysAction {
@@ -100147,6 +100148,8 @@ var NixInstallerAction = class extends DetSysAction {
       if (this.extraArgs && !this.extraArgs.includes(FLAG_DETERMINATE)) {
         args.push(FLAG_DETERMINATE);
       }
+    } else {
+      args.push(FLAG_PREFER_UPSTREAM_NIX);
     }
     return args;
   }
