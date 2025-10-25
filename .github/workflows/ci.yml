@@ -150,14 +150,14 @@ jobs:
     strategy:
       matrix:
         inputs:
-          # https://github.com/DeterminateSystems/nix-installer/blob/v0.18.0
+          # https://github.com/DeterminateSystems/nix-installer/blob/v3.11.3
           - key: url
-            value: https://github.com/DeterminateSystems/nix-installer/releases/download/v0.18.0/nix-installer-x86_64-linux
-            nix-version: "2.21.2"
-          # https://github.com/DeterminateSystems/nix-installer/tree/7011c077ec491da410fbc39f68676b0908b9ce7e
+            value: https://github.com/DeterminateSystems/nix-installer/releases/download/v3.11.3/nix-installer-x86_64-linux
+            nix-version: "3.11.3"
+          # https://github.com/DeterminateSystems/nix-installer/tree/a8befc7a44db5463cd4269f6d2381b0ab9a5dfc5
           - key: revision
-            value: 7011c077ec491da410fbc39f68676b0908b9ce7e
-            nix-version: "2.19.2"
+            value: a8befc7a44db5463cd4269f6d2381b0ab9a5dfc5
+            nix-version: "3.11.3"
 
     steps:
       - uses: actions/checkout@v4
