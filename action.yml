@@ -56,6 +56,10 @@ inputs:
   proxy:
     description: "The proxy to use (if any), valid proxy bases are `https://$URL`, `http://$URL` and `socks5://$URL`"
     required: false
+  timeout:
+    description: Timeout in milliseconds for fetching the Nix installer
+    required: false
+    default: "10000"
   mac-case-sensitive:
     description: "Use a case sensitive volume (`planner: macos` only)"
     required: false
