@@ -93,12 +93,12 @@ class NixInstallerAction extends DetSysAction {
     if (platform.getArchOs() === "X64-macOS") {
       // Holy guacamole this is ugly
       actionsCore.error(
-        "Determinate Nix Installer no longer supports macOS on Intel. See: https://github.com/DeterminateSystems/nix-src/issues/224",
+        "Determinate Nix Installer no longer supports macOS on Intel. Please migrate to Apple Silicon, and use Nix's built-in Rosetta support to build for Intel. See: https://github.com/DeterminateSystems/nix-src/issues/224",
       );
       const sourceTag = inputs.getStringOrUndefined("source-tag");
       if (sourceTag === undefined) {
         actionsCore.notice(
-          "Pinning the installer tag to v3.12.2, the last version to support Intel Macs.",
+          "Pinning the installer tag to v3.12.2 (the last version to support Intel Macs) as a temporary fallback.",
         );
         process.env["INPUT_SOURCE-TAG"] = "v3.12.2";
       }
