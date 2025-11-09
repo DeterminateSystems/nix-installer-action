@@ -92,7 +92,7 @@ class NixInstallerAction extends DetSysAction {
   constructor() {
     if (platform.getArchOs() === "X64-macOS") {
       // Holy guacamole this is ugly
-      actionsCore.warning(
+      actionsCore.error(
         "Determinate Nix Installer no longer supports macOS on Intel. See: https://github.com/DeterminateSystems/nix-src/issues/224",
       );
       const sourceTag = inputs.getStringOrUndefined("source-tag");

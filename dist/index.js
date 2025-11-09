@@ -101437,7 +101437,7 @@ var NixInstallerAction = class extends DetSysAction {
   runnerOs;
   constructor() {
     if (platform_exports.getArchOs() === "X64-macOS") {
-      core.warning(
+      core.error(
         "Determinate Nix Installer no longer supports macOS on Intel. See: https://github.com/DeterminateSystems/nix-src/issues/224"
       );
       const sourceTag = inputs_exports.getStringOrUndefined("source-tag");
@@ -101856,12 +101856,12 @@ var NixInstallerAction = class extends DetSysAction {
       if (!await this.doesTheSocketExistYet()) {
         throw new Error("Timed out waiting for the daemon socket to appear.");
       }
-    } catch (error2) {
+    } catch (error3) {
       this.recordEvent(EVENT_NO_SYSTEMD_SHIM_FAILED, {
-        error: stringifyError(error2),
+        error: stringifyError(error3),
         log: await (0,promises_namespaceObject.readFile)(outputPath, "utf-8")
       });
-      throw error2;
+      throw error3;
     }
     daemon.unref();
     core.endGroup();
@@ -101871,18 +101871,18 @@ var NixInstallerAction = class extends DetSysAction {
     try {
       await (0,promises_namespaceObject.stat)(socketPath);
       return true;
-    } catch (error2) {
-      if (error2.code === "ENOENT") {
+    } catch (error3) {
+      if (error3.code === "ENOENT") {
         core.debug(`Socket '${socketPath}' does not exist yet`);
         return false;
       }
       core.warning(
-        `Error waiting for the Nix Daemon socket: ${stringifyError(error2)}`
+        `Error waiting for the Nix Daemon socket: ${stringifyError(error3)}`
       );
       this.recordEvent("shim:wait-for-socket", {
-        exception: stringifyError(error2)
+        exception: stringifyError(error3)
       });
-      throw error2;
+      throw error3;
     }
   }
   async summarizeExecution() {
@@ -102221,10 +102221,10 @@ var NixInstallerAction = class extends DetSysAction {
       core.debug("Annotating mismatches");
       const count = annotateMismatches(mismatches);
       this.recordEvent(EVENT_FOD_ANNOTATE, { count });
-    } catch (error2) {
-      core.warning(`Could not consume hash mismatch events: ${error2}`);
+    } catch (error3) {
+      core.warning(`Could not consume hash mismatch events: ${error3}`);
       this.recordEvent("annotation-mismatch-execution:error", {
-        exception: stringifyError(error2)
+        exception: stringifyError(error3)
       });
     }
   }
