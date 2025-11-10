@@ -10,7 +10,7 @@ inputs:
   determinate:
     description: |
       Whether to install [Determinate Nix](https://determinate.systems/enterprise) and log in to FlakeHub for private Flakes and binary caches.
-    default: false
+    default: true
   extra-args:
     description: Extra args to pass to the planner (prefer using structured `with:` arguments unless using a custom planner!)
     required: false

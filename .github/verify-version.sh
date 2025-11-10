@@ -7,9 +7,8 @@ EXPECTED_VERSION="${1}"
 
 INSTALLED_NIX_VERSION_OUTPUT=$(nix --version)
 INSTALLED_NIX_VERSION=$(echo "${INSTALLED_NIX_VERSION_OUTPUT}" | awk '{print $NF}')
-EXPECTED_OUTPUT="nix (Nix) ${EXPECTED_VERSION}"
 
-if [ "${INSTALLED_NIX_VERSION_OUTPUT}" != "${EXPECTED_OUTPUT}" ]; then
+if [ "${INSTALLED_NIX_VERSION}" != "${EXPECTED_VERSION}" ]; then
   echo "Nix version ${INSTALLED_NIX_VERSION} didn't match expected version ${EXPECTED_VERSION}"
   exit 1
 else
