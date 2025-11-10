@@ -78,7 +78,7 @@ jobs:
         run: echo $PATH
 
       - name: Render the devshell
-        if: success() || failure()
+        if: (success() || failure()) && matrix.runner != 'macos-13-large' && matrix.runner != 'macos-14-large'
         run: |
           nix develop --command date
 
