@@ -845,8 +845,8 @@ class NixInstallerAction extends DetSysAction {
 
   private async setupKvm(): Promise<boolean> {
     this.recordEvent(EVENT_SETUP_KVM);
-    const currentUser = userInfo();
-    const isRoot = currentUser.uid === 0;
+    const isRoot =
+      typeof process.geteuid === "function" && process.geteuid() === 0;
     const maybeSudo = isRoot ? "" : "sudo";
 
     // First check to see whether the current user can open the KVM device node
