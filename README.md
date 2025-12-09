@@ -1,14 +1,14 @@
 # The Determinate Nix Installer Action
 
-Based on the [Determinate Nix Installer](https://github.com/DeterminateSystems/nix-installer), responsible for over tens of thousands of Nix installs daily.
-The fast, friendly, and reliable GitHub Action to install Nix with Flakes.
+The fast, friendly, and reliable GitHub Action to install [Determinate Nix][det-nix] with [flakes].
+The Determinate Nix Installer Action is based on [Determinate Nix Installer][installer], which is responsible for tens of thousands of installs daily.
 
 ## Supports
 
 - ✅ **Accelerated KVM** on open source projects and larger runners. See [GitHub's announcement](https://github.blog/changelog/2023-02-23-hardware-accelerated-android-virtualization-on-actions-windows-and-linux-larger-hosted-runners/) for more info.
-- ✅ Linux, x86_64, aarch64, and i686
-- ✅ macOS, x86_64 and aarch64
-- ✅ WSL2, x86_64 and aarch64
+- ✅ Linux (x86_64 and aarch64)
+- ✅ macOS (aarch64)
+- ✅ Windows Subsystem for Linux (WSL) (x86_64 and aarch64)
 - ✅ Containers
 - ✅ Valve's SteamOS
 - ✅ GitHub Enterprise Server
@@ -32,9 +32,13 @@ jobs:
       - run: nix build .
 ```
 
+> [!NOTE]
+> This Action installs [Determinate Nix][det-nix] by default.
+> You can, however, use it to install [upstream Nix](#installing-upstream-nix) until **January 1, 2026**.
+
 ### With FlakeHub
 
-To fetch private flakes from FlakeHub and Nix builds from FlakeHub Cache, update the `permissions` block and use [`determinate-nix-action`][determinate-nix-action]:
+To fetch private flakes from FlakeHub and Nix builds from FlakeHub Cache, update the `permissions` block and use [`determinate-nix-action`][determinate-nix-action] instead of this Action:
 
 ```yaml
 on:
@@ -59,8 +63,8 @@ See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for a full example.
 
 ### Pinning the version
 
-This GitHub Action uses the most recent version of the Determinate Nix Installer, even when the Action itself is pinned.
-If you wish to pin your CI workflows to a specific version, use the [`determinate-nix-action`][determinate-nix-action].
+This GitHub Action uses the most recent version of Determinate Nix Installer, even when the Action itself is pinned.
+If you wish to pin your CI workflows to a specific Determinate Nix version, use the [`determinate-nix-action`][determinate-nix-action].
 That Action is updated and tagged for every Determinate release.
 
 The `DeterminateSystems/determinate-nix-action@v3.5.2` reference, for example, always installs Determinate Nix v3.5.2.
@@ -84,8 +88,8 @@ Differing from the upstream [Nix](https://github.com/NixOS/nix) installer script
   - the `nix-command` and `flakes` features are enabled
   - `bash-prompt-prefix` is set
   - `auto-optimise-store` is set to `true` (On Linux only)
-  * `extra-nix-path` is set to `nixpkgs=flake:nixpkgs`
-  * `max-jobs` is set to `auto`
+  - `extra-nix-path` is set to `nixpkgs=flake:nixpkgs`
+  - `max-jobs` is set to `auto`
 - KVM is enabled by default.
 - an installation receipt (for uninstalling) is stored at `/nix/receipt.json` as well as a copy of the install binary at `/nix/nix-installer`
 - `nix-channel --update` is not run, `~/.nix-channels` is not provisioned
@@ -132,11 +136,27 @@ Differing from the upstream [Nix](https://github.com/NixOS/nix) installer script
 | `proxy`                 | The proxy to use (if any), valid proxy bases are `https://$URL`, `http://$URL` and `socks5://$URL`                                                                                                                                                                             | string                                     |                                                                |
 | `ssl-cert-file`         | An SSL cert to use (if any), used for fetching Nix and sets `NIX_SSL_CERT_FILE` for Nix                                                                                                                                                                                        | string                                     |                                                                |
 
+## Installing upstream Nix
+
+Although Determinate Nix is the default, you can also use this Action to install [upstream Nix][upstream].
+Make sure to set `determinate: false` in the Action's configuration:
+
+```yaml
+- uses: DeterminateSystems/nix-installer-action@main
+  with:
+    determinate: false
+```
+
+This option will be available until **January 1, 2026**, at which point installing upstream Nix using this Action will no longer be possible.
+
 [apfs]: https://en.wikipedia.org/wiki/Apple_File_System
 [backtrace]: https://doc.rust-lang.org/std/backtrace/index.html#environment-variables
 [dependabot-actions]: https://github.com/DeterminateSystems/determinate-nix-action?tab=readme-ov-file#-automate-updates-with-dependabot
+[det-nix]: https://docs.determinate.systems/determinate-nix
 [determinate-nix-action]: https://github.com/DeterminateSystems/determinate-nix-action
 [github token]: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
+[installer]: https://github.com/DeterminateSystems/nix-installer
 [planner]: https://github.com/determinateSystems/nix-installer#usage
 [profile]: https://nixos.org/manual/nix/stable/package-management/profiles
 [tracing directives]: https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives
+[upstream]: https://github.com/NixOS/nix
