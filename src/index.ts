@@ -88,6 +88,7 @@ class NixInstallerAction extends DetSysAction {
   startDaemon: boolean;
   trustRunnerUser: boolean;
   runnerOs: string | undefined;
+  summarize: boolean;
 
   constructor() {
     if (platform.getArchOs() === "X64-macOS") {
@@ -152,6 +153,7 @@ class NixInstallerAction extends DetSysAction {
     this.reinstall = inputs.getBool("reinstall");
     this.startDaemon = inputs.getBool("start-daemon");
     this.trustRunnerUser = inputs.getBool("trust-runner-user");
+    this.summarize = inputs.getBool("summarize");
     this.runnerOs = process.env["RUNNER_OS"];
   }
 
@@ -164,12 +166,14 @@ class NixInstallerAction extends DetSysAction {
 
   async post(): Promise<void> {
     await this.annotateMismatches();
-    try {
-      await this.summarizeExecution();
-    } catch (err: unknown) {
-      this.recordEvent("summarize-execution:error", {
-        exception: stringifyError(err),
-      });
+    if (this.summarize) {
+      try {
+        await this.summarizeExecution();
+      } catch (err: unknown) {
+        this.recordEvent("summarize-execution:error", {
+          exception: stringifyError(err),
+        });
+      }
     }
     await this.cleanupNoSystemd();
     await this.reportOverall();

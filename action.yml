@@ -126,6 +126,9 @@ inputs:
   trust-runner-user:
     description: Whether to make the runner user trusted by the Nix daemon
     default: true
+  summarize:
+    description: Whether to add a build summary and timeline chart to the GitHub job summary
+    default: true
   nix-installer-branch:
     description: (deprecated) The branch of `nix-installer` to use (conflicts with `nix-installer-tag`, `nix-installer-revision`, `nix-installer-pr`)
     required: false
