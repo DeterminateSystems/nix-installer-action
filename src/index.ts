@@ -388,13 +388,19 @@ class NixInstallerAction extends DetSysAction {
       extraConf += "\n";
     }
     if (this.trustRunnerUser) {
-      const user = userInfo().username;
-      if (user) {
-        extraConf += `trusted-users = root ${user}`;
-      } else {
-        extraConf += `trusted-users = root`;
+      try {
+        const user = userInfo().username;
+        if (user) {
+          extraConf += `trusted-users = root ${user}`;
+        } else {
+          extraConf += `trusted-users = root`;
+        }
+        extraConf += "\n";
+      } catch (e: unknown) {
+        actionsCore.warning(
+          `trusted-user calculation error: ${stringifyError(e)}`,
+        );
       }
-      extraConf += "\n";
     }
     if (this.extraConf !== null && this.extraConf.length !== 0) {
       extraConf += this.extraConf.join("\n");
@@ -849,8 +855,8 @@ class NixInstallerAction extends DetSysAction {
 
   private async setupKvm(): Promise<boolean> {
     this.recordEvent(EVENT_SETUP_KVM);
-    const currentUser = userInfo();
-    const isRoot = currentUser.uid === 0;
+    const isRoot =
+      typeof process.geteuid === "function" && process.geteuid() === 0;
     const maybeSudo = isRoot ? "" : "sudo";
 
     // First check to see whether the current user can open the KVM device node
