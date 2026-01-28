@@ -53,10 +53,8 @@ jobs:
           - ubuntu-latest
           - nscloud-ubuntu-22.04-amd64-4x16
           - namespace-profile-default-arm64
-          # - macos-12-large # determinate-nixd is broken on macos-12
-          - macos-13-large
-          - macos-14-large
-          - macos-14-xlarge # arm64
+          - macos-15-intel
+          - macos-latest # arm64
         determinate:
           - true
           - false
@@ -78,7 +76,7 @@ jobs:
         run: echo $PATH
 
       - name: Render the devshell
-        if: (success() || failure()) && matrix.runner != 'macos-13-large' && matrix.runner != 'macos-14-large'
+        if: (success() || failure()) && matrix.runner != 'macos-15-intel'
         run: |
           nix develop --command date
 
