@@ -396,7 +396,7 @@ class NixInstallerAction extends DetSysAction {
       }
       extraConf += "\n";
     }
-    extraConf += `build-provenance-tags = ${JSON.stringify(this.getBuildProvenanceTags())}`;
+    extraConf += `build-provenance-tags = ${JSON.stringify(this.getBuildProvenanceTags())}\n`;
     if (this.extraConf !== null && this.extraConf.length !== 0) {
       extraConf += this.extraConf.join("\n");
       extraConf += "\n";
