@@ -33,8 +33,7 @@ jobs:
 ```
 
 > [!NOTE]
-> This Action installs [Determinate Nix][det-nix] by default.
-> You can, however, use it to install [upstream Nix](#installing-upstream-nix) until **January 1, 2026**.
+> This Action installs [Determinate Nix][det-nix].
 
 ### With FlakeHub
 
