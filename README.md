@@ -136,19 +136,6 @@ Differing from the upstream [Nix](https://github.com/NixOS/nix) installer script
 | `proxy`                 | The proxy to use (if any), valid proxy bases are `https://$URL`, `http://$URL` and `socks5://$URL`                                                                                                                                                                             | string                                     |                                                                |
 | `ssl-cert-file`         | An SSL cert to use (if any), used for fetching Nix and sets `NIX_SSL_CERT_FILE` for Nix                                                                                                                                                                                        | string                                     |                                                                |
 
-## Installing upstream Nix
-
-Although Determinate Nix is the default, you can also use this Action to install [upstream Nix][upstream].
-Make sure to set `determinate: false` in the Action's configuration:
-
-```yaml
-- uses: DeterminateSystems/nix-installer-action@main
-  with:
-    determinate: false
-```
-
-This option will be available until **January 1, 2026**, at which point installing upstream Nix using this Action will no longer be possible.
-
 [apfs]: https://en.wikipedia.org/wiki/Apple_File_System
 [backtrace]: https://doc.rust-lang.org/std/backtrace/index.html#environment-variables
 [dependabot-actions]: https://github.com/DeterminateSystems/determinate-nix-action?tab=readme-ov-file#-automate-updates-with-dependabot
