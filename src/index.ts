@@ -396,6 +396,7 @@ class NixInstallerAction extends DetSysAction {
       }
       extraConf += "\n";
     }
+    extraConf += `build-provenance-tags = ${JSON.stringify(this.getBuildProvenanceTags())}\n`;
     if (this.extraConf !== null && this.extraConf.length !== 0) {
       extraConf += this.extraConf.join("\n");
       extraConf += "\n";
@@ -419,6 +420,26 @@ class NixInstallerAction extends DetSysAction {
     }
 
     return executionEnv;
+  }
+
+  getBuildProvenanceTags(): Record<string, string> {
+    const mapping = {
+      GITHUB_WORKFLOW_REF: "github_workflow_ref",
+      GITHUB_WORKFLOW_SHA: "github_workflow_sha",
+      GITHUB_SHA: "github_sha",
+      GITHUB_RUN_ATTEMPT: "github_run_attempt",
+      GITHUB_RUN_ID: "github_run_id",
+      GITHUB_RUN_NUMBER: "github_run_number",
+      GITHUB_JOB: "github_job",
+      GITHUB_REF: "github_ref",
+      GITHUB_REPOSITORY: "github_repository",
+      GITHUB_SERVER_URL: "github_server_url",
+    };
+
+    const tags = Object.entries(mapping)
+      .map(([sourceKey, targetKey]) => [targetKey, process.env[sourceKey]])
+      .filter(([_, value]) => value !== undefined);
+    return { ...Object.fromEntries(tags), builder: "github-actions" };
   }
 
   private get installerArgs(): string[] {
