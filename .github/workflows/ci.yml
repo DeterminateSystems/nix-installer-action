@@ -8,7 +8,7 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs:
       - check-dist-up-to-date
       - install-nix
@@ -24,9 +24,9 @@ jobs:
 
   check-dist-up-to-date:
     name: Check the dist/ folder is up to date
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/flakehub-cache-action@main
       - name: pnpm install
@@ -62,7 +62,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install Nix
         uses: ./
         with:
@@ -143,7 +143,7 @@ jobs:
 
   install-with-non-default-source-inputs:
     name: Install Nix using non-default source-${{ matrix.inputs.key }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         inputs:
@@ -153,7 +153,7 @@ jobs:
             nix-version: "2.31.2" # 3.11.3 is based on 2.31.2
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install with alternative source-${{ matrix.inputs.key }}
         uses: ./
         with:
@@ -164,9 +164,9 @@ jobs:
 
   install-no-id-token:
     name: Install Nix without an ID token
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./
         with:
           _internal-strict-mode: true
