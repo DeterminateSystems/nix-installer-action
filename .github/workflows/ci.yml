@@ -26,7 +26,7 @@ jobs:
     name: Check the dist/ folder is up to date
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/flakehub-cache-action@main
       - name: pnpm install
@@ -62,7 +62,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install Nix
         uses: ./
         with:
@@ -153,7 +153,7 @@ jobs:
             nix-version: "2.31.2" # 3.11.3 is based on 2.31.2
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install with alternative source-${{ matrix.inputs.key }}
         uses: ./
         with:
@@ -166,7 +166,7 @@ jobs:
     name: Install Nix without an ID token
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./
         with:
           _internal-strict-mode: true
