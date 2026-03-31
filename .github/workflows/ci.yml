@@ -50,10 +50,8 @@ jobs:
       fail-fast: false
       matrix:
         runner:
-          - ubuntu-latest
-          - nscloud-ubuntu-22.04-amd64-4x16
-          - namespace-profile-default-arm64
-          - macos-latest # arm64
+          - nscloud-ubuntu-22.04-amd64-4x16 # x86_64-linux
+          - macos-latest # aarch64-darwin
         determinate:
           - true
           - false
