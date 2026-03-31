@@ -45,17 +45,20 @@ jobs:
         run: git diff --exit-code
 
   install-nix:
-    name: "Test: ${{ matrix.runner }}${{ matrix.determinate && ' with determinate' || '' }}"
+    name: "Test: ${{ matrix.system.nix-system }} on ${{ matrix.system.runner }}${{ matrix.determinate && ' with determinate' || '' }}"
     strategy:
       fail-fast: false
       matrix:
-        runner:
-          - nscloud-ubuntu-22.04-amd64-4x16 # x86_64-linux
-          - macos-latest # aarch64-darwin
+        system:
+          - {
+              nix-system: x86_64-linux,
+              runner: nscloud-ubuntu-22.04-amd64-4x16,
+            }
+          - { nix-system: aarch64-darwin, runner: macos-latest }
         determinate:
           - true
           - false
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.system.runner }}
     permissions:
       contents: read
       id-token: write
