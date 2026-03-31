@@ -2,30 +2,44 @@
 {
   description = "Development environment for the Nix Installer action for GitHub.";
 
-  inputs = {
-    flake-schemas.url = "https://flakehub.com/f/DeterminateSystems/flake-schemas/*.tar.gz";
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.0.tar.gz";
-  };
+  inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1";
 
-  outputs = { self, flake-schemas, nixpkgs }:
+  outputs =
+    { self, ... }@inputs:
     let
-      supportedSystems = [ "x86_64-linux" "aarch64-darwin" "aarch64-linux" ];
-      forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
-        pkgs = import nixpkgs { inherit system; };
-      });
+      supportedSystems = [
+        "x86_64-linux"
+        "aarch64-darwin"
+      ];
+      forEachSupportedSystem =
+        f:
+        inputs.nixpkgs.lib.genAttrs supportedSystems (
+          system:
+          f {
+            inherit system;
+            pkgs = import inputs.nixpkgs { inherit system; };
+          }
+        );
     in
     {
-      schemas = flake-schemas.schemas;
+      devShells = forEachSupportedSystem (
+        { pkgs, system }:
+        {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              nodejs_latest
+              self.formatter.${system}
 
-      devShells = forEachSupportedSystem ({ pkgs }: {
-        default = pkgs.mkShell {
-          packages = with pkgs; [
-            nodejs_latest
-            nixpkgs-fmt
-            nodePackages_latest.pnpm
-            nodePackages_latest.typescript-language-server
-          ];
-        };
-      });
+              # Keep people from accidentally running pnpm
+              (writeScriptBin "pnpm" ''
+                echo "pnpm is no longer used in this repo; use npm instead"
+                exit 1
+              '')
+            ];
+          };
+        }
+      );
+
+      formatter = forEachSupportedSystem ({ pkgs, ... }: pkgs.nixfmt);
     };
 }

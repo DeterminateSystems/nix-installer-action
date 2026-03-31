@@ -12,7 +12,7 @@
     "lint": "eslint src/**/*.ts",
     "package": "ncc build",
     "test": "vitest --watch false",
-    "all": "pnpm run test && pnpm run format && pnpm run lint && pnpm run build && pnpm run package"
+    "all": "npm run test && npm run format && npm run lint && npm run build && npm run package"
   },
   "repository": {
     "type": "git",
@@ -33,12 +33,6 @@
     "got": "^14.6.6",
     "string-argv": "^0.3.2",
     "vitest": "^3.2.4"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "unrs-resolver"
-    ]
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
