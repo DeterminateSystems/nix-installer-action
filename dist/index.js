@@ -106182,7 +106182,7 @@ var DetSysAction = class {
 		return this.identity;
 	}
 	recordEvent(eventName, context = {}) {
-		const prefixedName = eventName === "$feature_flag_called" ? eventName : `${this.actionOptions.eventPrefix}${eventName}`;
+		const prefixedName = eventName === "$feature_flag_called" || eventName === "$groupidentify" ? eventName : `${this.actionOptions.eventPrefix}${eventName}`;
 		this.events.push({
 			name: prefixedName,
 			distinct_id: this.identity.$anon_distinct_id,
@@ -106240,6 +106240,7 @@ var DetSysAction = class {
 				this.addFact(FACT_NIX_STORE_TRUST, this.nixStoreTrust);
 			}
 			if (this.isMain) {
+				this.recordGroup();
 				await this.main();
 				await this.preflightNixVersion();
 			} else if (this.isPost) await this.post();
@@ -106307,6 +106308,15 @@ var DetSysAction = class {
 			$feature_flag_response: result.variant
 		});
 		return result;
+	}
+	recordGroup() {
+		const ghorg_hash = this.identity.$groups["github_organization"];
+		const ghorg_name = process.env["GITHUB_REPOSITORY_OWNER"];
+		if (ghorg_hash !== void 0 && ghorg_name !== void 0) this.recordEvent("$groupidentify", {
+			$group_type: "github_organization",
+			$group_key: ghorg_hash,
+			$group_set: { name: ghorg_name }
+		});
 	}
 	/**
 	* Check in to install.determinate.systems, to accomplish three things:

@@ -29,7 +29,7 @@
     "@actions/core": "^3.0.0",
     "@actions/exec": "^3.0.0",
     "@actions/github": "^9.0.0",
-    "detsys-ts": "github:DeterminateSystems/detsys-ts",
+    "detsys-ts": "github:DeterminateSystems/detsys-ts#push-sqvzmxuokwlk",
     "got": "^14.6.6",
     "string-argv": "^0.3.2",
     "vitest": "^3.2.4"
