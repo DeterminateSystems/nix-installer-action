@@ -11,6 +11,6 @@ updates:
       actions:
         patterns: ["*"]
     ignore:
-      - dependency-name: "DeterminateSystems/*"
+      - dependency-name: DeterminateSystems/*
     commit-message:
       prefix: ci
