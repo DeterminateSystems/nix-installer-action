@@ -9,6 +9,8 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs:
       - check-dist-up-to-date
       - install-nix
@@ -25,8 +27,12 @@ jobs:
   check-dist-up-to-date:
     name: Check the dist/ folder is up to date
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/flakehub-cache-action@main
       - name: npm install
@@ -63,7 +69,9 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: Install Nix
         uses: ./
         with:
@@ -145,6 +153,8 @@ jobs:
   install-with-non-default-source-inputs:
     name: Install Nix using non-default source-${{ matrix.inputs.key }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         inputs:
@@ -154,7 +164,9 @@ jobs:
             nix-version: "2.31.2" # 3.11.3 is based on 2.31.2
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: Install with alternative source-${{ matrix.inputs.key }}
         uses: ./
         with:
@@ -166,8 +178,12 @@ jobs:
   install-no-id-token:
     name: Install Nix without an ID token
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - uses: ./
         with:
           _internal-strict-mode: true
