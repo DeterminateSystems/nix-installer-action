@@ -32,7 +32,7 @@
     "detsys-ts": "github:DeterminateSystems/detsys-ts",
     "got": "^14.6.6",
     "string-argv": "^0.3.2",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.0"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
