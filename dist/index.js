@@ -1015,7 +1015,7 @@ function expand(str, max, isTop) {
 
     N = [];
 
-    for (var i = x; test(i, y); i += incr) {
+    for (var i = x; test(i, y) && N.length < max; i += incr) {
       var c;
       if (isAlphaSequence) {
         c = String.fromCharCode(i);
@@ -12583,6 +12583,9 @@ class Range {
   }
 
   parseRange (range) {
+    // strip build metadata so it can't bleed into the version
+    range = range.replace(BUILDSTRIPRE, '')
+
     // memoize range parsing for performance.
     // this is a very hot path, and fully deterministic.
     const memoOpts =
@@ -12708,12 +12711,16 @@ const debug = __nccwpck_require__(1159)
 const SemVer = __nccwpck_require__(7163)
 const {
   safeRe: re,
+  src,
   t,
   comparatorTrimReplace,
   tildeTrimReplace,
   caretTrimReplace,
 } = __nccwpck_require__(5471)
 const { FLAG_INCLUDE_PRERELEASE, FLAG_LOOSE } = __nccwpck_require__(5101)
+
+// unbounded global build-metadata stripper used by parseRange
+const BUILDSTRIPRE = new RegExp(src[t.BUILD], 'g')
 
 const isNullSet = c => c.value === '<0.0.0-0'
 const isAny = c => c.value === ''
@@ -14943,7 +14950,7 @@ const simpleSubset = (sub, dom, options) => {
         if (higher === c && higher !== gt) {
           return false
         }
-      } else if (gt.operator === '>=' && !satisfies(gt.semver, String(c), options)) {
+      } else if (gt.operator === '>=' && !c.test(gt.semver)) {
         return false
       }
     }
@@ -14961,7 +14968,7 @@ const simpleSubset = (sub, dom, options) => {
         if (lower === c && lower !== lt) {
           return false
         }
-      } else if (lt.operator === '<=' && !satisfies(lt.semver, String(c), options)) {
+      } else if (lt.operator === '<=' && !c.test(lt.semver)) {
         return false
       }
     }
@@ -19573,7 +19580,6 @@ function defaultFactory (origin, opts) {
 
 class Agent extends DispatcherBase {
   constructor ({ factory = defaultFactory, maxRedirections = 0, connect, ...options } = {}) {
-
     if (typeof factory !== 'function') {
       throw new InvalidArgumentError('factory must be a function.')
     }
@@ -20181,27 +20187,69 @@ class Parser {
 
       const offset = llhttp.llhttp_get_error_pos(this.ptr) - currentBufferPtr
 
-      if (ret === constants.ERROR.PAUSED_UPGRADE) {
-        this.onUpgrade(data.slice(offset))
-      } else if (ret === constants.ERROR.PAUSED) {
-        this.paused = true
-        socket.unshift(data.slice(offset))
-      } else if (ret !== constants.ERROR.OK) {
-        const ptr = llhttp.llhttp_get_error_reason(this.ptr)
-        let message = ''
-        /* istanbul ignore else: difficult to make a test case for */
-        if (ptr) {
-          const len = new Uint8Array(llhttp.memory.buffer, ptr).indexOf(0)
-          message =
-            'Response does not match the HTTP/1.1 protocol (' +
-            Buffer.from(llhttp.memory.buffer, ptr, len).toString() +
-            ')'
+      if (ret !== constants.ERROR.OK) {
+        const body = data.subarray(offset)
+
+        if (ret === constants.ERROR.PAUSED_UPGRADE) {
+          this.onUpgrade(body)
+        } else if (ret === constants.ERROR.PAUSED) {
+          this.paused = true
+          socket.unshift(body)
+        } else {
+          throw this.createError(ret, body)
         }
-        throw new HTTPParserError(message, constants.ERROR[ret], data.slice(offset))
       }
     } catch (err) {
       util.destroy(socket, err)
     }
+  }
+
+  finish () {
+    assert(currentParser === null)
+    assert(this.ptr != null)
+    assert(!this.paused)
+
+    const { llhttp } = this
+
+    let ret
+
+    try {
+      currentParser = this
+      ret = llhttp.llhttp_finish(this.ptr)
+    } finally {
+      currentParser = null
+    }
+
+    if (ret === constants.ERROR.OK) {
+      return null
+    }
+
+    if (ret === constants.ERROR.PAUSED || ret === constants.ERROR.PAUSED_UPGRADE) {
+      this.paused = true
+      return null
+    }
+
+    return this.createError(ret, EMPTY_BUF)
+  }
+
+  createError (ret, data) {
+    const { llhttp, contentLength, bytesRead } = this
+
+    if (contentLength && bytesRead !== parseInt(contentLength, 10)) {
+      return new ResponseContentLengthMismatchError()
+    }
+
+    const ptr = llhttp.llhttp_get_error_reason(this.ptr)
+    let message = ''
+    if (ptr) {
+      const len = new Uint8Array(llhttp.memory.buffer, ptr).indexOf(0)
+      message =
+        'Response does not match the HTTP/1.1 protocol (' +
+        Buffer.from(llhttp.memory.buffer, ptr, len).toString() +
+        ')'
+    }
+
+    return new HTTPParserError(message, constants.ERROR[ret], data)
   }
 
   destroy () {
@@ -20575,8 +20623,11 @@ async function connectH1 (client, socket) {
     // On Mac OS, we get an ECONNRESET even if there is a full body to be forwarded
     // to the user.
     if (err.code === 'ECONNRESET' && parser.statusCode && !parser.shouldKeepAlive) {
-      // We treat all incoming data so for as a valid response.
-      parser.onMessageComplete()
+      const parserErr = parser.finish()
+      if (parserErr) {
+        this[kError] = parserErr
+        this[kClient][kOnError](parserErr)
+      }
       return
     }
 
@@ -20595,8 +20646,10 @@ async function connectH1 (client, socket) {
     const parser = this[kParser]
 
     if (parser.statusCode && !parser.shouldKeepAlive) {
-      // We treat all incoming data so far as a valid response.
-      parser.onMessageComplete()
+      const parserErr = parser.finish()
+      if (parserErr) {
+        util.destroy(this, parserErr)
+      }
       return
     }
 
@@ -20608,8 +20661,7 @@ async function connectH1 (client, socket) {
 
     if (parser) {
       if (!this[kError] && parser.statusCode && !parser.shouldKeepAlive) {
-        // We treat all incoming data so far as a valid response.
-        parser.onMessageComplete()
+        this[kError] = parser.finish() || this[kError]
       }
 
       this[kParser].destroy()
@@ -43408,7 +43460,7 @@ module.exports = { version: packageJson.version }
 /***/ 4012:
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"name":"@actions/cache","version":"6.0.0","description":"Actions cache lib","keywords":["github","actions","cache"],"homepage":"https://github.com/actions/toolkit/tree/main/packages/cache","license":"MIT","type":"module","main":"lib/cache.js","types":"lib/cache.d.ts","exports":{".":{"types":"./lib/cache.d.ts","import":"./lib/cache.js"}},"directories":{"lib":"lib","test":"__tests__"},"files":["lib","!.DS_Store"],"publishConfig":{"access":"public"},"repository":{"type":"git","url":"git+https://github.com/actions/toolkit.git","directory":"packages/cache"},"scripts":{"audit-moderate":"npm install && npm audit --json --audit-level=moderate > audit.json","test":"echo \\"Error: run tests from root\\" && exit 1","tsc":"tsc && cp src/internal/shared/package-version.cjs lib/internal/shared/"},"bugs":{"url":"https://github.com/actions/toolkit/issues"},"dependencies":{"@actions/core":"^3.0.0","@actions/exec":"^3.0.0","@actions/glob":"^0.6.1","@actions/http-client":"^4.0.0","@actions/io":"^3.0.0","@azure/core-rest-pipeline":"^1.22.0","@azure/storage-blob":"^12.30.0","@protobuf-ts/runtime-rpc":"^2.11.1","semver":"^7.7.3"},"devDependencies":{"@protobuf-ts/plugin":"^2.9.4","@types/node":"^25.1.0","@types/semver":"^7.7.1","typescript":"^5.2.2"},"overrides":{"uri-js":"npm:uri-js-replace@^1.0.1","node-fetch":"^3.3.2"}}');
+module.exports = /*#__PURE__*/JSON.parse('{"name":"@actions/cache","version":"6.0.1","description":"Actions cache lib","keywords":["github","actions","cache"],"homepage":"https://github.com/actions/toolkit/tree/main/packages/cache","license":"MIT","type":"module","main":"lib/cache.js","types":"lib/cache.d.ts","exports":{".":{"types":"./lib/cache.d.ts","import":"./lib/cache.js"}},"directories":{"lib":"lib","test":"__tests__"},"files":["lib","!.DS_Store"],"publishConfig":{"access":"public"},"repository":{"type":"git","url":"git+https://github.com/actions/toolkit.git","directory":"packages/cache"},"scripts":{"audit-moderate":"npm install && npm audit --json --audit-level=moderate > audit.json","test":"echo \\"Error: run tests from root\\" && exit 1","tsc":"tsc && cp src/internal/shared/package-version.cjs lib/internal/shared/"},"bugs":{"url":"https://github.com/actions/toolkit/issues"},"dependencies":{"@actions/core":"^3.0.1","@actions/exec":"^3.0.0","@actions/glob":"^0.6.1","@actions/http-client":"^4.0.1","@actions/io":"^3.0.2","@azure/core-rest-pipeline":"^1.23.0","@azure/storage-blob":"^12.31.0","@protobuf-ts/runtime-rpc":"^2.11.1","semver":"^7.7.4"},"devDependencies":{"@protobuf-ts/plugin":"^2.11.1","@types/node":"^25.6.0","@types/semver":"^7.7.1","typescript":"^5.9.3"},"overrides":{"uri-js":"npm:uri-js-replace@^1.0.1","node-fetch":"^3.3.2"}}');
 
 /***/ })
 
@@ -47524,7 +47576,7 @@ class RequestError extends Error {
 
 
 // pkg/dist-src/version.js
-var dist_bundle_VERSION = "10.0.9";
+var dist_bundle_VERSION = "10.0.10";
 
 // pkg/dist-src/defaults.js
 var defaults_default = {
@@ -73263,7 +73315,6 @@ const BASIC_LATIN = {
   num: '#',
   dollar: '$',
   percent: '%',
-  amp: '&',
   ast: '*',
   commat: '@',
   lowbar: '_',
@@ -73695,9 +73746,6 @@ const CYRILLIC = {
  */
 const MATH = {
   plus: '+',
-  minus: '−',
-  mnplus: '∓',
-  mp: '∓',
   pm: '±',
   times: '×',
   div: '÷',
@@ -73770,10 +73818,6 @@ const MATH = {
   bumpe: '≏',
   bumpeq: '≏',
   HumpEqual: '≏',
-  dotminus: '∸',
-  minusd: '∸',
-  plusdo: '∔',
-  dotplus: '∔',
   le: '≤',
   LessEqual: '≤',
   ge: '≥',
@@ -73889,7 +73933,6 @@ const MATH_ADVANCED = {
   wr: '≀',
   wreath: '≀',
   nsime: '≄',
-  nsimeq: '≄',
   nsimeq: '≄',
   ncong: '≇',
   simne: '≆',
@@ -74007,10 +74050,6 @@ const ARROWS = {
   mapsto: '↦',
   mapstodown: '↧',
   crarr: '↵',
-  nwarrow: '↖',
-  nearrow: '↗',
-  searrow: '↘',
-  swarrow: '↙',
   nleftarrow: '↚',
   nleftrightarrow: '↮',
   nrightarrow: '↛',
@@ -74051,7 +74090,6 @@ const ARROWS = {
   ldrushar: '⥋',
   rdldhar: '⥩',
   lrhard: '⥭',
-  rlhar: '⇌',
   uharr: '↾',
   uharl: '↿',
   dharr: '⇂',
@@ -74067,7 +74105,6 @@ const ARROWS = {
   nhArr: '⇎',
   nlarr: '↚',
   nlArr: '⇍',
-  nrarr: '↛',
   nrArr: '⇏',
   larrb: '⇤',
   LeftArrowBar: '⇤',
@@ -74229,7 +74266,6 @@ const PUNCTUATION = {
   DiacriticalDot: '˙',
   DiacriticalDoubleAcute: '˝',
   grave: '`',
-  acute: '´',
 };
 
 /**
@@ -74243,7 +74279,6 @@ const CURRENCY = {
   yen: '¥',
   euro: '€',
   dollar: '$',
-  euro: '€',
   fnof: 'ƒ',
   inr: '₹',
   af: '؋',
@@ -74343,7 +74378,6 @@ const MISC_SYMBOLS = {
   Vdash: '⊩',
   dashv: '⊣',
   vDash: '⊨',
-  Vdash: '⊩',
   Vvdash: '⊪',
   nvdash: '⊬',
   nvDash: '⊭',
@@ -74700,7 +74734,7 @@ class EntityDecoder {
   decode(str) {
     if (typeof str !== 'string' || str.length === 0) return str;
     //TODO: check if needed
-    //if (str.indexOf('&') === -1) return str; // fast path — no entities at all
+    if (str.indexOf('&') === -1) return str; // fast path — no entities at all
 
     const original = str;
     const chunks = [];
@@ -104461,7 +104495,7 @@ NetworkError.isNetworkErrorCode = (code) => {
 };
 class UsageError extends Error {
     constructor() {
-        const message = `Cache storage quota has been hit. Unable to upload any new cache entries. Usage is recalculated every 6-12 hours.\nMore info on storage limits: https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions#calculating-minute-and-storage-spending`;
+        const message = `Cache storage quota has been hit. Unable to upload any new cache entries.\nMore info on storage limits: https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions#calculating-minute-and-storage-spending`;
         super(message);
         this.name = 'UsageError';
     }
