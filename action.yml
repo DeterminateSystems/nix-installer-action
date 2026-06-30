@@ -11,6 +11,10 @@ inputs:
     description: |
       Whether to install [Determinate Nix](https://determinate.systems/enterprise) and log in to FlakeHub for private Flakes and binary caches.
     default: true
+  determinate-nix-config:
+    description: |
+      A string of literal JSON to write to `/etc/determinate/config.json` before installing. Rejected if not valid JSON. If `/etc/determinate/config.json` already exists it is overwritten with a warning.
+    required: false
   extra-args:
     description: Extra args to pass to the planner (prefer using structured `with:` arguments unless using a custom planner!)
     required: false
