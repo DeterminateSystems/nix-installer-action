@@ -115465,6 +115465,7 @@ var STATE_START_DATETIME = "DETERMINATE_NIXD_START_DATETIME";
 var NixInstallerAction = class extends DetSysAction {
   daemonDir;
   determinate;
+  determinateNixConfig;
   platform;
   nixPackageUrl;
   backtrace;
@@ -115525,6 +115526,9 @@ var NixInstallerAction = class extends DetSysAction {
       saveState(STATE_DAEMONDIR, this.daemonDir);
     }
     this.determinate = inputs_exports.getBool("determinate") || inputs_exports.getBool("flakehub");
+    this.determinateNixConfig = inputs_exports.getStringOrNull(
+      "determinate-nix-config"
+    );
     this.platform = platform_exports.getNixPlatform(platform_exports.getArchOs());
     this.nixPackageUrl = inputs_exports.getStringOrNull("nix-package-url");
     this.backtrace = inputs_exports.getStringOrNull("backtrace");
@@ -115829,6 +115833,47 @@ var NixInstallerAction = class extends DetSysAction {
     }
     return args;
   }
+  async writeDeterminateNixConfig() {
+    if (this.determinateNixConfig === null) {
+      return;
+    }
+    const configDir = "/etc/determinate";
+    const configPath = (0,external_path_.join)(configDir, "config.json");
+    try {
+      JSON.parse(this.determinateNixConfig);
+    } catch (error3) {
+      const message = `\`determinate-nix-config\` is not valid JSON: ${stringifyError(error3)}`;
+      warning(message);
+      throw new Error(message);
+    }
+    let alreadyExists = false;
+    try {
+      await (0,promises_namespaceObject.access)(configPath);
+      alreadyExists = true;
+    } catch {
+    }
+    if (alreadyExists) {
+      warning(
+        `\`determinate-nix-config\` is set but ${configPath} already exists; overwriting it with the provided configuration.`
+      );
+    }
+    startGroup(`Writing Determinate Nix config to ${configPath}`);
+    const isRoot = (0,external_os_.userInfo)().uid === 0;
+    const runPrivileged = async (command, args, options = {}) => {
+      const exitCode = isRoot ? await exec_exec(command, args, options) : await exec_exec("sudo", [command, ...args], options);
+      if (exitCode !== 0) {
+        throw new Error(
+          `Non-zero exit code of \`${exitCode}\` detected while writing ${configPath}`
+        );
+      }
+    };
+    await runPrivileged("mkdir", ["-p", configDir]);
+    await runPrivileged("tee", [configPath], {
+      input: Buffer.from(this.determinateNixConfig, "utf-8"),
+      silent: true
+    });
+    endGroup();
+  }
   async executeInstall(binaryPath) {
     const executionEnv = await this.executionEnvironment();
     core_debug(
@@ -115880,6 +115925,7 @@ var NixInstallerAction = class extends DetSysAction {
         exportVariable("DETERMINATE_NIX_KVM", "0");
       }
     }
+    await this.writeDeterminateNixConfig();
     startGroup("Installing Nix");
     const binaryPath = await this.fetchBinary();
     await this.executeInstall(binaryPath);
