@@ -34,7 +34,7 @@ jobs:
 
 > [!NOTE]
 > This Action installs [Determinate Nix][det-nix] by default.
-> You can, however, use it to install [upstream Nix](#installing-upstream-nix) until **January 1, 2026**.
+> You can still use it to install [upstream Nix](#installing-upstream-nix), although that isn't a supported configuration.
 
 ### With FlakeHub
 
@@ -148,7 +148,8 @@ Make sure to set `determinate: false` in the Action's configuration:
     determinate: false
 ```
 
-This option will be available until **January 1, 2026**, at which point installing upstream Nix using this Action will no longer be possible.
+Installing upstream Nix isn't a supported configuration.
+The option remains available for now, but we may remove it in a future release.
 
 [apfs]: https://en.wikipedia.org/wiki/Apple_File_System
 [backtrace]: https://doc.rust-lang.org/std/backtrace/index.html#environment-variables
