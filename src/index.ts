@@ -7,7 +7,12 @@ import fs, { mkdirSync, openSync } from "node:fs";
 import { userInfo } from "node:os";
 import stringArgv from "string-argv";
 import * as path from "path";
-import { DetSysAction, inputs, platform, stringifyError } from "detsys-ts";
+import {
+  DetSysAction,
+  inputs,
+  platform,
+  stringifyError,
+} from "@determinate-systems/detsys-ts";
 import got from "got";
 import { setTimeout } from "node:timers/promises";
 import { getFixHashes } from "./fixHashes.js";
