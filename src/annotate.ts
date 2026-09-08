@@ -1,4 +1,4 @@
-import * as core from "@actions/core";
+import { log } from "@determinate-systems/detsys-ts";
 
 import type { Fix, FixHashesOutputV1, Mismatch } from "./fixHashes.js";
 
@@ -12,7 +12,7 @@ function annotateSingle(
   { derivation, replacement }: Mismatch,
 ): void {
   const pretty = prettyDerivation(derivation);
-  core.error(`To correct the hash mismatch for ${pretty}, use ${replacement}`, {
+  log.error(`To correct the hash mismatch for ${pretty}, use ${replacement}`, {
     file,
     startLine: line,
   });
@@ -29,7 +29,7 @@ function annotateMultiple(
     })
     .join("\n");
 
-  core.error(
+  log.error(
     `There are multiple replacements for the expression ${found}:\n${matches}`,
     {
       file,
