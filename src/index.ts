@@ -522,9 +522,6 @@ class NixInstallerAction extends DetSysAction {
   private async executeInstall(binaryPath: string): Promise<number> {
     return withSpan("execute_install", async (span) => {
       const executionEnv = await this.executionEnvironment();
-      log.debug(
-        `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`,
-      );
 
       this.addEvent(EVENT_INSTALL_NIX_START);
       const exitCode = await actionsExec.exec(binaryPath, this.installerArgs, {
