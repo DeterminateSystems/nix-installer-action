@@ -178774,9 +178774,6 @@ var NixInstallerAction = class extends DetSysAction {
   async executeInstall(binaryPath) {
     return withSpan("execute_install", async (span) => {
       const executionEnv = await this.executionEnvironment();
-      log_exports.debug(
-        `Execution environment: ${JSON.stringify(executionEnv, null, 4)}`
-      );
       this.addEvent(EVENT_INSTALL_NIX_START);
       const exitCode = await exec_exec(binaryPath, this.installerArgs, {
         env: {
