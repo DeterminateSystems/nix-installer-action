@@ -171802,6 +171802,8 @@ function makeOptionsConfident(actionOptions) {
 
 
 //# sourceMappingURL=index.mjs.map
+;// CONCATENATED MODULE: external "timers/promises"
+const external_timers_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("timers/promises");
 ;// CONCATENATED MODULE: ./node_modules/@sindresorhus/is/distribution/utilities.js
 function utilities_keysOf(value) {
     return Object.keys(value);
@@ -178073,11 +178075,8 @@ const source_got = dist_source_create(dist_source_defaults);
 
 
 
-;// CONCATENATED MODULE: external "timers/promises"
-const external_timers_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("timers/promises");
 ;// CONCATENATED MODULE: ./dist/index.js
 // src/index.ts
-
 
 
 
@@ -178381,9 +178380,6 @@ var EVENT_NO_SYSTEMD_SHIM_FAILED = "detsys.nix_installer.no_systemd_shim_failed"
 var EVENT_SHIM_WAIT_FOR_SOCKET = "detsys.nix_installer.shim_wait_for_socket_failed";
 var EVENT_SUMMARIZE_EXECUTION_ERROR = "detsys.nix_installer.summarize_execution_error";
 var EVENT_ANNOTATE_MISMATCHES_ERROR = "detsys.nix_installer.annotate_mismatches_error";
-var EVENT_DEBUG_PROBE_URLS_RESPONSE = "detsys.nix_installer.debug_probe_urls.response";
-var EVENT_DEBUG_PROBE_URLS_EXCEPTION = "detsys.nix_installer.debug_probe_urls.exception";
-var EVENT_DEBUG_PROBE_URLS_ERROR = "detsys.nix_installer.debug_probe_urls.error";
 var FEAT_ANNOTATIONS = "hash-mismatch-annotations";
 var ATTR_DETERMINATE_NIX = "detsys.nix_installer.determinate_nix";
 var ATTR_HAS_SYSTEMD = "detsys.nix_installer.has_systemd";
@@ -178401,11 +178397,6 @@ var ATTR_FOD_MISMATCH_COUNT = "detsys.nix_installer.fod_mismatch_count";
 var ATTR_IS_ROOT = "detsys.nix_installer.is_root";
 var ATTR_KVM_ENABLED = "detsys.nix_installer.kvm_enabled";
 var ATTR_DAEMON_PID = "detsys.nix_installer.daemon_pid";
-var ATTR_DEBUG_PROBE_URLS_IP = "detsys.nix_installer.debug_probe_urls.ip";
-var ATTR_DEBUG_PROBE_URLS_OK = "detsys.nix_installer.debug_probe_urls.ok";
-var ATTR_DEBUG_PROBE_URLS_STATUS_CODE = "detsys.nix_installer.debug_probe_urls.status_code";
-var ATTR_DEBUG_PROBE_URLS_BODY = "detsys.nix_installer.debug_probe_urls.body";
-var ATTR_DEBUG_PROBE_URLS_ELAPSED = "detsys.nix_installer.debug_probe_urls.elapsed";
 var FLAG_DETERMINATE = "--determinate";
 var FLAG_PREFER_UPSTREAM_NIX = "--prefer-upstream-nix";
 var STATE_DAEMONDIR = "DNI_DAEMONDIR";
@@ -178508,7 +178499,6 @@ var NixInstallerAction = class extends DetSysAction {
   }
   async main() {
     saveState(STATE_START_DATETIME, (/* @__PURE__ */ new Date()).toISOString());
-    await this.scienceDebugFly();
     await this.detectAndForceNoSystemd();
     await this.install();
   }
@@ -178537,39 +178527,6 @@ var NixInstallerAction = class extends DetSysAction {
   }
   get isRunningInNamespaceRunner() {
     return process.env["NSC_VM_ID"] !== void 0 && !(process.env["NOT_NAMESPACE"] === "true");
-  }
-  async scienceDebugFly() {
-    try {
-      const feat = this.getFeature("debug-probe-urls");
-      if (feat === void 0 || feat.payload === void 0) {
-        return;
-      }
-      const { timeoutMs, url } = JSON.parse(
-        feat.payload
-      );
-      try {
-        const resp = await got_dist_source.get(url, {
-          timeout: {
-            request: timeoutMs
-          }
-        });
-        this.addEvent(EVENT_DEBUG_PROBE_URLS_RESPONSE, {
-          [ATTR_DEBUG_PROBE_URLS_IP]: resp.ip,
-          [ATTR_DEBUG_PROBE_URLS_OK]: resp.ok,
-          [ATTR_DEBUG_PROBE_URLS_STATUS_CODE]: resp.statusCode,
-          [ATTR_DEBUG_PROBE_URLS_BODY]: resp.body,
-          [ATTR_DEBUG_PROBE_URLS_ELAPSED]: (resp.timings.end ?? 0) - resp.timings.start
-        });
-      } catch (e) {
-        this.addEvent(EVENT_DEBUG_PROBE_URLS_EXCEPTION, {
-          [semantic_conventions_build_src.ATTR_EXCEPTION_MESSAGE]: stringifyError(e)
-        });
-      }
-    } catch (err) {
-      this.addEvent(EVENT_DEBUG_PROBE_URLS_ERROR, {
-        [semantic_conventions_build_src.ATTR_EXCEPTION_MESSAGE]: stringifyError(err)
-      });
-    }
   }
   // Detect if we're in a GHA runner which is Linux and doesn't have Systemd.
   // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),

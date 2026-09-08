@@ -16,7 +16,6 @@ import {
   withSpan,
 } from "@determinate-systems/detsys-ts";
 import { ATTR_EXCEPTION_MESSAGE } from "@opentelemetry/semantic-conventions";
-import got from "got";
 import { setTimeout } from "node:timers/promises";
 import { getFixHashes } from "./fixHashes.js";
 import { annotateMismatches } from "./annotate.js";
@@ -50,14 +49,6 @@ const EVENT_SUMMARIZE_EXECUTION_ERROR =
 const EVENT_ANNOTATE_MISMATCHES_ERROR =
   "detsys.nix_installer.annotate_mismatches_error";
 
-// Debug probe events
-const EVENT_DEBUG_PROBE_URLS_RESPONSE =
-  "detsys.nix_installer.debug_probe_urls.response";
-const EVENT_DEBUG_PROBE_URLS_EXCEPTION =
-  "detsys.nix_installer.debug_probe_urls.exception";
-const EVENT_DEBUG_PROBE_URLS_ERROR =
-  "detsys.nix_installer.debug_probe_urls.error";
-
 // Feature flag names
 const FEAT_ANNOTATIONS = "hash-mismatch-annotations";
 
@@ -78,15 +69,6 @@ const ATTR_FOD_MISMATCH_COUNT = "detsys.nix_installer.fod_mismatch_count";
 const ATTR_IS_ROOT = "detsys.nix_installer.is_root";
 const ATTR_KVM_ENABLED = "detsys.nix_installer.kvm_enabled";
 const ATTR_DAEMON_PID = "detsys.nix_installer.daemon_pid";
-
-// Debug probe attributes
-const ATTR_DEBUG_PROBE_URLS_IP = "detsys.nix_installer.debug_probe_urls.ip";
-const ATTR_DEBUG_PROBE_URLS_OK = "detsys.nix_installer.debug_probe_urls.ok";
-const ATTR_DEBUG_PROBE_URLS_STATUS_CODE =
-  "detsys.nix_installer.debug_probe_urls.status_code";
-const ATTR_DEBUG_PROBE_URLS_BODY = "detsys.nix_installer.debug_probe_urls.body";
-const ATTR_DEBUG_PROBE_URLS_ELAPSED =
-  "detsys.nix_installer.debug_probe_urls.elapsed";
 
 // Flags
 const FLAG_DETERMINATE = "--determinate";
@@ -201,7 +183,6 @@ class NixInstallerAction extends DetSysAction {
 
   async main(): Promise<void> {
     actionsCore.saveState(STATE_START_DATETIME, new Date().toISOString());
-    await this.scienceDebugFly();
     await this.detectAndForceNoSystemd();
     await this.install();
   }
@@ -238,43 +219,6 @@ class NixInstallerAction extends DetSysAction {
       process.env["NSC_VM_ID"] !== undefined &&
       !(process.env["NOT_NAMESPACE"] === "true")
     );
-  }
-
-  async scienceDebugFly(): Promise<void> {
-    try {
-      const feat = this.getFeature("debug-probe-urls");
-      if (feat === undefined || feat.payload === undefined) {
-        return;
-      }
-
-      const { timeoutMs, url }: { timeoutMs: number; url: string } = JSON.parse(
-        feat.payload,
-      );
-      try {
-        const resp = await got.get(url, {
-          timeout: {
-            request: timeoutMs,
-          },
-        });
-
-        this.addEvent(EVENT_DEBUG_PROBE_URLS_RESPONSE, {
-          [ATTR_DEBUG_PROBE_URLS_IP]: resp.ip,
-          [ATTR_DEBUG_PROBE_URLS_OK]: resp.ok,
-          [ATTR_DEBUG_PROBE_URLS_STATUS_CODE]: resp.statusCode,
-          [ATTR_DEBUG_PROBE_URLS_BODY]: resp.body,
-          [ATTR_DEBUG_PROBE_URLS_ELAPSED]:
-            (resp.timings.end ?? 0) - resp.timings.start,
-        });
-      } catch (e: unknown) {
-        this.addEvent(EVENT_DEBUG_PROBE_URLS_EXCEPTION, {
-          [ATTR_EXCEPTION_MESSAGE]: stringifyError(e),
-        });
-      }
-    } catch (err: unknown) {
-      this.addEvent(EVENT_DEBUG_PROBE_URLS_ERROR, {
-        [ATTR_EXCEPTION_MESSAGE]: stringifyError(err),
-      });
-    }
   }
 
   // Detect if we're in a GHA runner which is Linux and doesn't have Systemd.
