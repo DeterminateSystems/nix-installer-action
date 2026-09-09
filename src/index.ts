@@ -16,7 +16,6 @@ import {
   stringifyError,
   withSpan,
 } from "@determinate-systems/detsys-ts";
-import { ATTR_EXCEPTION_MESSAGE } from "@opentelemetry/semantic-conventions";
 import { setTimeout } from "node:timers/promises";
 import { getFixHashes } from "./fixHashes.js";
 import { annotateMismatches } from "./annotate.js";
@@ -24,12 +23,6 @@ import { DEvent, getRecentEvents } from "./events.js";
 import { makeMermaidReport } from "./mermaid.js";
 import { summarizeFailures } from "./failuresummary.js";
 import { SpawnOptions, spawn } from "node:child_process";
-
-// Other events
-const EVENT_NO_SYSTEMD_SHIM_FAILED =
-  "detsys.nix_installer.no_systemd_shim_failed";
-const EVENT_SHIM_WAIT_FOR_SOCKET =
-  "detsys.nix_installer.shim_wait_for_socket_failed";
 
 // Feature flag names
 const FEAT_ANNOTATIONS = "hash-mismatch-annotations";
@@ -45,7 +38,6 @@ const ATTR_EXIT_CODE = "detsys.exit_code";
 const ATTR_JOB_CONCLUSION = "detsys.nix_installer.job_conclusion";
 const ATTR_LOGIN_SKIPPED_REASON = "detsys.flakehub.login_skipped_reason";
 const ATTR_LOGIN_SUCCEEDED = "detsys.flakehub.login_succeeded";
-const ATTR_SHIM_LOG = "detsys.nix_installer.shim_log";
 const ATTR_FOD_MISMATCH_COUNT = "detsys.nix_installer.fod_mismatch_count";
 const ATTR_SUMMARY_AVAILABLE = "detsys.nix_installer.summary_available";
 const ATTR_BUILDS_SUCCEEDED = "detsys.nix_installer.builds_succeeded";
@@ -531,6 +523,13 @@ class NixInstallerAction extends DetSysAction {
       "Directly spawning the daemon, since systemd is not available.",
       async () => {
         const outputPath = path.join(this.daemonDir, "daemon.log");
+
+        // The daemon log goes out as a log record if this phase fails. A log
+        // record body has no length limit, and a span attribute is cut at
+        // 8192 characters, thus more of the log arrives than an attribute
+        // could carry.
+        this.stapleFile("daemon.log", outputPath);
+
         const output = openSync(outputPath, "a");
 
         const daemonBin = this.determinate
@@ -571,39 +570,28 @@ class NixInstallerAction extends DetSysAction {
           await writeFile(pidFile, daemon.pid.toString());
         }
 
-        try {
-          for (let i = 0; i <= 2400; i++) {
-            // Approximately 2 minutes
-            if (daemon.signalCode !== null || daemon.exitCode !== null) {
-              let msg: string;
-              if (daemon.signalCode) {
-                msg = `Daemon was killed by signal ${daemon.signalCode}`;
-              } else {
-                msg = `Daemon exited with code ${daemon.exitCode}`;
-              }
-
-              throw new Error(msg);
+        for (let i = 0; i <= 2400; i++) {
+          // Approximately 2 minutes
+          if (daemon.signalCode !== null || daemon.exitCode !== null) {
+            let msg: string;
+            if (daemon.signalCode) {
+              msg = `Daemon was killed by signal ${daemon.signalCode}`;
+            } else {
+              msg = `Daemon exited with code ${daemon.exitCode}`;
             }
 
-            if (await this.doesTheSocketExistYet()) {
-              break;
-            }
-
-            await setTimeout(50);
+            throw new Error(msg);
           }
 
-          if (!(await this.doesTheSocketExistYet())) {
-            throw new Error(
-              "Timed out waiting for the daemon socket to appear.",
-            );
+          if (await this.doesTheSocketExistYet()) {
+            break;
           }
-        } catch (error: unknown) {
-          this.addEvent(EVENT_NO_SYSTEMD_SHIM_FAILED, {
-            [ATTR_EXCEPTION_MESSAGE]: stringifyError(error),
-            [ATTR_SHIM_LOG]: await readFile(outputPath, "utf-8"),
-          });
 
-          throw error;
+          await setTimeout(50);
+        }
+
+        if (!(await this.doesTheSocketExistYet())) {
+          throw new Error("Timed out waiting for the daemon socket to appear.");
         }
 
         daemon.unref();
@@ -626,9 +614,9 @@ class NixInstallerAction extends DetSysAction {
       log.warning(
         `Error waiting for the Nix Daemon socket: ${stringifyError(error)}`,
       );
-      this.addEvent(EVENT_SHIM_WAIT_FOR_SOCKET, {
-        [ATTR_EXCEPTION_MESSAGE]: stringifyError(error),
-      });
+
+      // The throw reaches the spawn_daemon span, and withSpan records the
+      // exception there in the way OpenTelemetry defines.
       throw error;
     }
   }
