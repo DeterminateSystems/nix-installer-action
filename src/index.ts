@@ -26,8 +26,6 @@ import { summarizeFailures } from "./failuresummary.js";
 import { SpawnOptions, spawn } from "node:child_process";
 
 // Other events
-const EVENT_CONCLUDE_JOB = "detsys.nix_installer.conclude_job";
-const EVENT_FOD_ANNOTATE = "detsys.nix_installer.fod_annotate";
 const EVENT_NO_SYSTEMD_SHIM_FAILED =
   "detsys.nix_installer.no_systemd_shim_failed";
 const EVENT_SHIM_WAIT_FOR_SOCKET =
@@ -1050,13 +1048,9 @@ class NixInstallerAction extends DetSysAction {
   }
 
   async reportOverall(): Promise<void> {
-    try {
-      this.addEvent(EVENT_CONCLUDE_JOB, {
-        [ATTR_JOB_CONCLUSION]: this.jobConclusion ?? "unknown",
-      });
-    } catch (e) {
-      log.debug(`Error submitting post-run diagnostics report: ${e}`);
-    }
+    // How the job ended is a property of the run, thus it belongs on the span
+    // of the run and not in an event of its own.
+    this.setAttribute(ATTR_JOB_CONCLUSION, this.jobConclusion ?? "unknown");
   }
 
   private get defaultPlanner(): string {
@@ -1095,11 +1089,10 @@ class NixInstallerAction extends DetSysAction {
         }
 
         log.debug("Annotating mismatches");
+        // One number, thus one attribute. It was a span attribute named
+        // detsys.annotation_count and an event that held the same count.
         const count = annotateMismatches(mismatches);
-        span.setAttribute("detsys.annotation_count", count);
-        this.addEvent(EVENT_FOD_ANNOTATE, {
-          [ATTR_FOD_MISMATCH_COUNT]: count,
-        });
+        span.setAttribute(ATTR_FOD_MISMATCH_COUNT, count);
       } catch (error) {
         // Don't hard fail the action if something exploded; this feature is only a nice-to-have
         log.warning(`Could not consume hash mismatch events: ${error}`);
