@@ -25,13 +25,6 @@ import { makeMermaidReport } from "./mermaid.js";
 import { summarizeFailures } from "./failuresummary.js";
 import { SpawnOptions, spawn } from "node:child_process";
 
-// Nix installation events
-const EVENT_INSTALL_NIX_FAILURE = "detsys.nix_installer.install_nix_failure";
-const EVENT_INSTALL_NIX_START = "detsys.nix_installer.install_nix_start";
-const EVENT_INSTALL_NIX_SUCCESS = "detsys.nix_installer.install_nix_success";
-const EVENT_SETUP_KVM = "detsys.nix_installer.setup_kvm";
-const EVENT_UNINSTALL_NIX = "detsys.nix_installer.uninstall";
-
 // Other events
 const EVENT_CONCLUDE_JOB = "detsys.nix_installer.conclude_job";
 const EVENT_FOD_ANNOTATE = "detsys.nix_installer.fod_annotate";
@@ -462,7 +455,6 @@ class NixInstallerAction extends DetSysAction {
     return withSpan("execute_install", async (span) => {
       const executionEnv = await this.executionEnvironment();
 
-      this.addEvent(EVENT_INSTALL_NIX_START);
       const exitCode = await actionsExec.exec(binaryPath, this.installerArgs, {
         env: {
           ...executionEnv,
@@ -474,13 +466,9 @@ class NixInstallerAction extends DetSysAction {
       span.setAttribute(ATTR_EXIT_CODE, exitCode);
 
       if (exitCode !== 0) {
-        this.addEvent(EVENT_INSTALL_NIX_FAILURE, {
-          [ATTR_EXIT_CODE]: exitCode,
-        });
+        // withSpan records the exception and sets the span status to error.
         throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
       }
-
-      this.addEvent(EVENT_INSTALL_NIX_SUCCESS);
 
       return exitCode;
     });
@@ -829,7 +817,6 @@ class NixInstallerAction extends DetSysAction {
 
   async executeUninstall(): Promise<number> {
     return withSpan("uninstall", async (span) => {
-      this.addEvent(EVENT_UNINSTALL_NIX);
       const exitCode = await actionsExec.exec(
         `/nix/nix-installer`,
         ["uninstall"],
@@ -900,7 +887,6 @@ class NixInstallerAction extends DetSysAction {
   // in a group of its own, which reported the same work twice.
   private async setupKvm(): Promise<boolean> {
     return log.group("setup_kvm", "Configuring KVM", async ({ span }) => {
-      this.addEvent(EVENT_SETUP_KVM);
       const currentUser = userInfo();
       const isRoot = currentUser.uid === 0;
       const maybeSudo = isRoot ? "" : "sudo";
