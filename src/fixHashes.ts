@@ -1,4 +1,8 @@
 import { getExecOutput } from "@actions/exec";
+import { which } from "@actions/io";
+
+/** The program that reports the hash mismatches. */
+const DETERMINATE_NIXD = "determinate-nixd";
 
 export interface Mismatch {
   readonly derivation: string;
@@ -21,9 +25,23 @@ export interface FixHashesOutputV1 {
   readonly files: readonly FileFix[];
 }
 
-export async function getFixHashes(since: string): Promise<FixHashesOutputV1> {
+/**
+ * The hash mismatches since `since`, or undefined when this runner has no
+ * determinate-nixd to ask.
+ *
+ * A run whose install did not finish has no {@link DETERMINATE_NIXD} on the
+ * path. It reports no mismatches, which is a normal outcome and not a failure
+ * of the caller.
+ */
+export async function getFixHashes(
+  since: string,
+): Promise<FixHashesOutputV1 | undefined> {
+  if ((await which(DETERMINATE_NIXD, false)) === "") {
+    return undefined;
+  }
+
   const output = await getExecOutput(
-    "determinate-nixd",
+    DETERMINATE_NIXD,
     ["fix", "hashes", "--json", "--since", since],
     { silent: true },
   );

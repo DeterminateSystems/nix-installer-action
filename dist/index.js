@@ -178204,9 +178204,14 @@ const source_got = dist_source_create(dist_source_defaults);
 
 // src/fixHashes.ts
 
+
+var DETERMINATE_NIXD = "determinate-nixd";
 async function getFixHashes(since) {
+  if (await which(DETERMINATE_NIXD, false) === "") {
+    return void 0;
+  }
   const output = await getExecOutput(
-    "determinate-nixd",
+    DETERMINATE_NIXD,
     ["fix", "hashes", "--json", "--since", since],
     { silent: true }
   );
@@ -178505,6 +178510,7 @@ var ATTR_LOGIN_SKIPPED_REASON = "detsys.flakehub.login_skipped_reason";
 var ATTR_LOGIN_SUCCEEDED = "detsys.flakehub.login_succeeded";
 var ATTR_FOD_MISMATCH_COUNT = "detsys.nix_installer.fod_mismatch_count";
 var ATTR_SUMMARY_AVAILABLE = "detsys.nix_installer.summary_available";
+var ATTR_FIX_HASHES_AVAILABLE = "detsys.nix_installer.fix_hashes_available";
 var ATTR_BUILDS_SUCCEEDED = "detsys.nix_installer.builds_succeeded";
 var ATTR_BUILDS_FAILED = "detsys.nix_installer.builds_failed";
 var ATTR_BUILDS_UNKNOWN_EVENT = "detsys.nix_installer.builds_unknown_event";
@@ -179331,6 +179337,12 @@ var NixInstallerAction = class extends DetSysAction {
         log_exports.debug("Getting hash fixes from determinate-nixd");
         const since = getState(STATE_START_DATETIME);
         const mismatches = await getFixHashes(since);
+        if (mismatches === void 0) {
+          span.setAttribute(ATTR_FIX_HASHES_AVAILABLE, false);
+          log_exports.debug("determinate-nixd is not on the path, so no annotations.");
+          return;
+        }
+        span.setAttribute(ATTR_FIX_HASHES_AVAILABLE, true);
         if (mismatches.version !== "v1") {
           throw new Error(
             `Unsupported \`determinate-nixd fix hashes\` output (got ${mismatches.version}, expected v1)`

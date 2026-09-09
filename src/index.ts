@@ -40,6 +40,7 @@ const ATTR_LOGIN_SKIPPED_REASON = "detsys.flakehub.login_skipped_reason";
 const ATTR_LOGIN_SUCCEEDED = "detsys.flakehub.login_succeeded";
 const ATTR_FOD_MISMATCH_COUNT = "detsys.nix_installer.fod_mismatch_count";
 const ATTR_SUMMARY_AVAILABLE = "detsys.nix_installer.summary_available";
+const ATTR_FIX_HASHES_AVAILABLE = "detsys.nix_installer.fix_hashes_available";
 const ATTR_BUILDS_SUCCEEDED = "detsys.nix_installer.builds_succeeded";
 const ATTR_BUILDS_FAILED = "detsys.nix_installer.builds_failed";
 const ATTR_BUILDS_UNKNOWN_EVENT = "detsys.nix_installer.builds_unknown_event";
@@ -1070,6 +1071,17 @@ class NixInstallerAction extends DetSysAction {
 
         const since = actionsCore.getState(STATE_START_DATETIME);
         const mismatches = await getFixHashes(since);
+
+        if (mismatches === undefined) {
+          // A run whose install did not finish has no determinate-nixd to
+          // ask. That is a normal outcome, not a failure of this span.
+          span.setAttribute(ATTR_FIX_HASHES_AVAILABLE, false);
+          log.debug("determinate-nixd is not on the path, so no annotations.");
+          return;
+        }
+
+        span.setAttribute(ATTR_FIX_HASHES_AVAILABLE, true);
+
         if (mismatches.version !== "v1") {
           throw new Error(
             `Unsupported \`determinate-nixd fix hashes\` output (got ${mismatches.version}, expected v1)`,
