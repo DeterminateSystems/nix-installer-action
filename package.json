@@ -33,7 +33,7 @@
     "@opentelemetry/semantic-conventions": "^1.43.0",
     "got": "^14.6.6",
     "string-argv": "^0.3.2",
-    "vitest": "^3.2.7"
+    "vitest": "^5.0.0"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
