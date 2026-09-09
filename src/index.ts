@@ -225,7 +225,9 @@ class NixInstallerAction extends DetSysAction {
   // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
   // and especially GitHub Enterprise Server.
   async detectAndForceNoSystemd(): Promise<void> {
-    return withSpan("detect_systemd", async () => {
+    // The group is the span of this operation. A second span inside it, for
+    // the check on its own, would report the same work twice.
+    return log.group("detect_systemd", "Detecting systemd...", async () => {
       if (!this.isLinux) {
         if (this.forceNoSystemd) {
           this.forceNoSystemd = false;
@@ -236,20 +238,18 @@ class NixInstallerAction extends DetSysAction {
         return;
       }
 
-      await log.group("Detecting systemd...", async () => {
-        const systemdCheck = fs.statSync("/run/systemd/system", {
-          throwIfNoEntry: false,
-        });
-        if (systemdCheck?.isDirectory()) {
-          this.setAttribute(ATTR_HAS_SYSTEMD, true);
-        } else {
-          this.setAttribute(ATTR_HAS_SYSTEMD, false);
-
-          this.forceNoSystemd = true;
-          this.init = "none";
-          this.planner = "linux";
-        }
+      const systemdCheck = fs.statSync("/run/systemd/system", {
+        throwIfNoEntry: false,
       });
+      if (systemdCheck?.isDirectory()) {
+        this.setAttribute(ATTR_HAS_SYSTEMD, true);
+      } else {
+        this.setAttribute(ATTR_HAS_SYSTEMD, false);
+
+        this.forceNoSystemd = true;
+        this.init = "none";
+        this.planner = "linux";
+      }
     });
   }
 
@@ -515,9 +515,7 @@ class NixInstallerAction extends DetSysAction {
       }
 
       if (this.kvm) {
-        const kvmEnabled = await log.group("Configuring KVM", async () =>
-          this.setupKvm(),
-        );
+        const kvmEnabled = await this.setupKvm();
 
         span.setAttribute(ATTR_KVM_ENABLED, kvmEnabled);
         if (kvmEnabled) {
@@ -529,7 +527,7 @@ class NixInstallerAction extends DetSysAction {
         }
       }
 
-      await log.group("Installing Nix", async () => {
+      await log.group("install_nix", "Installing Nix", async () => {
         const binaryPath = await this.fetchBinary();
         await this.executeInstall(binaryPath);
       });
@@ -548,6 +546,7 @@ class NixInstallerAction extends DetSysAction {
 
   async spawnDetached(): Promise<void> {
     return log.group(
+      "spawn_daemon",
       "Directly spawning the daemon, since systemd is not available.",
       async () => {
         const outputPath = path.join(this.daemonDir, "daemon.log");
@@ -804,23 +803,29 @@ class NixInstallerAction extends DetSysAction {
         return;
       }
 
-      await log.group("Logging in to FlakeHub", async () => {
-        try {
-          await actionsExec.exec(`determinate-nixd`, [
-            "login",
-            "github-action",
-          ]);
-          span.setAttribute(ATTR_LOGIN_SUCCEEDED, true);
-          this.addEvent(EVENT_LOGIN_SUCCESS);
-        } catch (e: unknown) {
-          span.setAttribute(ATTR_LOGIN_SUCCEEDED, false);
-          log.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
-          this.addEvent(EVENT_LOGIN_FAILURE, {
-            [ATTR_LOGIN_FAILURE_REASON]: "failed",
-            [ATTR_EXCEPTION_MESSAGE]: stringifyError(e),
-          });
-        }
-      });
+      // The span of the login command itself. The flakehub_login span around
+      // it also covers the runs that do not log in at all.
+      await log.group(
+        "determinate_nixd_login",
+        "Logging in to FlakeHub",
+        async () => {
+          try {
+            await actionsExec.exec(`determinate-nixd`, [
+              "login",
+              "github-action",
+            ]);
+            span.setAttribute(ATTR_LOGIN_SUCCEEDED, true);
+            this.addEvent(EVENT_LOGIN_SUCCESS);
+          } catch (e: unknown) {
+            span.setAttribute(ATTR_LOGIN_SUCCEEDED, false);
+            log.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
+            this.addEvent(EVENT_LOGIN_FAILURE, {
+              [ATTR_LOGIN_FAILURE_REASON]: "failed",
+              [ATTR_EXCEPTION_MESSAGE]: stringifyError(e),
+            });
+          }
+        },
+      );
 
       this.addEvent(EVENT_LOGIN_END);
     });
@@ -895,8 +900,10 @@ class NixInstallerAction extends DetSysAction {
     }
   }
 
+  // The group is the span of this operation. The caller used to wrap the call
+  // in a group of its own, which reported the same work twice.
   private async setupKvm(): Promise<boolean> {
-    return withSpan("setup_kvm", async (span) => {
+    return log.group("setup_kvm", "Configuring KVM", async ({ span }) => {
       this.addEvent(EVENT_SETUP_KVM);
       const currentUser = userInfo();
       const isRoot = currentUser.uid === 0;
