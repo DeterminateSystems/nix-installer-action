@@ -66,6 +66,7 @@ const ATTR_LOGIN_SKIPPED_REASON = "detsys.flakehub.login_skipped_reason";
 const ATTR_LOGIN_SUCCEEDED = "detsys.flakehub.login_succeeded";
 const ATTR_SHIM_LOG = "detsys.nix_installer.shim_log";
 const ATTR_FOD_MISMATCH_COUNT = "detsys.nix_installer.fod_mismatch_count";
+const ATTR_SUMMARY_AVAILABLE = "detsys.nix_installer.summary_available";
 const ATTR_IS_ROOT = "detsys.nix_installer.is_root";
 const ATTR_KVM_ENABLED = "detsys.nix_installer.kvm_enabled";
 const ATTR_DAEMON_PID = "detsys.nix_installer.daemon_pid";
@@ -655,7 +656,21 @@ class NixInstallerAction extends DetSysAction {
   async summarizeExecution(): Promise<void> {
     return withSpan("summarize_execution", async (span) => {
       const startDate = new Date(actionsCore.getState(STATE_START_DATETIME));
-      const { events, hasMismatches } = await getRecentEvents(startDate);
+      const recent = await getRecentEvents(startDate);
+
+      if (recent === undefined) {
+        // A runner with upstream Nix has no determinate-nixd to ask, thus
+        // this run has no summary.
+        span.setAttribute(ATTR_SUMMARY_AVAILABLE, false);
+        log.debug(
+          "determinate-nixd has no socket on this runner, so there is no build summary.",
+        );
+        return;
+      }
+
+      span.setAttribute(ATTR_SUMMARY_AVAILABLE, true);
+
+      const { events, hasMismatches } = recent;
 
       span.setAttribute("detsys.event_count", events.length);
       span.setAttribute("detsys.has_mismatches", hasMismatches);

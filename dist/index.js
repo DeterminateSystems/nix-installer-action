@@ -178256,15 +178256,30 @@ function parseEvents(data) {
   });
   return { events, hasMismatches };
 }
+var DAEMON_SOCKET = "/nix/var/determinate/determinate-nixd.socket";
 async function getRecentEvents(since) {
   const queryParam = encodeURIComponent(since.toISOString());
-  const resp = await got_dist_source.get(
-    `http://unix:/nix/var/determinate/determinate-nixd.socket:/events/recent?since=${queryParam}`,
-    {
+  try {
+    const resp = await got_dist_source.get(`http://unix:${DAEMON_SOCKET}:/events/recent?since=${queryParam}`, {
       enableUnixSockets: true
+    }).json();
+    return parseEvents(resp);
+  } catch (error) {
+    if (isSocketAbsent(error)) {
+      return void 0;
     }
-  ).json();
-  return parseEvents(resp);
+    throw error;
+  }
+}
+function isSocketAbsent(error) {
+  let candidate = error;
+  for (let link = 0; link < 4 && candidate != null; link++) {
+    if (candidate.code === "ENOENT") {
+      return true;
+    }
+    candidate = candidate.cause;
+  }
+  return false;
 }
 
 // src/util.ts
@@ -178464,6 +178479,7 @@ var ATTR_LOGIN_SKIPPED_REASON = "detsys.flakehub.login_skipped_reason";
 var ATTR_LOGIN_SUCCEEDED = "detsys.flakehub.login_succeeded";
 var ATTR_SHIM_LOG = "detsys.nix_installer.shim_log";
 var ATTR_FOD_MISMATCH_COUNT = "detsys.nix_installer.fod_mismatch_count";
+var ATTR_SUMMARY_AVAILABLE = "detsys.nix_installer.summary_available";
 var ATTR_IS_ROOT = "detsys.nix_installer.is_root";
 var ATTR_KVM_ENABLED = "detsys.nix_installer.kvm_enabled";
 var ATTR_DAEMON_PID = "detsys.nix_installer.daemon_pid";
@@ -178949,7 +178965,16 @@ var NixInstallerAction = class extends DetSysAction {
   async summarizeExecution() {
     return withSpan("summarize_execution", async (span) => {
       const startDate = new Date(getState(STATE_START_DATETIME));
-      const { events, hasMismatches } = await getRecentEvents(startDate);
+      const recent = await getRecentEvents(startDate);
+      if (recent === void 0) {
+        span.setAttribute(ATTR_SUMMARY_AVAILABLE, false);
+        log_exports.debug(
+          "determinate-nixd has no socket on this runner, so there is no build summary."
+        );
+        return;
+      }
+      span.setAttribute(ATTR_SUMMARY_AVAILABLE, true);
+      const { events, hasMismatches } = recent;
       span.setAttribute("detsys.event_count", events.length);
       span.setAttribute("detsys.has_mismatches", hasMismatches);
       await this.reportPassFailCount(events);
