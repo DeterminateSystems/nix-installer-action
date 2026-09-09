@@ -178455,10 +178455,6 @@ var EVENT_INSTALL_NIX_START = "detsys.nix_installer.install_nix_start";
 var EVENT_INSTALL_NIX_SUCCESS = "detsys.nix_installer.install_nix_success";
 var EVENT_SETUP_KVM = "detsys.nix_installer.setup_kvm";
 var EVENT_UNINSTALL_NIX = "detsys.nix_installer.uninstall";
-var EVENT_LOGIN_START = "detsys.flakehub.login_start";
-var EVENT_LOGIN_FAILURE = "detsys.flakehub.login_failure";
-var EVENT_LOGIN_SUCCESS = "detsys.flakehub.login_success";
-var EVENT_LOGIN_END = "detsys.flakehub.login_end";
 var EVENT_CONCLUDE_JOB = "detsys.nix_installer.conclude_job";
 var EVENT_FOD_ANNOTATE = "detsys.nix_installer.fod_annotate";
 var EVENT_NO_SYSTEMD_SHIM_FAILED = "detsys.nix_installer.no_systemd_shim_failed";
@@ -178474,7 +178470,6 @@ var ATTR_NIX_INSTALLER_PLANNER = "detsys.nix_installer.planner";
 var ATTR_SENT_SIGTERM = "detsys.nix_installer.sent_sigterm";
 var ATTR_EXIT_CODE = "detsys.exit_code";
 var ATTR_JOB_CONCLUSION = "detsys.nix_installer.job_conclusion";
-var ATTR_LOGIN_FAILURE_REASON = "detsys.flakehub.login_failure_reason";
 var ATTR_LOGIN_SKIPPED_REASON = "detsys.flakehub.login_skipped_reason";
 var ATTR_LOGIN_SUCCEEDED = "detsys.flakehub.login_succeeded";
 var ATTR_SHIM_LOG = "detsys.nix_installer.shim_log";
@@ -179064,7 +179059,6 @@ var NixInstallerAction = class extends DetSysAction {
   }
   async flakehubLogin() {
     return withSpan("flakehub_login", async (span) => {
-      this.addEvent(EVENT_LOGIN_START);
       const canLogin = process.env["ACTIONS_ID_TOKEN_REQUEST_URL"] && process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"];
       if (!canLogin) {
         const pr = github_context.payload.pull_request;
@@ -179072,20 +179066,12 @@ var NixInstallerAction = class extends DetSysAction {
         const head = pr?.head?.repo?.full_name;
         if (pr && base !== head) {
           span.setAttribute(ATTR_LOGIN_SKIPPED_REASON, "fork");
-          this.addEvent(EVENT_LOGIN_FAILURE, {
-            [ATTR_LOGIN_FAILURE_REASON]: "fork"
-          });
-          this.addEvent(EVENT_LOGIN_END);
           log_exports.info(
             `FlakeHub is disabled because this is a fork. GitHub Actions does not allow OIDC authentication from forked repositories ("${head}" is not from the same repository as "${base}").`
           );
           return;
         }
         span.setAttribute(ATTR_LOGIN_SKIPPED_REASON, "not-configured");
-        this.addEvent(EVENT_LOGIN_FAILURE, {
-          [ATTR_LOGIN_FAILURE_REASON]: "not-configured"
-        });
-        this.addEvent(EVENT_LOGIN_END);
         log_exports.info(
           "FlakeHub is disabled because the workflow is misconfigured. Please make sure that `id-token: write` and `contents: read` are set for this step's (or job's) permissions so that GitHub Actions provides OIDC token endpoints."
         );
@@ -179104,18 +179090,13 @@ var NixInstallerAction = class extends DetSysAction {
               "github-action"
             ]);
             span.setAttribute(ATTR_LOGIN_SUCCEEDED, true);
-            this.addEvent(EVENT_LOGIN_SUCCESS);
           } catch (e) {
             span.setAttribute(ATTR_LOGIN_SUCCEEDED, false);
             log_exports.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
-            this.addEvent(EVENT_LOGIN_FAILURE, {
-              [ATTR_LOGIN_FAILURE_REASON]: "failed",
-              [semantic_conventions_build_src.ATTR_EXCEPTION_MESSAGE]: stringifyError(e)
-            });
+            recordSpanError(span, e);
           }
         }
       );
-      this.addEvent(EVENT_LOGIN_END);
     });
   }
   async executeUninstall() {
