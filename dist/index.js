@@ -178450,11 +178450,6 @@ async function getLogFromNix(drv) {
 
 // src/index.ts
 
-var EVENT_INSTALL_NIX_FAILURE = "detsys.nix_installer.install_nix_failure";
-var EVENT_INSTALL_NIX_START = "detsys.nix_installer.install_nix_start";
-var EVENT_INSTALL_NIX_SUCCESS = "detsys.nix_installer.install_nix_success";
-var EVENT_SETUP_KVM = "detsys.nix_installer.setup_kvm";
-var EVENT_UNINSTALL_NIX = "detsys.nix_installer.uninstall";
 var EVENT_CONCLUDE_JOB = "detsys.nix_installer.conclude_job";
 var EVENT_FOD_ANNOTATE = "detsys.nix_installer.fod_annotate";
 var EVENT_NO_SYSTEMD_SHIM_FAILED = "detsys.nix_installer.no_systemd_shim_failed";
@@ -178810,7 +178805,6 @@ var NixInstallerAction = class extends DetSysAction {
   async executeInstall(binaryPath) {
     return withSpan("execute_install", async (span) => {
       const executionEnv = await this.executionEnvironment();
-      this.addEvent(EVENT_INSTALL_NIX_START);
       const exitCode = await exec_exec(binaryPath, this.installerArgs, {
         env: {
           ...executionEnv,
@@ -178821,12 +178815,8 @@ var NixInstallerAction = class extends DetSysAction {
       });
       span.setAttribute(ATTR_EXIT_CODE, exitCode);
       if (exitCode !== 0) {
-        this.addEvent(EVENT_INSTALL_NIX_FAILURE, {
-          [ATTR_EXIT_CODE]: exitCode
-        });
         throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
       }
-      this.addEvent(EVENT_INSTALL_NIX_SUCCESS);
       return exitCode;
     });
   }
@@ -179101,7 +179091,6 @@ var NixInstallerAction = class extends DetSysAction {
   }
   async executeUninstall() {
     return withSpan("uninstall", async (span) => {
-      this.addEvent(EVENT_UNINSTALL_NIX);
       const exitCode = await exec_exec(
         `/nix/nix-installer`,
         ["uninstall"],
@@ -179160,7 +179149,6 @@ var NixInstallerAction = class extends DetSysAction {
   // in a group of its own, which reported the same work twice.
   async setupKvm() {
     return log_exports.group("setup_kvm", "Configuring KVM", async ({ span }) => {
-      this.addEvent(EVENT_SETUP_KVM);
       const currentUser = (0,external_os_.userInfo)();
       const isRoot = currentUser.uid === 0;
       const maybeSudo = isRoot ? "" : "sudo";
