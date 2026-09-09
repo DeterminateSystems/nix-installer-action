@@ -30,10 +30,6 @@ const EVENT_NO_SYSTEMD_SHIM_FAILED =
   "detsys.nix_installer.no_systemd_shim_failed";
 const EVENT_SHIM_WAIT_FOR_SOCKET =
   "detsys.nix_installer.shim_wait_for_socket_failed";
-const EVENT_SUMMARIZE_EXECUTION_ERROR =
-  "detsys.nix_installer.summarize_execution_error";
-const EVENT_ANNOTATE_MISMATCHES_ERROR =
-  "detsys.nix_installer.annotate_mismatches_error";
 
 // Feature flag names
 const FEAT_ANNOTATIONS = "hash-mismatch-annotations";
@@ -179,9 +175,10 @@ class NixInstallerAction extends DetSysAction {
       try {
         await this.summarizeExecution();
       } catch (err: unknown) {
-        this.addEvent(EVENT_SUMMARIZE_EXECUTION_ERROR, {
-          [ATTR_EXCEPTION_MESSAGE]: stringifyError(err),
-        });
+        // The summarize_execution span already carries the exception and the
+        // error status, because withSpan recorded them before the throw. The
+        // summary is a nice-to-have, thus the phase carries on.
+        log.debug(`Could not summarize the execution: ${stringifyError(err)}`);
       }
     }
     await this.cleanupNoSystemd();
@@ -1096,9 +1093,10 @@ class NixInstallerAction extends DetSysAction {
       } catch (error) {
         // Don't hard fail the action if something exploded; this feature is only a nice-to-have
         log.warning(`Could not consume hash mismatch events: ${error}`);
-        this.addEvent(EVENT_ANNOTATE_MISMATCHES_ERROR, {
-          [ATTR_EXCEPTION_MESSAGE]: stringifyError(error),
-        });
+
+        // The operation failed, thus the span failed. The Action continues:
+        // the caller catches nothing, because nothing is thrown.
+        recordSpanError(span, error);
       }
     });
   }
