@@ -48,6 +48,9 @@ const ATTR_LOGIN_SUCCEEDED = "detsys.flakehub.login_succeeded";
 const ATTR_SHIM_LOG = "detsys.nix_installer.shim_log";
 const ATTR_FOD_MISMATCH_COUNT = "detsys.nix_installer.fod_mismatch_count";
 const ATTR_SUMMARY_AVAILABLE = "detsys.nix_installer.summary_available";
+const ATTR_BUILDS_SUCCEEDED = "detsys.nix_installer.builds_succeeded";
+const ATTR_BUILDS_FAILED = "detsys.nix_installer.builds_failed";
+const ATTR_BUILDS_UNKNOWN_EVENT = "detsys.nix_installer.builds_unknown_event";
 const ATTR_IS_ROOT = "detsys.nix_installer.is_root";
 const ATTR_KVM_ENABLED = "detsys.nix_installer.kvm_enabled";
 const ATTR_DAEMON_PID = "detsys.nix_installer.daemon_pid";
@@ -726,9 +729,9 @@ class NixInstallerAction extends DetSysAction {
       }
     }
 
-    this.setAttribute("nix_builds_succeeded", built);
-    this.setAttribute("nix_builds_failed", failed);
-    this.setAttribute("nix_builds_unknown_event", unknown);
+    this.setAttribute(ATTR_BUILDS_SUCCEEDED, built);
+    this.setAttribute(ATTR_BUILDS_FAILED, failed);
+    this.setAttribute(ATTR_BUILDS_UNKNOWN_EVENT, unknown);
   }
 
   async setGithubPath(): Promise<void> {
