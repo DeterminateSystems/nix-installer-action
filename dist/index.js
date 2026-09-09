@@ -106149,6 +106149,8 @@ const external_node_os_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import
 var external_node_util_ = __nccwpck_require__(57975);
 // EXTERNAL MODULE: external "node:crypto"
 var external_node_crypto_ = __nccwpck_require__(77598);
+// EXTERNAL MODULE: ./node_modules/@opentelemetry/semantic-conventions/build/src/index-incubating.js
+var index_incubating = __nccwpck_require__(91958);
 // EXTERNAL MODULE: ./node_modules/@opentelemetry/api/build/src/index.js
 var src = __nccwpck_require__(63914);
 // EXTERNAL MODULE: ./node_modules/@opentelemetry/api-logs/build/src/index.js
@@ -169682,8 +169684,6 @@ function saveCacheV2(paths_1, key_1, options_1) {
     });
 }
 //# sourceMappingURL=cache.js.map
-// EXTERNAL MODULE: ./node_modules/@opentelemetry/semantic-conventions/build/src/index-incubating.js
-var index_incubating = __nccwpck_require__(91958);
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
 ;// CONCATENATED MODULE: external "node:fs/promises"
@@ -169691,6 +169691,7 @@ const external_node_fs_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequi
 ;// CONCATENATED MODULE: external "node:path"
 const external_node_path_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:path");
 ;// CONCATENATED MODULE: ./node_modules/@determinate-systems/detsys-ts/dist/index.mjs
+
 
 
 
@@ -170059,6 +170060,111 @@ function hashEnvironmentVariables(prefix, variables) {
 	return `${prefix}-${hash.digest("hex")}`;
 }
 //#endregion
+//#region src/github-semconv.ts
+/**
+* @packageDocumentation
+* The OpenTelemetry `cicd.*` and `vcs.*` attributes of a GitHub Actions run.
+*
+* These are the standard names for a CI/CD run and the repository it builds.
+* They hold the values themselves, and not a hash of the values.
+* Thus a backend that knows nothing about Determinate Systems can read them.
+*
+* The correlation data in `./correlation.ts` stays hashed.
+* It has a different purpose: the check-in evaluates feature flags against it.
+*/
+/**
+* The `cicd.*` and `vcs.*` attributes of this run.
+*
+* Each attribute that the run does not supply is absent.
+* Only the provider is left when the program does not run in GitHub Actions.
+*/
+function githubSemconvAttributes(context = github_context) {
+	const repository = repositoryOf(context);
+	const pullRequest = context.payload.pull_request;
+	const head = pullRequest?.head;
+	const attributes = {
+		[index_incubating.ATTR_CICD_PIPELINE_NAME]: dist_text(context.workflow),
+		[index_incubating.ATTR_CICD_PIPELINE_RUN_ID]: numericString(context.runId),
+		[index_incubating.ATTR_CICD_PIPELINE_RUN_URL_FULL]: pipelineRunUrl(context, repository),
+		[index_incubating.ATTR_CICD_PIPELINE_TASK_NAME]: dist_text(context.job),
+		[index_incubating.ATTR_CICD_WORKER_NAME]: dist_text(process.env["RUNNER_NAME"]),
+		[index_incubating.ATTR_VCS_PROVIDER_NAME]: index_incubating.VCS_PROVIDER_NAME_VALUE_GITHUB,
+		[index_incubating.ATTR_VCS_OWNER_NAME]: repository?.owner,
+		[index_incubating.ATTR_VCS_REPOSITORY_NAME]: repository?.repo,
+		[index_incubating.ATTR_VCS_REPOSITORY_URL_FULL]: repositoryUrl(context, repository),
+		[index_incubating.ATTR_VCS_REF_HEAD_NAME]: dist_text(head?.ref) ?? refName(context.ref),
+		[index_incubating.ATTR_VCS_REF_HEAD_TYPE]: head === void 0 ? refType(dist_text(context.ref)) : index_incubating.VCS_REF_HEAD_TYPE_VALUE_BRANCH,
+		[index_incubating.ATTR_VCS_REF_HEAD_REVISION]: dist_text(head?.sha) ?? dist_text(context.sha),
+		[index_incubating.ATTR_VCS_REF_BASE_NAME]: dist_text(pullRequest?.base?.ref),
+		[index_incubating.ATTR_VCS_REF_BASE_TYPE]: pullRequest?.base?.ref === void 0 ? void 0 : index_incubating.VCS_REF_BASE_TYPE_VALUE_BRANCH,
+		[index_incubating.ATTR_VCS_REF_BASE_REVISION]: dist_text(pullRequest?.base?.sha),
+		[index_incubating.ATTR_VCS_CHANGE_ID]: numericString(pullRequest?.number)
+	};
+	return Object.fromEntries(Object.entries(attributes).filter(([, value]) => value !== void 0));
+}
+/** The owner and the name of the repository, when the run names them. */
+function repositoryOf(context) {
+	try {
+		const { owner, repo } = context.repo;
+		return dist_text(owner) === void 0 || dist_text(repo) === void 0 ? void 0 : {
+			owner,
+			repo
+		};
+	} catch {
+		return;
+	}
+}
+/** The address of the repository in a browser. */
+function repositoryUrl(context, repository) {
+	if (repository === void 0) return;
+	const server = dist_text(context.serverUrl)?.replace(/\/+$/, "");
+	return server === void 0 ? void 0 : `${server}/${repository.owner}/${repository.repo}`;
+}
+/**
+* The address of this workflow run in a browser.
+*
+* The address names the attempt when the run is not the first attempt.
+* The first attempt is at the address of the run itself.
+*/
+function pipelineRunUrl(context, repository) {
+	const url = repositoryUrl(context, repository);
+	const runId = numericString(context.runId);
+	if (url === void 0 || runId === void 0) return;
+	const run = `${url}/actions/runs/${runId}`;
+	const attempt = numericString(context.runAttempt);
+	return attempt === void 0 || attempt === "1" ? run : `${run}/attempts/${attempt}`;
+}
+/**
+* The bare name of a reference.
+*
+* A reference that is not a branch and not a tag keeps its full name.
+*/
+function refName(ref) {
+	return dist_text(ref)?.replace(/^refs\/(heads|tags)\//, "");
+}
+/** Whether a reference is a branch or a tag. */
+function refType(ref) {
+	if (ref?.startsWith("refs/heads/") === true) return index_incubating.VCS_REF_HEAD_TYPE_VALUE_BRANCH;
+	if (ref?.startsWith("refs/tags/") === true) return index_incubating.VCS_REF_HEAD_TYPE_VALUE_TAG;
+}
+/**
+* A value that the run supplies, or undefined.
+*
+* The toolkit says each of these is a string.
+* A run that does not set the variable makes it undefined all the same.
+*/
+function dist_text(value) {
+	return value === void 0 || value === "" ? void 0 : value;
+}
+/**
+* A number as the conventions want it, which is text.
+*
+* The toolkit parses these, and gives NaN for a variable that is not set.
+*/
+function numericString(value) {
+	return value === void 0 || !Number.isInteger(value) ? void 0 : `${value}`;
+}
+//#endregion
 //#region src/errors.ts
 /**
 * Coerce a value of type `unknown` into a string.
@@ -170120,11 +170226,27 @@ const SHUTDOWN_TIMEOUT_MS = 5e3;
 * instead: a log record's body is not an attribute and is not truncated.
 */
 const DEFAULT_ATTRIBUTE_VALUE_LENGTH_LIMIT = 8192;
+/**
+* The attribute that tells the collector to keep this data.
+*
+* `sampling.priority` is the usual name for such a signal.
+* This SDK samples at the head and keeps everything, thus the attribute only
+* speaks to the tail sampler of the collector.
+*/
+const ATTR_SAMPLING_PRIORITY = "sampling.priority";
+/**
+* The value of {@link ATTR_SAMPLING_PRIORITY} that means "keep this trace".
+*
+* Any value above zero means the same thing.
+* Zero means the opposite: discard the trace.
+*/
+const SAMPLING_PRIORITY_KEEP = 1;
 /** The OTLP environment variables a child process inherits from this run. */
 const OTLP_EXPORT_VARIABLES = [
 	"OTEL_EXPORTER_OTLP_ENDPOINT",
 	"OTEL_EXPORTER_OTLP_HEADERS",
-	"OTEL_EXPORTER_OTLP_COMPRESSION"
+	"OTEL_EXPORTER_OTLP_COMPRESSION",
+	"OTEL_RESOURCE_ATTRIBUTES"
 ];
 /**
 * Our own propagator instance, rather than the global one.
@@ -170169,11 +170291,27 @@ function applyOtlpEnvironmentDefaults() {
 		const headers = core_build_src.parseKeyPairsIntoRecord(core_build_src.getStringFromEnv("OTEL_EXPORTER_OTLP_HEADERS"));
 		if (!Object.keys(headers).some((name) => name.toLowerCase() === "authorization")) {
 			headers["Authorization"] = `Bearer ${OTLP_INGEST_TOKEN}`;
-			process.env["OTEL_EXPORTER_OTLP_HEADERS"] = encodeOtlpHeaders(headers);
+			process.env["OTEL_EXPORTER_OTLP_HEADERS"] = encodeKeyPairs(headers);
 		}
 	}
 	if (core_build_src.getStringFromEnv("OTEL_EXPORTER_OTLP_COMPRESSION") === void 0) process.env["OTEL_EXPORTER_OTLP_COMPRESSION"] = "gzip";
 	if (core_build_src.getNumberFromEnv("OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT") === void 0) process.env["OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"] = `${DEFAULT_ATTRIBUTE_VALUE_LENGTH_LIMIT}`;
+	if (isDebug()) markRunAsHighPriority();
+}
+/**
+* Ask the collector to keep the data of this run.
+*
+* The attribute goes in `OTEL_RESOURCE_ATTRIBUTES`.
+* Thus it is on the data of this process, and on the data of each program the
+* Action runs, which all read that variable.
+* Only a value the user set for {@link ATTR_SAMPLING_PRIORITY} stays: theirs is
+* the priority they meant to use.
+*/
+function markRunAsHighPriority() {
+	const attributes = core_build_src.parseKeyPairsIntoRecord(core_build_src.getStringFromEnv("OTEL_RESOURCE_ATTRIBUTES"));
+	if (attributes["sampling.priority"] !== void 0) return;
+	attributes[ATTR_SAMPLING_PRIORITY] = `${SAMPLING_PRIORITY_KEEP}`;
+	process.env["OTEL_RESOURCE_ATTRIBUTES"] = encodeKeyPairs(attributes);
 }
 /**
 * Whether this run sends its data to {@link DEFAULT_OTLP_ENDPOINT}.
@@ -170203,42 +170341,17 @@ function otlpExportEnvironment() {
 	return environment;
 }
 /**
-* Make the value of `OTEL_EXPORTER_OTLP_HEADERS`.
+* Make the value of an `OTEL_*` variable that holds key pairs, such as
+* `OTEL_EXPORTER_OTLP_HEADERS` or `OTEL_RESOURCE_ATTRIBUTES`.
 *
-* The variable uses the W3C baggage format.
+* These variables use the W3C baggage format.
 * The reader decodes each percent-encoded value.
 * Thus you must encode the space in `Bearer <token>`.
 * If you do not encode it, the scheme and the token become two entries.
 */
-function encodeOtlpHeaders(headers) {
-	return Object.entries(headers).map(([name, value]) => `${encodeURIComponent(name)}=${encodeURIComponent(value)}`).join(",");
+function encodeKeyPairs(pairs) {
+	return Object.entries(pairs).map(([name, value]) => `${encodeURIComponent(name)}=${encodeURIComponent(value)}`).join(",");
 }
-/**
-* The generator of the trace and span IDs of this run.
-*
-* It makes random IDs, as the default generator does.
-* It can also give one span an identity that you supply.
-* That is how a span that one process announces starts in a different process.
-* See {@link Telemetry.startAnnouncedSpan}.
-*/
-var PinnedIdGenerator = class {
-	/** Give the next span this identity. */
-	pin(traceId, spanId) {
-		this.traceId = traceId;
-		this.spanId = spanId;
-	}
-	/** Give each subsequent span a random identity again. */
-	unpin() {
-		this.traceId = void 0;
-		this.spanId = void 0;
-	}
-	generateTraceId() {
-		return this.traceId ?? randomHex(16);
-	}
-	generateSpanId() {
-		return this.spanId ?? randomHex(8);
-	}
-};
 /**
 * Owns the OpenTelemetry SDK's lifecycle. Constructing this does nothing on
 * its own; `start()` registers the global providers and `shutdown()` flushes
@@ -170265,10 +170378,8 @@ var Telemetry = class {
 				...options.serviceVersion === void 0 ? {} : { [semantic_conventions_build_src.ATTR_SERVICE_VERSION]: options.serviceVersion },
 				...options.resourceAttributes
 			})).merge(resources_build_src.detectResources({ detectors: [resources_build_src.envDetector] }));
-			this.idGenerator = new PinnedIdGenerator();
 			this.tracerProvider = new index_shim/* BasicTracerProvider */.l({
 				resource,
-				idGenerator: this.idGenerator,
 				spanProcessors: [new index_shim/* BatchSpanProcessor */.J(new exporter_trace_otlp_http_build_src/* OTLPTraceExporter */.Q())]
 			});
 			this.loggerProvider = new sdk_logs_build_src/* LoggerProvider */.IB({
@@ -170284,36 +170395,7 @@ var Telemetry = class {
 		} catch (e) {
 			this.tracerProvider = void 0;
 			this.loggerProvider = void 0;
-			this.idGenerator = void 0;
 			core_debug(`Failed to start OpenTelemetry export, continuing without it: ${stringifyError(e)}`);
-		}
-	}
-	/**
-	* Start the span that {@link newTraceparent} announced.
-	*
-	* A workflow job runs each Action as a process of its own.
-	* Thus a span that covers more than one Action can only start in one of them.
-	* The Action that announces such a span makes its identity known first, and
-	* starts the span itself last, in the process that runs at the end.
-	* The spans that already point at that identity then find their parent.
-	*
-	* The span starts at `startTime`, which is the moment of the announcement.
-	* It is a child of the span in `parentContext`, and a root span if that
-	* context holds no span.
-	*
-	* Returns undefined if the export is off, or if `traceparent` does not name a
-	* usable span.
-	*/
-	startAnnouncedSpan(name, traceparent, startTime, parentContext = src.ROOT_CONTEXT) {
-		const generator = this.idGenerator;
-		const spanContext = src.trace.getSpanContext(contextFromTraceparent(traceparent));
-		if (generator === void 0 || this.tracerProvider === void 0 || spanContext === void 0 || !src.isSpanContextValid(spanContext)) return;
-		const tracer = this.tracerProvider.getTracer(SCOPE_NAME, "1.0");
-		try {
-			generator.pin(spanContext.traceId, spanContext.spanId);
-			return tracer.startSpan(name, { startTime }, parentContext);
-		} finally {
-			generator.unpin();
 		}
 	}
 	/**
@@ -170332,7 +170414,6 @@ var Telemetry = class {
 		} finally {
 			this.tracerProvider = void 0;
 			this.loggerProvider = void 0;
-			this.idGenerator = void 0;
 		}
 	}
 };
@@ -170377,27 +170458,6 @@ function traceparentOf(span) {
 	return carrier["traceparent"];
 }
 /**
-* Make the identity of a span, but do not start the span.
-*
-* Announce the result to whatever must point at the span before it starts:
-* a different process, or a request this process makes too early to record.
-* Start the span itself with {@link Telemetry.startAnnouncedSpan}.
-*
-* The span is in the trace of `parent`, or in a new trace of its own if there
-* is no usable parent.
-* A new trace is sampled, because a process that only forwards an identity
-* cannot ask the sampler, and an unsampled parent would discard the work of
-* each process that joins.
-*/
-function newTraceparent(parent) {
-	const parentContext = src.trace.getSpanContext(contextFromTraceparent(parent));
-	if (parentContext !== void 0 && src.isSpanContextValid(parentContext)) {
-		const flags = parentContext.traceFlags.toString(16).padStart(2, "0");
-		return `00-${parentContext.traceId}-${randomHex(8)}-${flags}`;
-	}
-	return `00-${randomHex(16)}-${randomHex(8)}-01`;
-}
-/**
 * The W3C trace context headers of the operation in progress, for an outgoing
 * HTTP request.
 *
@@ -170407,7 +170467,7 @@ function newTraceparent(parent) {
 * The headers describe the span that is active now.
 * When no span is active yet -- a request the Action makes before it starts a
 * span of its own -- they describe the span that `$TRACEPARENT` names, which is
-* the span the Action announced, or the span of the workflow job.
+* the span of the program that started this one.
 *
 * The result is empty when the export is off.
 * A no-op span's context is all zeroes, and is not a valid parent.
@@ -170454,10 +170514,6 @@ async function withSpan(name, fn, attributes) {
 			span.end();
 		}
 	});
-}
-/** A random ID of `bytes` bytes, in the lowercase hex the W3C format uses. */
-function randomHex(bytes) {
-	return (0,external_node_crypto_.randomBytes)(bytes).toString("hex");
 }
 /** Reject if `promise` has not settled within `timeoutMs`. */
 async function withTimeout(promise, timeoutMs) {
@@ -170908,6 +170964,7 @@ const ATTR_PROJECT = "detsys.project";
 const ATTR_IDS_PROJECT = "detsys.ids_project";
 const ATTR_EXECUTION_PHASE = "detsys.execution_phase";
 const ATTR_CROSS_PHASE_ID = "detsys.cross_phase_id";
+const ATTR_INVOCATION_ID = "detsys.invocation_id";
 const ATTR_ANONYMOUS_ID = "detsys.anonymous_id";
 const ATTR_CORRELATION_SOURCE = "detsys.correlation_source";
 const ATTR_ARCH_OS = "detsys.arch_os";
@@ -170915,12 +170972,6 @@ const ATTR_NIX_SYSTEM = "detsys.nix_system";
 const ATTR_FEATURE_PREFIX = "detsys.feature.";
 const ATTR_GITHUB_EVENT_NAME = "detsys.github.event_name";
 const ATTR_GITHUB_ACTION_REPOSITORY = "detsys.github.action_repository";
-const ATTR_GITHUB_REPOSITORY_HASH = "detsys.github.repository_hash";
-const ATTR_GITHUB_ORGANIZATION_HASH = "detsys.github.organization_hash";
-const ATTR_GITHUB_WORKFLOW_HASH = "detsys.github.workflow_hash";
-const ATTR_GITHUB_WORKFLOW_JOB_HASH = "detsys.github.workflow_job_hash";
-const ATTR_GITHUB_WORKFLOW_RUN_HASH = "detsys.github.workflow_run_hash";
-const ATTR_GITHUB_WORKFLOW_RUN_DIFFERENTIATOR_HASH = "detsys.github.workflow_run_differentiator_hash";
 const ATTR_ARTIFACT_NAME = "detsys.artifact.name";
 const ATTR_ARTIFACT_FETCH_SUFFIX = "detsys.artifact.fetch_suffix";
 const ATTR_ARTIFACT_CACHE_HIT = "detsys.artifact.cache_hit";
@@ -170939,11 +170990,8 @@ const STATE_KEY_EXECUTION_PHASE = "detsys_action_execution_phase";
 const STATE_KEY_NIX_NOT_FOUND = "detsys_action_nix_not_found";
 const STATE_NOT_FOUND = "not-found";
 const STATE_KEY_CROSS_PHASE_ID = "detsys_cross_phase_id";
-const STATE_KEY_TRACEPARENT = "detsys_otel_traceparent";
-const STATE_KEY_JOB_TRACEPARENT = "detsys_otel_job_traceparent";
-const STATE_KEY_JOB_SPAN_START = "detsys_otel_job_span_start";
 const ENV_TRACEPARENT = "TRACEPARENT";
-const SPAN_JOB = "github_actions_job";
+const ENV_INVOCATION_ID = "DETSYS_INVOCATION_ID";
 const SPAN_CHECK_IN = "check_in";
 const CHECK_IN_ENDPOINT_TIMEOUT_MS = 1e3;
 const determinateStateDir = "/var/lib/determinate";
@@ -170999,6 +171047,7 @@ var DetSysAction = class {
 		this.features = {};
 		this.pendingAttributes = {};
 		this.getCrossPhaseId();
+		this.getInvocationId();
 		this.identity = identify();
 		this.archOs = getArchOs();
 		this.nixSystem = getNixPlatform(this.archOs);
@@ -171070,6 +171119,15 @@ var DetSysAction = class {
 	getUniqueId() {
 		return this.identity.github_workflow_run_differentiator_hash || process.env.RUNNER_TRACKING_ID || (0,external_node_crypto_.randomUUID)();
 	}
+	/**
+	* The ID of this Action, which every execution phase of it shares.
+	*
+	* Each phase reports a trace of its own.
+	* This ID is what puts the phases of one Action together, as
+	* `detsys.cross_phase_id`.
+	*
+	* The Action's state carries it from one phase to the next.
+	*/
 	getCrossPhaseId() {
 		let crossPhaseId = getState(STATE_KEY_CROSS_PHASE_ID);
 		if (crossPhaseId === "") {
@@ -171077,6 +171135,28 @@ var DetSysAction = class {
 			saveState(STATE_KEY_CROSS_PHASE_ID, crossPhaseId);
 		}
 		return crossPhaseId;
+	}
+	/**
+	* The ID of this workflow job, which every Action of the job shares.
+	*
+	* Each execution phase of each Action reports a trace of its own, and each
+	* program a phase runs reports its own data.
+	* This ID is what puts that data together: it is on the spans and the log
+	* records of every participant, as `detsys.invocation_id`.
+	*
+	* A job runs each Action as a process of its own.
+	* Thus the Actions can only agree on the ID through the job's environment.
+	* The first Action to run makes the ID and exports it as
+	* `$DETSYS_INVOCATION_ID`.
+	* Each later step finds it there: the other Actions, and the programs the
+	* workflow runs, such as Nix.
+	*/
+	getInvocationId() {
+		const invocationId = process.env[ENV_INVOCATION_ID];
+		if (invocationId !== void 0 && invocationId !== "") return invocationId;
+		const newInvocationId = (0,external_node_crypto_.randomUUID)();
+		exportVariable(ENV_INVOCATION_ID, newInvocationId);
+		return newInvocationId;
 	}
 	getCorrelationHashes() {
 		return this.identity;
@@ -171121,7 +171201,6 @@ var DetSysAction = class {
 	async executeAsync() {
 		const phaseStartTime = /* @__PURE__ */ new Date();
 		try {
-			this.announceJobTrace(phaseStartTime);
 			await this.startTelemetry();
 			this.startPhaseSpan(phaseStartTime);
 			await this.withPhaseSpanActive(async () => {
@@ -171188,79 +171267,34 @@ var DetSysAction = class {
 		});
 	}
 	/**
-	* Put every Action of this workflow job in one trace.
-	*
-	* A job runs each Action as a process of its own.
-	* Thus the Actions can only agree on a trace through the job's environment.
-	* The first Action to run makes the identity of the job's span and exports it
-	* as `$TRACEPARENT`.
-	* Each later step finds it there: the other Actions, and the programs the
-	* workflow runs, such as Nix.
-	*
-	* The span itself starts and ends in the post phase of the Action that
-	* announced it.
-	* GitHub Actions runs the post phases in the reverse of the order of the main
-	* phases, thus that phase is the last one of the job.
-	* The span then covers the whole job.
-	* See {@link endJobSpan}.
-	*
-	* A `$TRACEPARENT` that is already set belongs to an earlier Action, or to the
-	* system that started the workflow.
-	* Do not change it, and join that trace.
-	*/
-	announceJobTrace(startTime) {
-		if (!this.isMain || !exportEnabled()) return;
-		if (process.env[ENV_TRACEPARENT]) return;
-		const traceparent = newTraceparent();
-		exportVariable(ENV_TRACEPARENT, traceparent);
-		saveState(STATE_KEY_JOB_TRACEPARENT, traceparent);
-		saveState(STATE_KEY_JOB_SPAN_START, `${startTime.getTime()}`);
-	}
-	/**
-	* End the job's span, if this Action is the one that announced it.
-	*
-	* The span also starts here.
-	* A span belongs to the process that ends it, and the process that made the
-	* announcement stopped long ago.
-	* See {@link announceJobTrace}.
-	*/
-	endJobSpan() {
-		if (!this.isPost) return;
-		const traceparent = getState(STATE_KEY_JOB_TRACEPARENT);
-		if (traceparent === "") return;
-		const startTime = parseInt(getState(STATE_KEY_JOB_SPAN_START), 10);
-		this.telemetry.startAnnouncedSpan(SPAN_JOB, traceparent, new Date(Number.isFinite(startTime) ? startTime : Date.now()))?.end();
-	}
-	/**
 	* Start the root span of this execution phase.
 	*
 	* The span starts at the moment the phase did, and thus covers the start of
 	* the SDK, which comes before it.
 	*
-	* `main` and `post` are separate processes.
-	* Thus the main phase saves the identity of its span in the Action's state,
-	* and the post phase makes its span a child of it.
-	* A `$TRACEPARENT` in the environment is the span of the workflow job, or of
-	* the system that started the workflow.
+	* Each execution phase reports a trace of its own.
+	* A phase is a process of its own, and the phases of a job run minutes or
+	* hours apart, thus a trace that spans them says nothing a trace of each
+	* phase does not.
+	* The span is therefore the root of its trace, and joins no other.
+	*
+	* {@link getInvocationId} is what puts the traces of one job together, and
+	* {@link getCrossPhaseId} is what puts the phases of one Action together.
 	*/
 	startPhaseSpan(startTime) {
 		if (!this.telemetry.enabled) return;
-		const parent = getState(STATE_KEY_TRACEPARENT) || process.env[ENV_TRACEPARENT] || void 0;
-		const span = getTracer().startSpan(`${this.actionOptions.name}:${this.executionPhase}`, { startTime }, contextFromTraceparent(parent));
+		const span = getTracer().startSpan(`${this.actionOptions.name}:${this.executionPhase}`, { startTime }, src.ROOT_CONTEXT);
 		span.setAttributes(this.pendingAttributes);
 		this.pendingAttributes = {};
 		const traceparent = traceparentOf(span);
-		if (traceparent !== void 0) {
-			process.env[ENV_TRACEPARENT] = traceparent;
-			if (this.isMain) saveState(STATE_KEY_TRACEPARENT, traceparent);
-		}
+		if (traceparent !== void 0) process.env[ENV_TRACEPARENT] = traceparent;
 		this.phaseSpan = span;
 	}
 	/**
 	* The stable, run-scoped attributes attached to every span and log record.
 	*
-	* The correlation data here is hashed and does not identify a repository,
-	* an organization, or a person.
+	* The run and the repository are in the standard `cicd.*` and `vcs.*`
+	* attributes, with the values themselves and not a hash of them.
 	*/
 	async telemetryResourceAttributes() {
 		const details = await this.systemDetails;
@@ -171273,18 +171307,14 @@ var DetSysAction = class {
 			[ATTR_IDS_PROJECT]: this.actionOptions.idsProjectName,
 			[ATTR_EXECUTION_PHASE]: this.executionPhase,
 			[ATTR_CROSS_PHASE_ID]: this.getCrossPhaseId(),
+			[ATTR_INVOCATION_ID]: this.getInvocationId(),
 			[ATTR_ANONYMOUS_ID]: this.identity.$anon_distinct_id,
 			[ATTR_CORRELATION_SOURCE]: this.identity.correlation_source,
 			[ATTR_ARCH_OS]: this.archOs,
 			[ATTR_NIX_SYSTEM]: this.nixSystem,
 			[ATTR_GITHUB_EVENT_NAME]: process.env["GITHUB_EVENT_NAME"],
 			[ATTR_GITHUB_ACTION_REPOSITORY]: process.env["GITHUB_ACTION_REPOSITORY"],
-			[ATTR_GITHUB_REPOSITORY_HASH]: this.identity.github_repository_hash,
-			[ATTR_GITHUB_ORGANIZATION_HASH]: this.identity.$groups["github_organization"],
-			[ATTR_GITHUB_WORKFLOW_HASH]: this.identity.github_workflow_hash,
-			[ATTR_GITHUB_WORKFLOW_JOB_HASH]: this.identity.github_workflow_job_hash,
-			[ATTR_GITHUB_WORKFLOW_RUN_HASH]: this.identity.github_workflow_run_hash,
-			[ATTR_GITHUB_WORKFLOW_RUN_DIFFERENTIATOR_HASH]: this.identity.github_workflow_run_differentiator_hash
+			...githubSemconvAttributes()
 		};
 	}
 	/**
@@ -171299,11 +171329,13 @@ var DetSysAction = class {
 	}
 	/**
 	* The environment variables that let a child process add data to this
-	* Action's trace: the current `$TRACEPARENT` and the OTLP export settings.
+	* Action's trace: the current `$TRACEPARENT`, the invocation ID, and the
+	* OTLP export settings.
 	*
 	* Add these variables to the environment of each child process to trace.
 	* A child that inherits this process's environment already has the OTLP
-	* settings; only `$TRACEPARENT` changes as the run proceeds.
+	* settings and the invocation ID; only `$TRACEPARENT` changes as the run
+	* proceeds.
 	*
 	* The result is empty if the OpenTelemetry export is off.
 	* Thus it is always safe to add them.
@@ -171311,6 +171343,7 @@ var DetSysAction = class {
 	async getTelemetryEnvironment() {
 		if (!this.telemetry.enabled) return {};
 		const environment = otlpExportEnvironment();
+		environment[ENV_INVOCATION_ID] = this.getInvocationId();
 		const traceparent = this.getTraceparent();
 		if (traceparent !== void 0) environment[ENV_TRACEPARENT] = traceparent;
 		return environment;
@@ -171585,7 +171618,6 @@ var DetSysAction = class {
 	async complete() {
 		this.phaseSpan?.end();
 		this.phaseSpan = void 0;
-		this.endJobSpan();
 		await this.telemetry.shutdown();
 	}
 	async getCheckInUrl() {
