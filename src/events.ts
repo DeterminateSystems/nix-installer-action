@@ -71,19 +71,57 @@ export function parseEvents(data: unknown): ParsedEventsResult {
   return { events, hasMismatches };
 }
 
+/** Where determinate-nixd listens. */
+const DAEMON_SOCKET = "/nix/var/determinate/determinate-nixd.socket";
+
+/**
+ * The events determinate-nixd recorded since `since`, or undefined when this
+ * machine has no determinate-nixd to ask.
+ *
+ * A machine that runs upstream Nix has no socket at {@link DAEMON_SOCKET}.
+ * It therefore reports no events, which is a normal outcome and not a
+ * failure of the caller.
+ */
 export async function getRecentEvents(
   since: Date,
-): Promise<ParsedEventsResult> {
+): Promise<ParsedEventsResult | undefined> {
   const queryParam = encodeURIComponent(since.toISOString());
 
-  const resp = await got
-    .get(
-      `http://unix:/nix/var/determinate/determinate-nixd.socket:/events/recent?since=${queryParam}`,
-      {
+  try {
+    const resp = await got
+      .get(`http://unix:${DAEMON_SOCKET}:/events/recent?since=${queryParam}`, {
         enableUnixSockets: true,
-      },
-    )
-    .json();
+      })
+      .json();
 
-  return parseEvents(resp);
+    return parseEvents(resp);
+  } catch (error: unknown) {
+    if (isSocketAbsent(error)) {
+      return undefined;
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Whether `error` reports that the socket is not there.
+ *
+ * A request to a Unix socket that does not exist fails with ENOENT.
+ * `got` wraps the error of the request, thus the code can be on the error or
+ * on its cause. Four links is more than any real chain.
+ */
+function isSocketAbsent(error: unknown): boolean {
+  let candidate: unknown = error;
+
+  for (let link = 0; link < 4 && candidate != null; link++) {
+    // eslint-disable-next-line no-undef
+    if ((candidate as NodeJS.ErrnoException).code === "ENOENT") {
+      return true;
+    }
+
+    candidate = (candidate as { cause?: unknown }).cause;
+  }
+
+  return false;
 }
