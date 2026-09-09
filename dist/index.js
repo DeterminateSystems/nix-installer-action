@@ -178159,7 +178159,6 @@ const source_got = dist_source_create(dist_source_defaults);
 
 
 
-
 // src/fixHashes.ts
 
 async function getFixHashes(since) {
@@ -178450,12 +178449,6 @@ async function getLogFromNix(drv) {
 
 // src/index.ts
 
-var EVENT_CONCLUDE_JOB = "detsys.nix_installer.conclude_job";
-var EVENT_FOD_ANNOTATE = "detsys.nix_installer.fod_annotate";
-var EVENT_NO_SYSTEMD_SHIM_FAILED = "detsys.nix_installer.no_systemd_shim_failed";
-var EVENT_SHIM_WAIT_FOR_SOCKET = "detsys.nix_installer.shim_wait_for_socket_failed";
-var EVENT_SUMMARIZE_EXECUTION_ERROR = "detsys.nix_installer.summarize_execution_error";
-var EVENT_ANNOTATE_MISMATCHES_ERROR = "detsys.nix_installer.annotate_mismatches_error";
 var FEAT_ANNOTATIONS = "hash-mismatch-annotations";
 var ATTR_DETERMINATE_NIX = "detsys.nix_installer.determinate_nix";
 var ATTR_HAS_SYSTEMD = "detsys.nix_installer.has_systemd";
@@ -178467,9 +178460,11 @@ var ATTR_EXIT_CODE = "detsys.exit_code";
 var ATTR_JOB_CONCLUSION = "detsys.nix_installer.job_conclusion";
 var ATTR_LOGIN_SKIPPED_REASON = "detsys.flakehub.login_skipped_reason";
 var ATTR_LOGIN_SUCCEEDED = "detsys.flakehub.login_succeeded";
-var ATTR_SHIM_LOG = "detsys.nix_installer.shim_log";
 var ATTR_FOD_MISMATCH_COUNT = "detsys.nix_installer.fod_mismatch_count";
 var ATTR_SUMMARY_AVAILABLE = "detsys.nix_installer.summary_available";
+var ATTR_BUILDS_SUCCEEDED = "detsys.nix_installer.builds_succeeded";
+var ATTR_BUILDS_FAILED = "detsys.nix_installer.builds_failed";
+var ATTR_BUILDS_UNKNOWN_EVENT = "detsys.nix_installer.builds_unknown_event";
 var ATTR_IS_ROOT = "detsys.nix_installer.is_root";
 var ATTR_KVM_ENABLED = "detsys.nix_installer.kvm_enabled";
 var ATTR_DAEMON_PID = "detsys.nix_installer.daemon_pid";
@@ -178584,9 +178579,7 @@ var NixInstallerAction = class extends DetSysAction {
       try {
         await this.summarizeExecution();
       } catch (err) {
-        this.addEvent(EVENT_SUMMARIZE_EXECUTION_ERROR, {
-          [semantic_conventions_build_src.ATTR_EXCEPTION_MESSAGE]: stringifyError(err)
-        });
+        log_exports.debug(`Could not summarize the execution: ${stringifyError(err)}`);
       }
     }
     await this.cleanupNoSystemd();
@@ -178868,6 +178861,7 @@ var NixInstallerAction = class extends DetSysAction {
       "Directly spawning the daemon, since systemd is not available.",
       async () => {
         const outputPath = external_path_.join(this.daemonDir, "daemon.log");
+        this.stapleFile("daemon.log", outputPath);
         const output = (0,external_fs_.openSync)(outputPath, "a");
         const daemonBin = this.determinate ? "/usr/local/bin/determinate-nixd" : "/nix/var/nix/profiles/default/bin/nix-daemon";
         const daemonCliFlags = this.determinate ? ["daemon"] : [];
@@ -178896,33 +178890,23 @@ var NixInstallerAction = class extends DetSysAction {
           this.setAttribute(ATTR_DAEMON_PID, daemon.pid);
           await (0,promises_namespaceObject.writeFile)(pidFile, daemon.pid.toString());
         }
-        try {
-          for (let i = 0; i <= 2400; i++) {
-            if (daemon.signalCode !== null || daemon.exitCode !== null) {
-              let msg;
-              if (daemon.signalCode) {
-                msg = `Daemon was killed by signal ${daemon.signalCode}`;
-              } else {
-                msg = `Daemon exited with code ${daemon.exitCode}`;
-              }
-              throw new Error(msg);
+        for (let i = 0; i <= 2400; i++) {
+          if (daemon.signalCode !== null || daemon.exitCode !== null) {
+            let msg;
+            if (daemon.signalCode) {
+              msg = `Daemon was killed by signal ${daemon.signalCode}`;
+            } else {
+              msg = `Daemon exited with code ${daemon.exitCode}`;
             }
-            if (await this.doesTheSocketExistYet()) {
-              break;
-            }
-            await (0,external_timers_promises_namespaceObject.setTimeout)(50);
+            throw new Error(msg);
           }
-          if (!await this.doesTheSocketExistYet()) {
-            throw new Error(
-              "Timed out waiting for the daemon socket to appear."
-            );
+          if (await this.doesTheSocketExistYet()) {
+            break;
           }
-        } catch (error) {
-          this.addEvent(EVENT_NO_SYSTEMD_SHIM_FAILED, {
-            [semantic_conventions_build_src.ATTR_EXCEPTION_MESSAGE]: stringifyError(error),
-            [ATTR_SHIM_LOG]: await (0,promises_namespaceObject.readFile)(outputPath, "utf-8")
-          });
-          throw error;
+          await (0,external_timers_promises_namespaceObject.setTimeout)(50);
+        }
+        if (!await this.doesTheSocketExistYet()) {
+          throw new Error("Timed out waiting for the daemon socket to appear.");
         }
         daemon.unref();
       }
@@ -178941,9 +178925,6 @@ var NixInstallerAction = class extends DetSysAction {
       log_exports.warning(
         `Error waiting for the Nix Daemon socket: ${stringifyError(error)}`
       );
-      this.addEvent(EVENT_SHIM_WAIT_FOR_SOCKET, {
-        [semantic_conventions_build_src.ATTR_EXCEPTION_MESSAGE]: stringifyError(error)
-      });
       throw error;
     }
   }
@@ -179025,9 +179006,9 @@ var NixInstallerAction = class extends DetSysAction {
           unknown++;
       }
     }
-    this.setAttribute("nix_builds_succeeded", built);
-    this.setAttribute("nix_builds_failed", failed);
-    this.setAttribute("nix_builds_unknown_event", unknown);
+    this.setAttribute(ATTR_BUILDS_SUCCEEDED, built);
+    this.setAttribute(ATTR_BUILDS_FAILED, failed);
+    this.setAttribute(ATTR_BUILDS_UNKNOWN_EVENT, unknown);
   }
   async setGithubPath() {
     try {
@@ -179280,13 +179261,7 @@ var NixInstallerAction = class extends DetSysAction {
     });
   }
   async reportOverall() {
-    try {
-      this.addEvent(EVENT_CONCLUDE_JOB, {
-        [ATTR_JOB_CONCLUSION]: this.jobConclusion ?? "unknown"
-      });
-    } catch (e) {
-      log_exports.debug(`Error submitting post-run diagnostics report: ${e}`);
-    }
+    this.setAttribute(ATTR_JOB_CONCLUSION, this.jobConclusion ?? "unknown");
   }
   get defaultPlanner() {
     if (this.isMacOS) {
@@ -179320,15 +179295,10 @@ var NixInstallerAction = class extends DetSysAction {
         }
         log_exports.debug("Annotating mismatches");
         const count = annotateMismatches(mismatches);
-        span.setAttribute("detsys.annotation_count", count);
-        this.addEvent(EVENT_FOD_ANNOTATE, {
-          [ATTR_FOD_MISMATCH_COUNT]: count
-        });
+        span.setAttribute(ATTR_FOD_MISMATCH_COUNT, count);
       } catch (error) {
         log_exports.warning(`Could not consume hash mismatch events: ${error}`);
-        this.addEvent(EVENT_ANNOTATE_MISMATCHES_ERROR, {
-          [semantic_conventions_build_src.ATTR_EXCEPTION_MESSAGE]: stringifyError(error)
-        });
+        recordSpanError(span, error);
       }
     });
   }
