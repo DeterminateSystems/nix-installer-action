@@ -34,6 +34,7 @@ const EVENT_UNINSTALL_NIX = "detsys.nix_installer.uninstall";
 // FlakeHub events
 const EVENT_LOGIN_START = "detsys.flakehub.login_start";
 const EVENT_LOGIN_FAILURE = "detsys.flakehub.login_failure";
+const EVENT_LOGIN_SKIPPED = "detsys.flakehub.login_skipped";
 const EVENT_LOGIN_SUCCESS = "detsys.flakehub.login_success";
 const EVENT_LOGIN_END = "detsys.flakehub.login_end";
 
@@ -792,8 +793,8 @@ class NixInstallerAction extends DetSysAction {
 
         if (pr && base !== head) {
           span.setAttribute(ATTR_LOGIN_SKIPPED_REASON, "fork");
-          this.addEvent(EVENT_LOGIN_FAILURE, {
-            [ATTR_LOGIN_FAILURE_REASON]: "fork",
+          this.addEvent(EVENT_LOGIN_SKIPPED, {
+            [ATTR_LOGIN_SKIPPED_REASON]: "fork",
           });
           this.addEvent(EVENT_LOGIN_END);
 
@@ -804,8 +805,8 @@ class NixInstallerAction extends DetSysAction {
         }
 
         span.setAttribute(ATTR_LOGIN_SKIPPED_REASON, "not-configured");
-        this.addEvent(EVENT_LOGIN_FAILURE, {
-          [ATTR_LOGIN_FAILURE_REASON]: "not-configured",
+        this.addEvent(EVENT_LOGIN_SKIPPED, {
+          [ATTR_LOGIN_SKIPPED_REASON]: "not-configured",
         });
         this.addEvent(EVENT_LOGIN_END);
 
