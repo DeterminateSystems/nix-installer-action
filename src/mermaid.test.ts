@@ -1,6 +1,7 @@
-import { mermaidify, makeMermaidReport } from "./mermaid.js";
-import { DEvent, parseEvents } from "./events.js";
 import { expect, test } from "vitest";
+
+import { type DEvent, parseEvents } from "./events.js";
+import { mermaidify, makeMermaidReport } from "./mermaid.js";
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
@@ -60,9 +61,7 @@ test("Create a medium large report doc and make sure it is small enough", () => 
   // Assert that no lines were pruned
   expect(report.match(/dep-/g)!.length).toStrictEqual(eventCount);
 
-  expect(report).toContain(
-    "suffixes have been removed to make the graph small enough to render",
-  );
+  expect(report).toContain("suffixes have been removed to make the graph small enough to render");
 
   expect(report.length).lessThan(50200);
   expect(report.length).greaterThan(18000);

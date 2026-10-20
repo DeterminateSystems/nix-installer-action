@@ -1,4 +1,4 @@
-import { DEvent } from "./events.js";
+import type { DEvent } from "./events.js";
 import { truncateDerivation } from "./util.js";
 
 export function makeMermaidReport(events: DEvent[]): string | undefined {
@@ -41,19 +41,13 @@ export function makeMermaidReport(events: DEvent[]): string | undefined {
   return lines.join("\n");
 }
 
-export function mermaidify(
-  allEvents: DEvent[],
-  pruneLevel: number,
-): string | undefined {
+export function mermaidify(allEvents: DEvent[], pruneLevel: number): string | undefined {
   const events = allEvents
     .filter(
       (event) =>
-        event.c === "BuiltPathResponseEventV1" ||
-        event.c === "BuildFailureResponseEventV1",
+        event.c === "BuiltPathResponseEventV1" || event.c === "BuildFailureResponseEventV1",
     )
-    .sort(
-      (a, b) => a.timing.startTime.getTime() - b.timing.startTime.getTime(),
-    );
+    .sort((a, b) => a.timing.startTime.getTime() - b.timing.startTime.getTime());
 
   const firstEvent = events.at(0);
   if (firstEvent === undefined) {
@@ -62,12 +56,7 @@ export function mermaidify(
 
   const zeroMoment = firstEvent.timing.startTime.getTime();
 
-  const lines = [
-    "```mermaid",
-    "gantt",
-    "    dateFormat X",
-    "    axisFormat %Mm%Ss",
-  ];
+  const lines = ["```mermaid", "gantt", "    dateFormat X", "    axisFormat %Mm%Ss"];
 
   for (const event of events) {
     const duration = event.timing.durationSeconds;
@@ -77,12 +66,9 @@ export function mermaidify(
 
     const label = pruneLevel >= 0 ? truncateDerivation(event.drv) : event.drv;
     const tag = event.c === "BuildFailureResponseEventV1" ? "crit" : "d";
-    const relativeStartTime =
-      (event.timing.startTime.getTime() - zeroMoment) / 1000;
+    const relativeStartTime = (event.timing.startTime.getTime() - zeroMoment) / 1000;
 
-    lines.push(
-      `${label} (${formatDuration(duration)}):${tag}, ${relativeStartTime}, ${duration}s`,
-    );
+    lines.push(`${label} (${formatDuration(duration)}):${tag}, ${relativeStartTime}, ${duration}s`);
   }
   lines.push("```");
 

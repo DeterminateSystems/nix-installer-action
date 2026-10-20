@@ -34,5 +34,5 @@ export async function getFixHashes(since: string): Promise<FixHashesOutputV1> {
     );
   }
 
-  return JSON.parse(output.stdout);
+  return JSON.parse(output.stdout) as FixHashesOutputV1;
 }

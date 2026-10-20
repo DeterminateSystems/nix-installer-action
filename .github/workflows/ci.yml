@@ -56,10 +56,7 @@ jobs:
       fail-fast: false
       matrix:
         system:
-          - {
-              nix-system: x86_64-linux,
-              runner: nscloud-ubuntu-22.04-amd64-4x16,
-            }
+          - { nix-system: x86_64-linux, runner: nscloud-ubuntu-22.04-amd64-4x16 }
           - { nix-system: aarch64-darwin, runner: macos-latest }
         determinate:
           - true

@@ -6,11 +6,7 @@ function prettyDerivation(derivation: string): string {
   return derivation.replace(/\/nix\/store\/\w+-/, "").replace(/.drv$/, "");
 }
 
-function annotateSingle(
-  file: string,
-  line: number,
-  { derivation, replacement }: Mismatch,
-): void {
+function annotateSingle(file: string, line: number, { derivation, replacement }: Mismatch): void {
   const pretty = prettyDerivation(derivation);
   log.error(`To correct the hash mismatch for ${pretty}, use ${replacement}`, {
     file,
@@ -18,10 +14,7 @@ function annotateSingle(
   });
 }
 
-function annotateMultiple(
-  file: string,
-  { line, found, mismatches }: Fix,
-): void {
+function annotateMultiple(file: string, { line, found, mismatches }: Fix): void {
   const matches = mismatches
     .map(({ derivation, replacement }) => {
       const pretty = prettyDerivation(derivation);
@@ -29,13 +22,10 @@ function annotateMultiple(
     })
     .join("\n");
 
-  log.error(
-    `There are multiple replacements for the expression ${found}:\n${matches}`,
-    {
-      file,
-      startLine: line,
-    },
-  );
+  log.error(`There are multiple replacements for the expression ${found}:\n${matches}`, {
+    file,
+    startLine: line,
+  });
 }
 
 function annotate(file: string, fix: Fix): void {

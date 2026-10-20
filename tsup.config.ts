@@ -1,4 +1,5 @@
 import { defineConfig } from "tsup";
+
 import { name } from "./package.json";
 
 export default defineConfig({
