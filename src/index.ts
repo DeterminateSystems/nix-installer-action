@@ -676,8 +676,10 @@ class NixInstallerAction extends DetSysAction {
       }
 
       if (failureSummary !== undefined) {
+        // Use actionsCore.info directly: log.info also exports each message
+        // as a telemetry log record, and build logs do not belong there.
         for (const chunk of failureSummary.logChunks) {
-          log.info(chunk);
+          actionsCore.info(chunk);
         }
 
         actionsCore.summary.addRaw(

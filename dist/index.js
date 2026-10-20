@@ -181174,7 +181174,7 @@ var NixInstallerAction = class extends DetSysAction {
       }
       if (failureSummary !== void 0) {
         for (const chunk of failureSummary.logChunks) {
-          log_exports.info(chunk);
+          info(chunk);
         }
         summary.addRaw(
           failureSummary.markdownLines.join("\n"),
