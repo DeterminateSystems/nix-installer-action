@@ -7,14 +7,22 @@ import { stripVTControlCharacters } from "node:util";
 // Rounding it all down a bit further for wiggle room, that leaves lots of log space.
 const defaultMaxSummaryLength = 995_000;
 
+// Returns the first failure event for each derivation.
+// A derivation that is retried fails more than once, and its log is the same each time.
 export function getBuildFailures(events: DEvent[]): DEvent[] {
-  return events.filter((event: DEvent): Boolean => {
-    return event.c === "BuildFailureResponseEventV1";
+  const seen = new Set<string>();
+  return events.filter((event: DEvent): boolean => {
+    if (event.c !== "BuildFailureResponseEventV1" || seen.has(event.drv)) {
+      return false;
+    }
+    seen.add(event.drv);
+    return true;
   });
 }
 
 export interface FailureSummary {
-  logLines: string[];
+  // Each chunk is a multi-line string that the caller writes in one call.
+  logChunks: string[];
   markdownLines: string[];
 }
 
@@ -29,14 +37,14 @@ export async function summarizeFailures(
     return undefined;
   }
 
-  const logLines = [];
+  const logChunks = [];
   const markdownLines = [];
 
-  logLines.push(
-    `\u001b[38;2;255;0;0mBuild logs from ${failures.length} failure${failures.length === 1 ? "" : "s"}`,
-  );
-  logLines.push(
-    `The following build logs are also available in the Markdown summary:`,
+  logChunks.push(
+    [
+      `\u001b[38;2;255;0;0mBuild logs from ${failures.length} failure${failures.length === 1 ? "" : "s"}`,
+      `The following build logs are also available in the Markdown summary:`,
+    ].join("\n"),
   );
   markdownLines.push(`### Build error review :boom:`);
   markdownLines.push("> [!NOTE]");
@@ -89,7 +97,7 @@ export async function summarizeFailures(
     if (markdownLength + chunkLength > maxLength) {
       skippedChunks.push(chunk);
     } else {
-      logLines.push(...chunk.txtLines);
+      logChunks.push(chunk.txtLines.join("\n"));
       markdownLines.push(...chunk.mdLines);
       markdownLength += chunkLength;
     }
@@ -103,16 +111,16 @@ export async function summarizeFailures(
       "> The full logs are available in the post-run phase of the Nix Installer Action.",
     );
 
-    logLines.push(
+    logChunks.push(
       "The following build logs are NOT available in the Markdown summary:",
     );
     for (const chunk of skippedChunks) {
       markdownLines.push(`> * \`${chunk.drv}\``);
-      logLines.push(...chunk.txtLines);
+      logChunks.push(chunk.txtLines.join("\n"));
     }
   }
 
-  return { logLines, markdownLines };
+  return { logChunks, markdownLines };
 }
 
 async function getLogFromNix(drv: string): Promise<string | undefined> {
