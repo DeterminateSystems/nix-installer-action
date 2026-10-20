@@ -22,7 +22,7 @@
     "check-fmt": "oxfmt --check .",
     "lint": "oxlint src",
     "package": "ncc build",
-    "test": "vitest --watch false",
+    "test": "vitest --run",
     "all": "npm run test && npm run format && npm run lint && npm run build && npm run package"
   },
   "dependencies": {
@@ -33,18 +33,15 @@
     "@opentelemetry/semantic-conventions": "^1.43.0",
     "got": "^14.6.6",
     "string-argv": "^0.3.2",
-    "vitest": "^3.2.7"
+    "vitest": "^5.0.5"
   },
   "devDependencies": {
     "@determinate-systems/oxlint-config": "^1.0.0",
-    "@types/node": "^20.19.43",
+    "@types/node": "^24.19.2",
     "@types/uuid": "^9.0.8",
     "@vercel/ncc": "^0.38.4",
     "oxlint-tsgolint": "^7.0.2004",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
-  },
-  "overrides": {
-    "esbuild": "^0.28.1"
   }
 }
