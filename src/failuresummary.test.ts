@@ -273,3 +273,40 @@ The following build logs are NOT available in the Markdown summary:
     /nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-3.drv
 ::endgroup::`);
 });
+
+test("Report a derivation that failed more than once only once", () => {
+  const events = [
+    {
+      v: "1",
+      c: "BuildFailureResponseEventV1",
+      drv: `/nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-1.drv`,
+      timing: {
+        startTime: new Date(1 * 1000),
+        durationSeconds: 1,
+      },
+    },
+    {
+      v: "1",
+      c: "BuildFailureResponseEventV1",
+      drv: `/nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-3.drv`,
+      timing: {
+        startTime: new Date(2 * 1000),
+        durationSeconds: 2,
+      },
+    },
+    {
+      v: "1",
+      c: "BuildFailureResponseEventV1",
+      drv: `/nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-1.drv`,
+      timing: {
+        startTime: new Date(3 * 1000),
+        durationSeconds: 3,
+      },
+    },
+  ];
+
+  expect(getBuildFailures(events).map((event) => event.drv)).toStrictEqual([
+    `/nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-1.drv`,
+    `/nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-3.drv`,
+  ]);
+});

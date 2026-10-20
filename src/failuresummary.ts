@@ -7,9 +7,16 @@ import { stripVTControlCharacters } from "node:util";
 // Rounding it all down a bit further for wiggle room, that leaves lots of log space.
 const defaultMaxSummaryLength = 995_000;
 
+// Returns the first failure event for each derivation.
+// A derivation that is retried fails more than once, and its log is the same each time.
 export function getBuildFailures(events: DEvent[]): DEvent[] {
-  return events.filter((event: DEvent): Boolean => {
-    return event.c === "BuildFailureResponseEventV1";
+  const seen = new Set<string>();
+  return events.filter((event: DEvent): boolean => {
+    if (event.c !== "BuildFailureResponseEventV1" || seen.has(event.drv)) {
+      return false;
+    }
+    seen.add(event.drv);
+    return true;
   });
 }
 

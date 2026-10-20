@@ -180567,8 +180567,13 @@ function formatDuration(duration) {
 
 var defaultMaxSummaryLength = 995e3;
 function getBuildFailures(events) {
+  const seen = /* @__PURE__ */ new Set();
   return events.filter((event) => {
-    return event.c === "BuildFailureResponseEventV1";
+    if (event.c !== "BuildFailureResponseEventV1" || seen.has(event.drv)) {
+      return false;
+    }
+    seen.add(event.drv);
+    return true;
   });
 }
 async function summarizeFailures(events, getLog = getLogFromNix, maxLength = defaultMaxSummaryLength) {
