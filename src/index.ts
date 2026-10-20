@@ -676,8 +676,8 @@ class NixInstallerAction extends DetSysAction {
       }
 
       if (failureSummary !== undefined) {
-        for (const logLine of failureSummary.logLines) {
-          log.info(logLine);
+        for (const chunk of failureSummary.logChunks) {
+          log.info(chunk);
         }
 
         actionsCore.summary.addRaw(

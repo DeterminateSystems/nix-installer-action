@@ -150,7 +150,7 @@ test("Summarize Failures", async () => {
 </details>
 `);
 
-  expect(summary.logLines.join("\n"))
+  expect(summary.logChunks.join("\n"))
     .toStrictEqual(`\u001b[38;2;255;0;0mBuild logs from 2 failures
 The following build logs are also available in the Markdown summary:
 ::group::Failed build: /nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-1.drv
@@ -254,7 +254,7 @@ test("Omit some logs if there are too many", async () => {
 > The full logs are available in the post-run phase of the Nix Installer Action.
 > * \`/nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-3.drv\``);
 
-  expect(summary.logLines.join("\n"))
+  expect(summary.logChunks.join("\n"))
     .toStrictEqual(`\u001b[38;2;255;0;0mBuild logs from 2 failures
 The following build logs are also available in the Markdown summary:
 ::group::Failed build: /nix/store/rz9hrpay90sjrid5hx3x8v606ji679xa-dep-1.drv

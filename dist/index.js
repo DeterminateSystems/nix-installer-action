@@ -180576,13 +180576,13 @@ async function summarizeFailures(events, getLog = getLogFromNix, maxLength = def
   if (failures.length === 0) {
     return void 0;
   }
-  const logLines = [];
+  const logChunks = [];
   const markdownLines = [];
-  logLines.push(
-    `\x1B[38;2;255;0;0mBuild logs from ${failures.length} failure${failures.length === 1 ? "" : "s"}`
-  );
-  logLines.push(
-    `The following build logs are also available in the Markdown summary:`
+  logChunks.push(
+    [
+      `\x1B[38;2;255;0;0mBuild logs from ${failures.length} failure${failures.length === 1 ? "" : "s"}`,
+      `The following build logs are also available in the Markdown summary:`
+    ].join("\n")
   );
   markdownLines.push(`### Build error review :boom:`);
   markdownLines.push("> [!NOTE]");
@@ -180621,7 +180621,7 @@ async function summarizeFailures(events, getLog = getLogFromNix, maxLength = def
     if (markdownLength + chunkLength > maxLength) {
       skippedChunks.push(chunk);
     } else {
-      logLines.push(...chunk.txtLines);
+      logChunks.push(chunk.txtLines.join("\n"));
       markdownLines.push(...chunk.mdLines);
       markdownLength += chunkLength;
     }
@@ -180633,15 +180633,15 @@ async function summarizeFailures(events, getLog = getLogFromNix, maxLength = def
       `> The following ${skippedChunks.length === 1 ? "failure has" : "failures have"} been omitted due to GitHub Actions' summary length limitations.`,
       "> The full logs are available in the post-run phase of the Nix Installer Action."
     );
-    logLines.push(
+    logChunks.push(
       "The following build logs are NOT available in the Markdown summary:"
     );
     for (const chunk of skippedChunks) {
       markdownLines.push(`> * \`${chunk.drv}\``);
-      logLines.push(...chunk.txtLines);
+      logChunks.push(chunk.txtLines.join("\n"));
     }
   }
-  return { logLines, markdownLines };
+  return { logChunks, markdownLines };
 }
 async function getLogFromNix(drv) {
   const output = await getExecOutput("nix", ["log", drv], {
@@ -181173,8 +181173,8 @@ var NixInstallerAction = class extends DetSysAction {
         );
       }
       if (failureSummary !== void 0) {
-        for (const logLine of failureSummary.logLines) {
-          log_exports.info(logLine);
+        for (const chunk of failureSummary.logChunks) {
+          log_exports.info(chunk);
         }
         summary.addRaw(
           failureSummary.markdownLines.join("\n"),
