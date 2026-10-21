@@ -32,8 +32,7 @@ export function parseEvents(data: unknown): ParsedEventsResult {
     // Otherwise, determine if it's an event we're interested in
     if (
       event.v === "1" &&
-      (event.c === "BuildFailureResponseEventV1" ||
-        event.c === "BuiltPathResponseEventV1") &&
+      (event.c === "BuildFailureResponseEventV1" || event.c === "BuiltPathResponseEventV1") &&
       Object.hasOwn(event, "drv") &&
       typeof event.drv === "string" &&
       Object.hasOwn(event, "timing") &&
@@ -82,9 +81,7 @@ const DAEMON_SOCKET = "/nix/var/determinate/determinate-nixd.socket";
  * It therefore reports no events, which is a normal outcome and not a
  * failure of the caller.
  */
-export async function getRecentEvents(
-  since: Date,
-): Promise<ParsedEventsResult | undefined> {
+export async function getRecentEvents(since: Date): Promise<ParsedEventsResult | undefined> {
   const queryParam = encodeURIComponent(since.toISOString());
 
   try {
@@ -114,7 +111,7 @@ export async function getRecentEvents(
 function isSocketAbsent(error: unknown): boolean {
   let candidate: unknown = error;
 
-  for (let link = 0; link < 4 && candidate != null; link++) {
+  for (let link = 0; link < 4 && candidate; link++) {
     // eslint-disable-next-line no-undef
     if ((candidate as NodeJS.ErrnoException).code === "ENOENT") {
       return true;

@@ -1,12 +1,14 @@
+import { type SpawnOptions, spawn } from "node:child_process";
+import fs, { mkdirSync, openSync } from "node:fs";
+import { access, readFile, stat, writeFile } from "node:fs/promises";
+import { userInfo } from "node:os";
+import { join } from "node:path";
+import * as path from "node:path";
+import { setTimeout } from "node:timers/promises";
+
 import * as actionsCore from "@actions/core";
 import * as actionsExec from "@actions/exec";
 import * as github from "@actions/github";
-import { access, readFile, stat, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import fs, { mkdirSync, openSync } from "node:fs";
-import { userInfo } from "node:os";
-import stringArgv from "string-argv";
-import * as path from "path";
 import {
   DetSysAction,
   inputs,
@@ -16,13 +18,13 @@ import {
   stringifyError,
   withSpan,
 } from "@determinate-systems/detsys-ts";
-import { setTimeout } from "node:timers/promises";
-import { getFixHashes } from "./fixHashes.js";
+import stringArgv from "string-argv";
+
 import { annotateMismatches } from "./annotate.js";
-import { DEvent, getRecentEvents } from "./events.js";
-import { makeMermaidReport } from "./mermaid.js";
+import { type DEvent, getRecentEvents } from "./events.js";
 import { summarizeFailures } from "./failuresummary.js";
-import { SpawnOptions, spawn } from "node:child_process";
+import { getFixHashes } from "./fixHashes.js";
+import { makeMermaidReport } from "./mermaid.js";
 
 // Feature flag names
 const FEAT_ANNOTATIONS = "hash-mismatch-annotations";
@@ -114,16 +116,15 @@ class NixInstallerAction extends DetSysAction {
       diagnosticsSuffix: "diagnostic",
     });
 
-    if (actionsCore.getState(STATE_DAEMONDIR) !== "") {
-      this.daemonDir = actionsCore.getState(STATE_DAEMONDIR);
-    } else {
+    if (actionsCore.getState(STATE_DAEMONDIR) === "") {
       this.daemonDir = this.getTemporaryName();
       mkdirSync(this.daemonDir);
       actionsCore.saveState(STATE_DAEMONDIR, this.daemonDir);
+    } else {
+      this.daemonDir = actionsCore.getState(STATE_DAEMONDIR);
     }
 
-    this.determinate =
-      inputs.getBool("determinate") || inputs.getBool("flakehub");
+    this.determinate = inputs.getBool("determinate") || inputs.getBool("flakehub");
     this.platform = platform.getNixPlatform(platform.getArchOs());
     this.nixPackageUrl = inputs.getStringOrNull("nix-package-url");
     this.backtrace = inputs.getStringOrNull("backtrace");
@@ -155,7 +156,7 @@ class NixInstallerAction extends DetSysAction {
     this.startDaemon = inputs.getBool("start-daemon");
     this.trustRunnerUser = inputs.getBool("trust-runner-user");
     this.summarize = inputs.getBool("summarize");
-    this.runnerOs = process.env["RUNNER_OS"];
+    this.runnerOs = process.env.RUNNER_OS;
   }
 
   async main(): Promise<void> {
@@ -189,14 +190,11 @@ class NixInstallerAction extends DetSysAction {
   }
 
   private get isRunningInAct(): boolean {
-    return process.env["ACT"] !== undefined && !(process.env["NOT_ACT"] === "");
+    return process.env.ACT !== undefined && !(process.env.NOT_ACT === "");
   }
 
   private get isRunningInNamespaceRunner(): boolean {
-    return (
-      process.env["NSC_VM_ID"] !== undefined &&
-      !(process.env["NOT_NAMESPACE"] === "true")
-    );
+    return process.env.NSC_VM_ID !== undefined && !(process.env.NOT_NAMESPACE === "true");
   }
 
   // Detect if we're in a GHA runner which is Linux and doesn't have Systemd.
@@ -235,9 +233,7 @@ class NixInstallerAction extends DetSysAction {
     const executionEnv: ExecuteEnvironment = {};
 
     executionEnv.NIX_INSTALLER_NO_CONFIRM = "true";
-    executionEnv.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(
-      this.getCorrelationHashes(),
-    );
+    executionEnv.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(this.getCorrelationHashes());
 
     if (this.backtrace !== null) {
       executionEnv.RUST_BACKTRACE = this.backtrace;
@@ -259,8 +255,7 @@ class NixInstallerAction extends DetSysAction {
     }
 
     if (this.nixBuildUserPrefix !== null) {
-      executionEnv.NIX_INSTALLER_NIX_BUILD_USER_PREFIX =
-        this.nixBuildUserPrefix;
+      executionEnv.NIX_INSTALLER_NIX_BUILD_USER_PREFIX = this.nixBuildUserPrefix;
     }
 
     if (this.nixBuildUserCount !== null) {
@@ -272,7 +267,7 @@ class NixInstallerAction extends DetSysAction {
     }
 
     if (this.nixPackageUrl !== null) {
-      executionEnv.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nixPackageUrl}`;
+      executionEnv.NIX_INSTALLER_NIX_PACKAGE_URL = this.nixPackageUrl;
     }
 
     if (this.proxy !== null) {
@@ -296,18 +291,14 @@ class NixInstallerAction extends DetSysAction {
 
     if (this.macCaseSensitive !== null) {
       if (!this.isMacOS) {
-        throw new Error(
-          "`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`",
-        );
+        throw new Error("`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_CASE_SENSITIVE = this.macCaseSensitive;
     }
 
     if (this.macVolumeLabel !== null) {
       if (!this.isMacOS) {
-        throw new Error(
-          "`mac-volume-label` while `$RUNNER_OS` was not `macOS`",
-        );
+        throw new Error("`mac-volume-label` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_VOLUME_LABEL = this.macVolumeLabel;
     }
@@ -330,9 +321,7 @@ class NixInstallerAction extends DetSysAction {
     // TODO: Error if the user uses these on MacOS
     if (this.init !== null) {
       if (this.isMacOS) {
-        throw new Error(
-          "`init` is not a valid option when `$RUNNER_OS` is `macOS`",
-        );
+        throw new Error("`init` is not a valid option when `$RUNNER_OS` is `macOS`");
       }
       executionEnv.NIX_INSTALLER_INIT = this.init;
     }
@@ -401,7 +390,10 @@ class NixInstallerAction extends DetSysAction {
     };
 
     const tags = Object.entries(mapping)
-      .map(([sourceKey, targetKey]) => [targetKey, process.env[sourceKey]])
+      .map(([sourceKey, targetKey]): [string, string | undefined] => [
+        targetKey,
+        process.env[sourceKey],
+      ])
       .filter(([_, value]) => value !== undefined);
     return { ...Object.fromEntries(tags), builder: "github-actions" };
   }
@@ -470,9 +462,7 @@ class NixInstallerAction extends DetSysAction {
       if (existingInstall) {
         if (this.reinstall) {
           // We need to uninstall, then reinstall
-          log.info(
-            "Nix was already installed, `reinstall` is set, uninstalling for a reinstall",
-          );
+          log.info("Nix was already installed, `reinstall` is set, uninstalling for a reinstall");
           await this.executeUninstall();
         } else {
           // We're already installed, and not reinstalling, just log in to FlakeHub, set GITHUB_PATH and finish early
@@ -611,9 +601,7 @@ class NixInstallerAction extends DetSysAction {
         return false;
       }
 
-      log.warning(
-        `Error waiting for the Nix Daemon socket: ${stringifyError(error)}`,
-      );
+      log.warning(`Error waiting for the Nix Daemon socket: ${stringifyError(error)}`);
 
       // The throw reaches the spawn_daemon span, and withSpan records the
       // exception there in the way OpenTelemetry defines.
@@ -630,9 +618,7 @@ class NixInstallerAction extends DetSysAction {
         // A runner with upstream Nix has no determinate-nixd to ask, thus
         // this run has no summary.
         span.setAttribute(ATTR_SUMMARY_AVAILABLE, false);
-        log.debug(
-          "determinate-nixd has no socket on this runner, so there is no build summary.",
-        );
+        log.debug("determinate-nixd has no socket on this runner, so there is no build summary.");
         return;
       }
 
@@ -682,10 +668,7 @@ class NixInstallerAction extends DetSysAction {
           actionsCore.info(chunk);
         }
 
-        actionsCore.summary.addRaw(
-          failureSummary.markdownLines.join("\n"),
-          true,
-        );
+        actionsCore.summary.addRaw(failureSummary.markdownLines.join("\n"), true);
         actionsCore.summary.addRaw("\n", true);
       }
 
@@ -734,7 +717,7 @@ class NixInstallerAction extends DetSysAction {
       }
 
       paths.push("/nix/var/nix/profiles/default/bin");
-      paths.push(`${process.env["HOME"]}/.nix-profile/bin`);
+      paths.push(`${process.env.HOME}/.nix-profile/bin`);
 
       for (const p of paths) {
         actionsCore.addPath(p);
@@ -750,8 +733,7 @@ class NixInstallerAction extends DetSysAction {
   async flakehubLogin(): Promise<void> {
     return withSpan("flakehub_login", async (span) => {
       const canLogin =
-        process.env["ACTIONS_ID_TOKEN_REQUEST_URL"] &&
-        process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"];
+        process.env.ACTIONS_ID_TOKEN_REQUEST_URL && process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
 
       if (!canLogin) {
         const pr = github.context.payload.pull_request;
@@ -780,42 +762,31 @@ class NixInstallerAction extends DetSysAction {
 
       // The span of the login command itself. The flakehub_login span around
       // it also covers the runs that do not log in at all.
-      await log.group(
-        "determinate_nixd_login",
-        "Logging in to FlakeHub",
-        async () => {
-          try {
-            await actionsExec.exec(`determinate-nixd`, [
-              "login",
-              "github-action",
-            ]);
-            span.setAttribute(ATTR_LOGIN_SUCCEEDED, true);
-          } catch (e: unknown) {
-            span.setAttribute(ATTR_LOGIN_SUCCEEDED, false);
-            log.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
+      await log.group("determinate_nixd_login", "Logging in to FlakeHub", async () => {
+        try {
+          await actionsExec.exec(`determinate-nixd`, ["login", "github-action"]);
+          span.setAttribute(ATTR_LOGIN_SUCCEEDED, true);
+        } catch (e: unknown) {
+          span.setAttribute(ATTR_LOGIN_SUCCEEDED, false);
+          log.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
 
-            // The login failed, thus the span failed. The Action continues:
-            // the caller catches nothing, because nothing is thrown.
-            recordSpanError(span, e);
-          }
-        },
-      );
+          // The login failed, thus the span failed. The Action continues:
+          // the caller catches nothing, because nothing is thrown.
+          recordSpanError(span, e);
+        }
+      });
     });
   }
 
   async executeUninstall(): Promise<number> {
     return withSpan("uninstall", async (span) => {
-      const exitCode = await actionsExec.exec(
-        `/nix/nix-installer`,
-        ["uninstall"],
-        {
-          env: {
-            NIX_INSTALLER_NO_CONFIRM: "true",
-            ...process.env, // To get $PATH, etc
-            ...(await this.getTelemetryEnvironment()),
-          },
+      const exitCode = await actionsExec.exec(`/nix/nix-installer`, ["uninstall"], {
+        env: {
+          NIX_INSTALLER_NO_CONFIRM: "true",
+          ...process.env, // To get $PATH, etc
+          ...(await this.getTelemetryEnvironment()),
         },
-      );
+      });
 
       span.setAttribute("detsys.exit_code", exitCode);
 
@@ -834,9 +805,7 @@ class NixInstallerAction extends DetSysAction {
         await access(receiptPath);
         // There is a /nix/receipt.json
         span.setAttribute("detsys.existing_install", true);
-        log.info(
-          "\u001b[32m Nix is already installed: found /nix/receipt.json \u001b[33m",
-        );
+        log.info("\u001b[32m Nix is already installed: found /nix/receipt.json \u001b[33m");
         return true;
       } catch {
         // No /nix/receipt.json
@@ -847,9 +816,7 @@ class NixInstallerAction extends DetSysAction {
 
         if (exitCode === 0) {
           span.setAttribute("detsys.existing_install", true);
-          log.info(
-            "\u001b[32m Nix is already installed: `nix --version` exited 0 \u001b[33m",
-          );
+          log.info("\u001b[32m Nix is already installed: `nix --version` exited 0 \u001b[33m");
           // Working existing installation of `nix` available, possibly a self-hosted runner
           return true;
         }
@@ -890,8 +857,7 @@ class NixInstallerAction extends DetSysAction {
       span.setAttribute("detsys.kvm_accessible", false);
 
       // The current user can't access KVM, so try adding a udev rule to allow access to all users and groups
-      const kvmRules =
-        "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
+      const kvmRules = "/etc/udev/rules.d/99-determinate-nix-installer-kvm.rules";
       try {
         const writeFileExitCode = await actionsExec.exec(
           "sh",
@@ -929,10 +895,14 @@ class NixInstallerAction extends DetSysAction {
           command: string,
           args: string[],
         ): Promise<void> => {
+          // TODO(gustavderdrache): do this without reassigning parameters
+          // oxlint-disable eslint/no-param-reassign
           if (!isRoot) {
             args = [command, ...args];
             command = "sudo";
           }
+          // oxlint-enable eslint/no-param-reassign
+
           const reloadExitCode = await actionsExec.exec(command, args, {
             silent: true,
             listeners: {
@@ -958,10 +928,7 @@ class NixInstallerAction extends DetSysAction {
           }
         };
 
-        await debugRootRunThrow("reloading udev rules", "udevadm", [
-          "control",
-          "--reload-rules",
-        ]);
+        await debugRootRunThrow("reloading udev rules", "udevadm", ["control", "--reload-rules"]);
 
         await debugRootRunThrow("triggering udev against kvm", "udevadm", [
           "trigger",
@@ -982,13 +949,12 @@ class NixInstallerAction extends DetSysAction {
   }
 
   private async fetchBinary(): Promise<string> {
-    if (!this.localRoot) {
-      return await this.fetchExecutable();
-    } else {
+    if (this.localRoot) {
       const localPath = join(this.localRoot, `nix-installer-${this.platform}`);
       log.info(`Using binary ${localPath}`);
       return localPath;
     }
+    return this.fetchExecutable();
   }
 
   async cleanupNoSystemd(): Promise<void> {
@@ -1028,10 +994,7 @@ class NixInstallerAction extends DetSysAction {
 
       if (actionsCore.isDebug()) {
         log.info("Entire log:");
-        const entireLog = await readFile(
-          path.join(this.daemonDir, "daemon.log"),
-          "utf-8",
-        );
+        const entireLog = await readFile(path.join(this.daemonDir, "daemon.log"), "utf-8");
         log.info(entireLog);
       }
     });
@@ -1048,11 +1011,8 @@ class NixInstallerAction extends DetSysAction {
       return "macos";
     } else if (this.isLinux) {
       return "linux";
-    } else {
-      throw new Error(
-        `Unsupported \`RUNNER_OS\` (currently \`${this.runnerOs}\`)`,
-      );
     }
+    throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${this.runnerOs}\`)`);
   }
 
   private async annotateMismatches(): Promise<void> {
@@ -1095,7 +1055,7 @@ class NixInstallerAction extends DetSysAction {
   }
 }
 
-type ExecuteEnvironment = {
+interface ExecuteEnvironment {
   // All env vars are strings, no fanciness here.
   RUST_BACKTRACE?: string;
   NIX_INSTALLER_MODIFY_PROFILE?: string;
@@ -1119,7 +1079,7 @@ type ExecuteEnvironment = {
   NIX_INSTALLER_EXTRA_CONF?: string;
   NIX_INSTALLER_LOG_DIRECTIVES?: string;
   NIX_INSTALLER_LOGGER?: string;
-};
+}
 
 function main(): void {
   new NixInstallerAction().execute();

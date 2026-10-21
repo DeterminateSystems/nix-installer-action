@@ -1,6 +1,8 @@
-import { getExecOutput } from "@actions/exec";
-import { DEvent } from "./events.js";
 import { stripVTControlCharacters } from "node:util";
+
+import { getExecOutput } from "@actions/exec";
+
+import type { DEvent } from "./events.js";
 
 // CI summaries have a max length of "1024k" which I assume to be 1048576 bytes.
 // Generously, the mermaid doc is about 50,000 bytes.
@@ -48,9 +50,7 @@ export async function summarizeFailures(
   );
   markdownLines.push(`### Build error review :boom:`);
   markdownLines.push("> [!NOTE]");
-  markdownLines.push(
-    `> ${failures.length} build${failures.length === 1 ? "" : "s"} failed`,
-  );
+  markdownLines.push(`> ${failures.length} build${failures.length === 1 ? "" : "s"} failed`);
 
   const markdownLogChunks: {
     drv: string;
@@ -62,9 +62,7 @@ export async function summarizeFailures(
     const txtLogChunk = [];
     txtLogChunk.push(`::group::Failed build: ${event.drv}`);
 
-    const log =
-      (await getLog(event.drv)) ??
-      "(failure reading the log for this derivation.)";
+    const log = (await getLog(event.drv)) ?? "(failure reading the log for this derivation.)";
     const indented = log.split("\n").map((line) => `    ${line}`);
 
     markdownLogChunk.push(
@@ -111,9 +109,7 @@ export async function summarizeFailures(
       "> The full logs are available in the post-run phase of the Nix Installer Action.",
     );
 
-    logChunks.push(
-      "The following build logs are NOT available in the Markdown summary:",
-    );
+    logChunks.push("The following build logs are NOT available in the Markdown summary:");
     for (const chunk of skippedChunks) {
       markdownLines.push(`> * \`${chunk.drv}\``);
       logChunks.push(chunk.txtLines.join("\n"));

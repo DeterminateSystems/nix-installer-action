@@ -60740,7 +60740,7 @@ exports.colors = [6, 2, 3, 4, 5, 1];
 try {
 	// Optional dependency (as in, doesn't need to be installed, NOT like optionalDependencies in package.json)
 	// eslint-disable-next-line import/no-extraneous-dependencies
-	const supportsColor = __nccwpck_require__(21450);
+	const supportsColor = __nccwpck_require__(60075);
 
 	if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
 		exports.colors = [
@@ -60971,21 +60971,6 @@ formatters.o = function (v) {
 formatters.O = function (v) {
 	this.inspectOpts.colors = this.useColors;
 	return util.inspect(v, this.inspectOpts);
-};
-
-
-/***/ }),
-
-/***/ 83813:
-/***/ ((module) => {
-
-
-
-module.exports = (flag, argv = process.argv) => {
-	const prefix = flag.startsWith('-') ? '' : (flag.length === 1 ? '-' : '--');
-	const position = argv.indexOf(prefix + flag);
-	const terminatorPosition = argv.indexOf('--');
-	return position !== -1 && (terminatorPosition === -1 || position < terminatorPosition);
 };
 
 
@@ -67916,148 +67901,6 @@ const validRange = (range, options) => {
   }
 }
 module.exports = validRange
-
-
-/***/ }),
-
-/***/ 21450:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-
-const os = __nccwpck_require__(70857);
-const tty = __nccwpck_require__(52018);
-const hasFlag = __nccwpck_require__(83813);
-
-const {env} = process;
-
-let forceColor;
-if (hasFlag('no-color') ||
-	hasFlag('no-colors') ||
-	hasFlag('color=false') ||
-	hasFlag('color=never')) {
-	forceColor = 0;
-} else if (hasFlag('color') ||
-	hasFlag('colors') ||
-	hasFlag('color=true') ||
-	hasFlag('color=always')) {
-	forceColor = 1;
-}
-
-if ('FORCE_COLOR' in env) {
-	if (env.FORCE_COLOR === 'true') {
-		forceColor = 1;
-	} else if (env.FORCE_COLOR === 'false') {
-		forceColor = 0;
-	} else {
-		forceColor = env.FORCE_COLOR.length === 0 ? 1 : Math.min(parseInt(env.FORCE_COLOR, 10), 3);
-	}
-}
-
-function translateLevel(level) {
-	if (level === 0) {
-		return false;
-	}
-
-	return {
-		level,
-		hasBasic: true,
-		has256: level >= 2,
-		has16m: level >= 3
-	};
-}
-
-function supportsColor(haveStream, streamIsTTY) {
-	if (forceColor === 0) {
-		return 0;
-	}
-
-	if (hasFlag('color=16m') ||
-		hasFlag('color=full') ||
-		hasFlag('color=truecolor')) {
-		return 3;
-	}
-
-	if (hasFlag('color=256')) {
-		return 2;
-	}
-
-	if (haveStream && !streamIsTTY && forceColor === undefined) {
-		return 0;
-	}
-
-	const min = forceColor || 0;
-
-	if (env.TERM === 'dumb') {
-		return min;
-	}
-
-	if (process.platform === 'win32') {
-		// Windows 10 build 10586 is the first Windows release that supports 256 colors.
-		// Windows 10 build 14931 is the first release that supports 16m/TrueColor.
-		const osRelease = os.release().split('.');
-		if (
-			Number(osRelease[0]) >= 10 &&
-			Number(osRelease[2]) >= 10586
-		) {
-			return Number(osRelease[2]) >= 14931 ? 3 : 2;
-		}
-
-		return 1;
-	}
-
-	if ('CI' in env) {
-		if (['TRAVIS', 'CIRCLECI', 'APPVEYOR', 'GITLAB_CI', 'GITHUB_ACTIONS', 'BUILDKITE'].some(sign => sign in env) || env.CI_NAME === 'codeship') {
-			return 1;
-		}
-
-		return min;
-	}
-
-	if ('TEAMCITY_VERSION' in env) {
-		return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
-	}
-
-	if (env.COLORTERM === 'truecolor') {
-		return 3;
-	}
-
-	if ('TERM_PROGRAM' in env) {
-		const version = parseInt((env.TERM_PROGRAM_VERSION || '').split('.')[0], 10);
-
-		switch (env.TERM_PROGRAM) {
-			case 'iTerm.app':
-				return version >= 3 ? 3 : 2;
-			case 'Apple_Terminal':
-				return 2;
-			// No default
-		}
-	}
-
-	if (/-256(color)?$/i.test(env.TERM)) {
-		return 2;
-	}
-
-	if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
-		return 1;
-	}
-
-	if ('COLORTERM' in env) {
-		return 1;
-	}
-
-	return min;
-}
-
-function getSupportLevel(stream) {
-	const level = supportsColor(stream, stream && stream.isTTY);
-	return translateLevel(level);
-}
-
-module.exports = {
-	supportsColor: getSupportLevel,
-	stdout: translateLevel(supportsColor(true, tty.isatty(1))),
-	stderr: translateLevel(supportsColor(true, tty.isatty(2)))
-};
 
 
 /***/ }),
@@ -96325,6 +96168,14 @@ module.exports = {
 
 /***/ }),
 
+/***/ 60075:
+/***/ ((module) => {
+
+module.exports = eval("require")("supports-color");
+
+
+/***/ }),
+
 /***/ 42613:
 /***/ ((module) => {
 
@@ -97037,8 +96888,18 @@ __nccwpck_require__.d(mappers_namespaceObject, {
   UserDelegationKey: () => (UserDelegationKey)
 });
 
+// EXTERNAL MODULE: external "child_process"
+var external_child_process_ = __nccwpck_require__(35317);
+// EXTERNAL MODULE: external "fs"
+var external_fs_ = __nccwpck_require__(79896);
+;// CONCATENATED MODULE: external "fs/promises"
+const promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("fs/promises");
 // EXTERNAL MODULE: external "os"
 var external_os_ = __nccwpck_require__(70857);
+// EXTERNAL MODULE: external "path"
+var external_path_ = __nccwpck_require__(16928);
+;// CONCATENATED MODULE: external "timers/promises"
+const external_timers_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("timers/promises");
 ;// CONCATENATED MODULE: ./node_modules/@actions/core/lib/utils.js
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -97169,8 +97030,6 @@ function escapeProperty(s) {
 //# sourceMappingURL=command.js.map
 // EXTERNAL MODULE: external "crypto"
 var external_crypto_ = __nccwpck_require__(76982);
-// EXTERNAL MODULE: external "fs"
-var external_fs_ = __nccwpck_require__(79896);
 ;// CONCATENATED MODULE: ./node_modules/@actions/core/lib/file-command.js
 // For internal use, subject to change.
 // We use any as a valid input type
@@ -97206,8 +97065,6 @@ function file_command_prepareKeyValueMessage(key, value) {
     return `${key}<<${delimiter}${external_os_.EOL}${convertedValue}${external_os_.EOL}${delimiter}`;
 }
 //# sourceMappingURL=file-command.js.map
-// EXTERNAL MODULE: external "path"
-var external_path_ = __nccwpck_require__(16928);
 // EXTERNAL MODULE: external "http"
 var external_http_ = __nccwpck_require__(58611);
 var external_http_namespaceObject = /*#__PURE__*/__nccwpck_require__.t(external_http_, 2);
@@ -98475,8 +98332,6 @@ function toPlatformPath(pth) {
 var external_string_decoder_ = __nccwpck_require__(13193);
 // EXTERNAL MODULE: external "events"
 var external_events_ = __nccwpck_require__(24434);
-// EXTERNAL MODULE: external "child_process"
-var external_child_process_ = __nccwpck_require__(35317);
 // EXTERNAL MODULE: external "assert"
 var external_assert_ = __nccwpck_require__(42613);
 ;// CONCATENATED MODULE: ./node_modules/@actions/io/lib/io-util.js
@@ -104982,51 +104837,6 @@ function getOctokit(token, options, ...additionalPlugins) {
     return new GitHubWithPlugins(getOctokitOptions(token, options));
 }
 //# sourceMappingURL=github.js.map
-;// CONCATENATED MODULE: external "fs/promises"
-const promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("fs/promises");
-;// CONCATENATED MODULE: ./node_modules/string-argv/index.js
-
-function parseArgsStringToArgv(value, env, file) {
-    // ([^\s'"]([^\s'"]*(['"])([^\3]*?)\3)+[^\s'"]*) Matches nested quotes until the first space outside of quotes
-    // [^\s'"]+ or Match if not a space ' or "
-    // (['"])([^\5]*?)\5 or Match "quoted text" without quotes
-    // `\3` and `\5` are a backreference to the quote style (' or ") captured
-    var myRegexp = /([^\s'"]([^\s'"]*(['"])([^\3]*?)\3)+[^\s'"]*)|[^\s'"]+|(['"])([^\5]*?)\5/gi;
-    var myString = value;
-    var myArray = [];
-    if (env) {
-        myArray.push(env);
-    }
-    if (file) {
-        myArray.push(file);
-    }
-    var match;
-    do {
-        // Each call to exec returns the next regex match as an array
-        match = myRegexp.exec(myString);
-        if (match !== null) {
-            // Index 1 in the array is the captured group if it exists
-            // Index 0 is the matched text, which we use if no captured group exists
-            myArray.push(firstString(match[1], match[6], match[0]));
-        }
-    } while (match !== null);
-    return myArray;
-}
-// Accepts any number of arguments, and returns the first one that is a string
-// (even an empty string)
-function firstString() {
-    var args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        args[_i] = arguments[_i];
-    }
-    for (var i = 0; i < args.length; i++) {
-        var arg = args[i];
-        if (typeof arg === "string") {
-            return arg;
-        }
-    }
-}
-
 ;// CONCATENATED MODULE: ./node_modules/@determinate-systems/detsys-ts/dist/rolldown-runtime-D7D4PA-g.mjs
 //#region \0rolldown/runtime.js
 var __defProp = Object.defineProperty;
@@ -174075,8 +173885,49 @@ function makeOptionsConfident(actionOptions) {
 
 
 //# sourceMappingURL=index.mjs.map
-;// CONCATENATED MODULE: external "timers/promises"
-const external_timers_promises_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("timers/promises");
+;// CONCATENATED MODULE: ./node_modules/string-argv/index.js
+
+function parseArgsStringToArgv(value, env, file) {
+    // ([^\s'"]([^\s'"]*(['"])([^\3]*?)\3)+[^\s'"]*) Matches nested quotes until the first space outside of quotes
+    // [^\s'"]+ or Match if not a space ' or "
+    // (['"])([^\5]*?)\5 or Match "quoted text" without quotes
+    // `\3` and `\5` are a backreference to the quote style (' or ") captured
+    var myRegexp = /([^\s'"]([^\s'"]*(['"])([^\3]*?)\3)+[^\s'"]*)|[^\s'"]+|(['"])([^\5]*?)\5/gi;
+    var myString = value;
+    var myArray = [];
+    if (env) {
+        myArray.push(env);
+    }
+    if (file) {
+        myArray.push(file);
+    }
+    var match;
+    do {
+        // Each call to exec returns the next regex match as an array
+        match = myRegexp.exec(myString);
+        if (match !== null) {
+            // Index 1 in the array is the captured group if it exists
+            // Index 0 is the matched text, which we use if no captured group exists
+            myArray.push(firstString(match[1], match[6], match[0]));
+        }
+    } while (match !== null);
+    return myArray;
+}
+// Accepts any number of arguments, and returns the first one that is a string
+// (even an empty string)
+function firstString() {
+    var args = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        args[_i] = arguments[_i];
+    }
+    for (var i = 0; i < args.length; i++) {
+        var arg = args[i];
+        if (typeof arg === "string") {
+            return arg;
+        }
+    }
+}
+
 ;// CONCATENATED MODULE: ./node_modules/@sindresorhus/is/distribution/utilities.js
 function utilities_keysOf(value) {
     return Object.keys(value);
@@ -180362,22 +180213,6 @@ const source_got = dist_source_create(dist_source_defaults);
 
 
 
-// src/fixHashes.ts
-
-async function getFixHashes(since) {
-  const output = await getExecOutput(
-    "determinate-nixd",
-    ["fix", "hashes", "--json", "--since", since],
-    { silent: true }
-  );
-  if (output.exitCode !== 0) {
-    throw new Error(
-      `determinate-nixd fix hashes returned non-zero exit code ${output.exitCode} with the following error output:
-${output.stderr}`
-    );
-  }
-  return JSON.parse(output.stdout);
-}
 
 // src/annotate.ts
 
@@ -180396,14 +180231,11 @@ function annotateMultiple(file, { line, found, mismatches }) {
     const pretty = prettyDerivation(derivation);
     return `* For the derivation ${pretty}, use ${replacement}`;
   }).join("\n");
-  log_exports.error(
-    `There are multiple replacements for the expression ${found}:
-${matches}`,
-    {
-      file,
-      startLine: line
-    }
-  );
+  log_exports.error(`There are multiple replacements for the expression ${found}:
+${matches}`, {
+    file,
+    startLine: line
+  });
 }
 function annotate(file, fix) {
   if (fix.mismatches.length === 1) {
@@ -180475,13 +180307,119 @@ async function getRecentEvents(since) {
 }
 function isSocketAbsent(error) {
   let candidate = error;
-  for (let link = 0; link < 4 && candidate != null; link++) {
+  for (let link = 0; link < 4 && candidate; link++) {
     if (candidate.code === "ENOENT") {
       return true;
     }
     candidate = candidate.cause;
   }
   return false;
+}
+
+// src/failuresummary.ts
+
+
+var defaultMaxSummaryLength = 995e3;
+function getBuildFailures(events) {
+  const seen = /* @__PURE__ */ new Set();
+  return events.filter((event) => {
+    if (event.c !== "BuildFailureResponseEventV1" || seen.has(event.drv)) {
+      return false;
+    }
+    seen.add(event.drv);
+    return true;
+  });
+}
+async function summarizeFailures(events, getLog = getLogFromNix, maxLength = defaultMaxSummaryLength) {
+  const failures = getBuildFailures(events);
+  if (failures.length === 0) {
+    return void 0;
+  }
+  const logChunks = [];
+  const markdownLines = [];
+  logChunks.push(
+    [
+      `\x1B[38;2;255;0;0mBuild logs from ${failures.length} failure${failures.length === 1 ? "" : "s"}`,
+      `The following build logs are also available in the Markdown summary:`
+    ].join("\n")
+  );
+  markdownLines.push(`### Build error review :boom:`);
+  markdownLines.push("> [!NOTE]");
+  markdownLines.push(`> ${failures.length} build${failures.length === 1 ? "" : "s"} failed`);
+  const markdownLogChunks = [];
+  for (const event of failures) {
+    const markdownLogChunk = [];
+    const txtLogChunk = [];
+    txtLogChunk.push(`::group::Failed build: ${event.drv}`);
+    const log3 = await getLog(event.drv) ?? "(failure reading the log for this derivation.)";
+    const indented = log3.split("\n").map((line) => `    ${line}`);
+    markdownLogChunk.push(
+      `<details><summary>Failure log: <code>${event.drv.replace(/^(\/nix[^-]*-)(.*)(\.drv)$/, "$1<strong>$2</strong>$3")}</code></summary>`
+    );
+    markdownLogChunk.push("");
+    for (const line of indented) {
+      txtLogChunk.push(line);
+      markdownLogChunk.push((0,external_util_.stripVTControlCharacters)(line));
+    }
+    markdownLogChunk.push("");
+    markdownLogChunk.push("</details>");
+    markdownLogChunk.push("");
+    markdownLogChunks.push({
+      drv: event.drv,
+      mdLines: markdownLogChunk,
+      txtLines: txtLogChunk
+    });
+    txtLogChunk.push(`::endgroup::`);
+  }
+  const skippedChunks = [];
+  let markdownLength = markdownLines.join("\n").length;
+  for (const chunk of markdownLogChunks) {
+    const chunkLength = chunk.mdLines.join("\n").length;
+    if (markdownLength + chunkLength > maxLength) {
+      skippedChunks.push(chunk);
+    } else {
+      logChunks.push(chunk.txtLines.join("\n"));
+      markdownLines.push(...chunk.mdLines);
+      markdownLength += chunkLength;
+    }
+  }
+  if (skippedChunks.length > 0) {
+    markdownLines.push(
+      "",
+      "> [!NOTE]",
+      `> The following ${skippedChunks.length === 1 ? "failure has" : "failures have"} been omitted due to GitHub Actions' summary length limitations.`,
+      "> The full logs are available in the post-run phase of the Nix Installer Action."
+    );
+    logChunks.push("The following build logs are NOT available in the Markdown summary:");
+    for (const chunk of skippedChunks) {
+      markdownLines.push(`> * \`${chunk.drv}\``);
+      logChunks.push(chunk.txtLines.join("\n"));
+    }
+  }
+  return { logChunks, markdownLines };
+}
+async function getLogFromNix(drv) {
+  const output = await getExecOutput("nix", ["log", drv], {
+    silent: true
+  });
+  return output.stdout;
+}
+
+// src/fixHashes.ts
+
+async function getFixHashes(since) {
+  const output = await getExecOutput(
+    "determinate-nixd",
+    ["fix", "hashes", "--json", "--since", since],
+    { silent: true }
+  );
+  if (output.exitCode !== 0) {
+    throw new Error(
+      `determinate-nixd fix hashes returned non-zero exit code ${output.exitCode} with the following error output:
+${output.stderr}`
+    );
+  }
+  return JSON.parse(output.stdout);
 }
 
 // src/util.ts
@@ -180527,20 +180465,13 @@ function makeMermaidReport(events) {
 function mermaidify(allEvents, pruneLevel) {
   const events = allEvents.filter(
     (event) => event.c === "BuiltPathResponseEventV1" || event.c === "BuildFailureResponseEventV1"
-  ).sort(
-    (a, b) => a.timing.startTime.getTime() - b.timing.startTime.getTime()
-  );
+  ).sort((a, b) => a.timing.startTime.getTime() - b.timing.startTime.getTime());
   const firstEvent = events.at(0);
   if (firstEvent === void 0) {
     return void 0;
   }
   const zeroMoment = firstEvent.timing.startTime.getTime();
-  const lines = [
-    "```mermaid",
-    "gantt",
-    "    dateFormat X",
-    "    axisFormat %Mm%Ss"
-  ];
+  const lines = ["```mermaid", "gantt", "    dateFormat X", "    axisFormat %Mm%Ss"];
   for (const event of events) {
     const duration = event.timing.durationSeconds;
     if (duration < pruneLevel) {
@@ -180549,9 +180480,7 @@ function mermaidify(allEvents, pruneLevel) {
     const label = pruneLevel >= 0 ? truncateDerivation(event.drv) : event.drv;
     const tag = event.c === "BuildFailureResponseEventV1" ? "crit" : "d";
     const relativeStartTime = (event.timing.startTime.getTime() - zeroMoment) / 1e3;
-    lines.push(
-      `${label} (${formatDuration(duration)}):${tag}, ${relativeStartTime}, ${duration}s`
-    );
+    lines.push(`${label} (${formatDuration(duration)}):${tag}, ${relativeStartTime}, ${duration}s`);
   }
   lines.push("```");
   return lines.join("\n");
@@ -180562,101 +180491,7 @@ function formatDuration(duration) {
   return `${durMinutes > 0 ? `${durMinutes}m` : ""}${durSeconds}s`;
 }
 
-// src/failuresummary.ts
-
-
-var defaultMaxSummaryLength = 995e3;
-function getBuildFailures(events) {
-  const seen = /* @__PURE__ */ new Set();
-  return events.filter((event) => {
-    if (event.c !== "BuildFailureResponseEventV1" || seen.has(event.drv)) {
-      return false;
-    }
-    seen.add(event.drv);
-    return true;
-  });
-}
-async function summarizeFailures(events, getLog = getLogFromNix, maxLength = defaultMaxSummaryLength) {
-  const failures = getBuildFailures(events);
-  if (failures.length === 0) {
-    return void 0;
-  }
-  const logChunks = [];
-  const markdownLines = [];
-  logChunks.push(
-    [
-      `\x1B[38;2;255;0;0mBuild logs from ${failures.length} failure${failures.length === 1 ? "" : "s"}`,
-      `The following build logs are also available in the Markdown summary:`
-    ].join("\n")
-  );
-  markdownLines.push(`### Build error review :boom:`);
-  markdownLines.push("> [!NOTE]");
-  markdownLines.push(
-    `> ${failures.length} build${failures.length === 1 ? "" : "s"} failed`
-  );
-  const markdownLogChunks = [];
-  for (const event of failures) {
-    const markdownLogChunk = [];
-    const txtLogChunk = [];
-    txtLogChunk.push(`::group::Failed build: ${event.drv}`);
-    const log3 = await getLog(event.drv) ?? "(failure reading the log for this derivation.)";
-    const indented = log3.split("\n").map((line) => `    ${line}`);
-    markdownLogChunk.push(
-      `<details><summary>Failure log: <code>${event.drv.replace(/^(\/nix[^-]*-)(.*)(\.drv)$/, "$1<strong>$2</strong>$3")}</code></summary>`
-    );
-    markdownLogChunk.push("");
-    for (const line of indented) {
-      txtLogChunk.push(line);
-      markdownLogChunk.push((0,external_util_.stripVTControlCharacters)(line));
-    }
-    markdownLogChunk.push("");
-    markdownLogChunk.push("</details>");
-    markdownLogChunk.push("");
-    markdownLogChunks.push({
-      drv: event.drv,
-      mdLines: markdownLogChunk,
-      txtLines: txtLogChunk
-    });
-    txtLogChunk.push(`::endgroup::`);
-  }
-  const skippedChunks = [];
-  let markdownLength = markdownLines.join("\n").length;
-  for (const chunk of markdownLogChunks) {
-    const chunkLength = chunk.mdLines.join("\n").length;
-    if (markdownLength + chunkLength > maxLength) {
-      skippedChunks.push(chunk);
-    } else {
-      logChunks.push(chunk.txtLines.join("\n"));
-      markdownLines.push(...chunk.mdLines);
-      markdownLength += chunkLength;
-    }
-  }
-  if (skippedChunks.length > 0) {
-    markdownLines.push(
-      "",
-      "> [!NOTE]",
-      `> The following ${skippedChunks.length === 1 ? "failure has" : "failures have"} been omitted due to GitHub Actions' summary length limitations.`,
-      "> The full logs are available in the post-run phase of the Nix Installer Action."
-    );
-    logChunks.push(
-      "The following build logs are NOT available in the Markdown summary:"
-    );
-    for (const chunk of skippedChunks) {
-      markdownLines.push(`> * \`${chunk.drv}\``);
-      logChunks.push(chunk.txtLines.join("\n"));
-    }
-  }
-  return { logChunks, markdownLines };
-}
-async function getLogFromNix(drv) {
-  const output = await getExecOutput("nix", ["log", drv], {
-    silent: true
-  });
-  return output.stdout;
-}
-
 // src/index.ts
-
 var FEAT_ANNOTATIONS = "hash-mismatch-annotations";
 var ATTR_DETERMINATE_NIX = "detsys.nix_installer.determinate_nix";
 var ATTR_HAS_SYSTEMD = "detsys.nix_installer.has_systemd";
@@ -180735,12 +180570,12 @@ var NixInstallerAction = class extends DetSysAction {
       requireNix: "ignore",
       diagnosticsSuffix: "diagnostic"
     });
-    if (getState(STATE_DAEMONDIR) !== "") {
-      this.daemonDir = getState(STATE_DAEMONDIR);
-    } else {
+    if (getState(STATE_DAEMONDIR) === "") {
       this.daemonDir = this.getTemporaryName();
       (0,external_fs_.mkdirSync)(this.daemonDir);
       saveState(STATE_DAEMONDIR, this.daemonDir);
+    } else {
+      this.daemonDir = getState(STATE_DAEMONDIR);
     }
     this.determinate = inputs_exports.getBool("determinate") || inputs_exports.getBool("flakehub");
     this.platform = platform_exports.getNixPlatform(platform_exports.getArchOs());
@@ -180774,7 +180609,7 @@ var NixInstallerAction = class extends DetSysAction {
     this.startDaemon = inputs_exports.getBool("start-daemon");
     this.trustRunnerUser = inputs_exports.getBool("trust-runner-user");
     this.summarize = inputs_exports.getBool("summarize");
-    this.runnerOs = process.env["RUNNER_OS"];
+    this.runnerOs = process.env.RUNNER_OS;
   }
   async main() {
     saveState(STATE_START_DATETIME, (/* @__PURE__ */ new Date()).toISOString());
@@ -180800,10 +180635,10 @@ var NixInstallerAction = class extends DetSysAction {
     return this.runnerOs === "Linux";
   }
   get isRunningInAct() {
-    return process.env["ACT"] !== void 0 && !(process.env["NOT_ACT"] === "");
+    return process.env.ACT !== void 0 && !(process.env.NOT_ACT === "");
   }
   get isRunningInNamespaceRunner() {
-    return process.env["NSC_VM_ID"] !== void 0 && !(process.env["NOT_NAMESPACE"] === "true");
+    return process.env.NSC_VM_ID !== void 0 && !(process.env.NOT_NAMESPACE === "true");
   }
   // Detect if we're in a GHA runner which is Linux and doesn't have Systemd.
   // This is a common case in self-hosted runners, providers like [Namespace](https://namespace.so/),
@@ -180835,9 +180670,7 @@ var NixInstallerAction = class extends DetSysAction {
   async executionEnvironment() {
     const executionEnv = {};
     executionEnv.NIX_INSTALLER_NO_CONFIRM = "true";
-    executionEnv.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(
-      this.getCorrelationHashes()
-    );
+    executionEnv.NIX_INSTALLER_DIAGNOSTIC_ATTRIBUTION = JSON.stringify(this.getCorrelationHashes());
     if (this.backtrace !== null) {
       executionEnv.RUST_BACKTRACE = this.backtrace;
     }
@@ -180864,7 +180697,7 @@ var NixInstallerAction = class extends DetSysAction {
       executionEnv.NIX_INSTALLER_NIX_BUILD_USER_ID_BASE = `${this.nixBuildUserBase}`;
     }
     if (this.nixPackageUrl !== null) {
-      executionEnv.NIX_INSTALLER_NIX_PACKAGE_URL = `${this.nixPackageUrl}`;
+      executionEnv.NIX_INSTALLER_NIX_PACKAGE_URL = this.nixPackageUrl;
     }
     if (this.proxy !== null) {
       executionEnv.NIX_INSTALLER_PROXY = this.proxy;
@@ -180881,17 +180714,13 @@ var NixInstallerAction = class extends DetSysAction {
     }
     if (this.macCaseSensitive !== null) {
       if (!this.isMacOS) {
-        throw new Error(
-          "`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`"
-        );
+        throw new Error("`mac-case-sensitive` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_CASE_SENSITIVE = this.macCaseSensitive;
     }
     if (this.macVolumeLabel !== null) {
       if (!this.isMacOS) {
-        throw new Error(
-          "`mac-volume-label` while `$RUNNER_OS` was not `macOS`"
-        );
+        throw new Error("`mac-volume-label` while `$RUNNER_OS` was not `macOS`");
       }
       executionEnv.NIX_INSTALLER_VOLUME_LABEL = this.macVolumeLabel;
     }
@@ -180909,9 +180738,7 @@ var NixInstallerAction = class extends DetSysAction {
     }
     if (this.init !== null) {
       if (this.isMacOS) {
-        throw new Error(
-          "`init` is not a valid option when `$RUNNER_OS` is `macOS`"
-        );
+        throw new Error("`init` is not a valid option when `$RUNNER_OS` is `macOS`");
       }
       executionEnv.NIX_INSTALLER_INIT = this.init;
     }
@@ -180973,7 +180800,10 @@ var NixInstallerAction = class extends DetSysAction {
       GITHUB_REPOSITORY: "github_repository",
       GITHUB_SERVER_URL: "github_server_url"
     };
-    const tags = Object.entries(mapping).map(([sourceKey, targetKey]) => [targetKey, process.env[sourceKey]]).filter(([_, value]) => value !== void 0);
+    const tags = Object.entries(mapping).map(([sourceKey, targetKey]) => [
+      targetKey,
+      process.env[sourceKey]
+    ]).filter(([_, value]) => value !== void 0);
     return { ...Object.fromEntries(tags), builder: "github-actions" };
   }
   get installerArgs() {
@@ -181026,9 +180856,7 @@ var NixInstallerAction = class extends DetSysAction {
       const existingInstall = await this.detectExisting();
       if (existingInstall) {
         if (this.reinstall) {
-          log_exports.info(
-            "Nix was already installed, `reinstall` is set, uninstalling for a reinstall"
-          );
+          log_exports.info("Nix was already installed, `reinstall` is set, uninstalling for a reinstall");
           await this.executeUninstall();
         } else {
           await this.setGithubPath();
@@ -181130,9 +180958,7 @@ var NixInstallerAction = class extends DetSysAction {
         log_exports.debug(`Socket '${socketPath}' does not exist yet`);
         return false;
       }
-      log_exports.warning(
-        `Error waiting for the Nix Daemon socket: ${stringifyError(error)}`
-      );
+      log_exports.warning(`Error waiting for the Nix Daemon socket: ${stringifyError(error)}`);
       throw error;
     }
   }
@@ -181142,9 +180968,7 @@ var NixInstallerAction = class extends DetSysAction {
       const recent = await getRecentEvents(startDate);
       if (recent === void 0) {
         span.setAttribute(ATTR_SUMMARY_AVAILABLE, false);
-        log_exports.debug(
-          "determinate-nixd has no socket on this runner, so there is no build summary."
-        );
+        log_exports.debug("determinate-nixd has no socket on this runner, so there is no build summary.");
         return;
       }
       span.setAttribute(ATTR_SUMMARY_AVAILABLE, true);
@@ -181181,10 +181005,7 @@ var NixInstallerAction = class extends DetSysAction {
         for (const chunk of failureSummary.logChunks) {
           info(chunk);
         }
-        summary.addRaw(
-          failureSummary.markdownLines.join("\n"),
-          true
-        );
+        summary.addRaw(failureSummary.markdownLines.join("\n"), true);
         summary.addRaw("\n", true);
       }
       if (showResults) {
@@ -181225,7 +181046,7 @@ var NixInstallerAction = class extends DetSysAction {
         paths.push("/usr/local/bin");
       }
       paths.push("/nix/var/nix/profiles/default/bin");
-      paths.push(`${process.env["HOME"]}/.nix-profile/bin`);
+      paths.push(`${process.env.HOME}/.nix-profile/bin`);
       for (const p of paths) {
         addPath(p);
         log_exports.debug(`Added \`${p}\` to \`$GITHUB_PATH\``);
@@ -181238,7 +181059,7 @@ var NixInstallerAction = class extends DetSysAction {
   }
   async flakehubLogin() {
     return withSpan("flakehub_login", async (span) => {
-      const canLogin = process.env["ACTIONS_ID_TOKEN_REQUEST_URL"] && process.env["ACTIONS_ID_TOKEN_REQUEST_TOKEN"];
+      const canLogin = process.env.ACTIONS_ID_TOKEN_REQUEST_URL && process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
       if (!canLogin) {
         const pr = github_context.payload.pull_request;
         const base = pr?.base?.repo?.full_name;
@@ -181259,39 +181080,28 @@ var NixInstallerAction = class extends DetSysAction {
         );
         return;
       }
-      await log_exports.group(
-        "determinate_nixd_login",
-        "Logging in to FlakeHub",
-        async () => {
-          try {
-            await exec_exec(`determinate-nixd`, [
-              "login",
-              "github-action"
-            ]);
-            span.setAttribute(ATTR_LOGIN_SUCCEEDED, true);
-          } catch (e) {
-            span.setAttribute(ATTR_LOGIN_SUCCEEDED, false);
-            log_exports.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
-            recordSpanError(span, e);
-          }
+      await log_exports.group("determinate_nixd_login", "Logging in to FlakeHub", async () => {
+        try {
+          await exec_exec(`determinate-nixd`, ["login", "github-action"]);
+          span.setAttribute(ATTR_LOGIN_SUCCEEDED, true);
+        } catch (e) {
+          span.setAttribute(ATTR_LOGIN_SUCCEEDED, false);
+          log_exports.warning(`FlakeHub Login failure: ${stringifyError(e)}`);
+          recordSpanError(span, e);
         }
-      );
+      });
     });
   }
   async executeUninstall() {
     return withSpan("uninstall", async (span) => {
-      const exitCode = await exec_exec(
-        `/nix/nix-installer`,
-        ["uninstall"],
-        {
-          env: {
-            NIX_INSTALLER_NO_CONFIRM: "true",
-            ...process.env,
-            // To get $PATH, etc
-            ...await this.getTelemetryEnvironment()
-          }
+      const exitCode = await exec_exec(`/nix/nix-installer`, ["uninstall"], {
+        env: {
+          NIX_INSTALLER_NO_CONFIRM: "true",
+          ...process.env,
+          // To get $PATH, etc
+          ...await this.getTelemetryEnvironment()
         }
-      );
+      });
       span.setAttribute("detsys.exit_code", exitCode);
       if (exitCode !== 0) {
         throw new Error(`Non-zero exit code of \`${exitCode}\` detected`);
@@ -181305,9 +181115,7 @@ var NixInstallerAction = class extends DetSysAction {
       try {
         await (0,promises_namespaceObject.access)(receiptPath);
         span.setAttribute("detsys.existing_install", true);
-        log_exports.info(
-          "\x1B[32m Nix is already installed: found /nix/receipt.json \x1B[33m"
-        );
+        log_exports.info("\x1B[32m Nix is already installed: found /nix/receipt.json \x1B[33m");
         return true;
       } catch {
       }
@@ -181315,9 +181123,7 @@ var NixInstallerAction = class extends DetSysAction {
         const exitCode = await exec_exec("nix", ["--version"], {});
         if (exitCode === 0) {
           span.setAttribute("detsys.existing_install", true);
-          log_exports.info(
-            "\x1B[32m Nix is already installed: `nix --version` exited 0 \x1B[33m"
-          );
+          log_exports.info("\x1B[32m Nix is already installed: `nix --version` exited 0 \x1B[33m");
           return true;
         }
       } catch {
@@ -181406,10 +181212,7 @@ var NixInstallerAction = class extends DetSysAction {
             );
           }
         };
-        await debugRootRunThrow("reloading udev rules", "udevadm", [
-          "control",
-          "--reload-rules"
-        ]);
+        await debugRootRunThrow("reloading udev rules", "udevadm", ["control", "--reload-rules"]);
         await debugRootRunThrow("triggering udev against kvm", "udevadm", [
           "trigger",
           "--name-match=kvm"
@@ -181426,13 +181229,12 @@ var NixInstallerAction = class extends DetSysAction {
     });
   }
   async fetchBinary() {
-    if (!this.localRoot) {
-      return await this.fetchExecutable();
-    } else {
+    if (this.localRoot) {
       const localPath = (0,external_path_.join)(this.localRoot, `nix-installer-${this.platform}`);
       log_exports.info(`Using binary ${localPath}`);
       return localPath;
     }
+    return this.fetchExecutable();
   }
   async cleanupNoSystemd() {
     return withSpan("cleanup_no_systemd", async (span) => {
@@ -181460,10 +181262,7 @@ var NixInstallerAction = class extends DetSysAction {
       }
       if (isDebug()) {
         log_exports.info("Entire log:");
-        const entireLog = await (0,promises_namespaceObject.readFile)(
-          external_path_.join(this.daemonDir, "daemon.log"),
-          "utf-8"
-        );
+        const entireLog = await (0,promises_namespaceObject.readFile)(external_path_.join(this.daemonDir, "daemon.log"), "utf-8");
         log_exports.info(entireLog);
       }
     });
@@ -181476,11 +181275,8 @@ var NixInstallerAction = class extends DetSysAction {
       return "macos";
     } else if (this.isLinux) {
       return "linux";
-    } else {
-      throw new Error(
-        `Unsupported \`RUNNER_OS\` (currently \`${this.runnerOs}\`)`
-      );
     }
+    throw new Error(`Unsupported \`RUNNER_OS\` (currently \`${this.runnerOs}\`)`);
   }
   async annotateMismatches() {
     return withSpan("annotate_mismatches", async (span) => {

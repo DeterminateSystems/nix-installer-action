@@ -1,13 +1,12 @@
-import { parseEvents, getRecentEvents } from "./events.js";
 import { expect, test } from "vitest";
+
+import { parseEvents, getRecentEvents } from "./events.js";
 
 // Handy test for locally making sure you can fetch recent events:
 // eslint-disable-next-line no-constant-condition
 if (false) {
   test("Parsing existing events", async () => {
-    expect(await getRecentEvents(new Date(Date.now() - 1000000))).toStrictEqual(
-      [{}],
-    );
+    expect(await getRecentEvents(new Date(Date.now() - 1000000))).toStrictEqual([{}]);
   });
 }
 
